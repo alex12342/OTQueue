@@ -477,11 +477,6 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
         <Label>Name</Label>
         <Input name="name" defaultValue={defaultValues?.name} placeholder="e.g. Full-Time" required />
       </div>
-      <div className="space-y-2">
-        <Label>Sort Order</Label>
-        <p className="text-xs text-muted-foreground">Lower number = higher priority in Up Next (when Subclass Ordering is enabled).</p>
-        <Input name="sortOrder" type="number" defaultValue={defaultValues?.sortOrder ?? 0} />
-      </div>
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isPending}>{submitLabel}</Button>
       </div>
@@ -495,7 +490,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
       rosterId,
       data: {
         name: fd.get("name") as string,
-        sortOrder: parseInt(fd.get("sortOrder") as string, 10) || 0,
+        sortOrder: subclasses.length,
       },
     });
   };
@@ -509,7 +504,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
       id: editingSubclass.id,
       data: {
         name: fd.get("name") as string,
-        sortOrder: parseInt(fd.get("sortOrder") as string, 10) || 0,
+        sortOrder: editingSubclass.sortOrder,
       },
     });
   };
@@ -519,7 +514,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Subclasses</CardTitle>
-          <CardDescription>Define employment types (e.g. Full-Time, 4-Hour). Use sort order or the arrows to set their priority in the Up Next rotation.</CardDescription>
+          <CardDescription>Define employment types (e.g. Full-Time, 4-Hour). Use the arrows to set their priority in the Up Next rotation.</CardDescription>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -563,7 +558,6 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
                   </div>
                   <div>
                     <p className="font-medium">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">Sort order: {s.sortOrder}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">

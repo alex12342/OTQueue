@@ -14,19 +14,9 @@ import { Link } from "wouter";
 import { useRoster } from "@/hooks/use-roster";
 import { cn } from "@/lib/utils";
 
-type DayType = "weekday" | "weekend" | "holiday";
-
-const ALL_DAY_TYPES: DayType[] = ["weekday", "weekend", "holiday"];
-
-const DAY_TYPE_LABELS: Record<DayType, string> = {
-  weekday: "Weekday",
-  weekend: "Weekend",
-  holiday: "Holiday",
-};
-
 export default function Home() {
   const { activeRosterId, activeRoster } = useRoster();
-  const [dayType, setDayType] = useState<DayType>("weekday");
+  const [dayType, setDayType] = useState<string>("");
 
   const { data: dayTypeConfigs } = useListDayTypeConfig(activeRosterId ?? 0, {
     query: {
@@ -35,17 +25,15 @@ export default function Home() {
     },
   });
 
-  const enabledDayTypes = useMemo<DayType[]>(() => {
-    if (!dayTypeConfigs || dayTypeConfigs.length === 0) return ALL_DAY_TYPES;
-    const enabled = dayTypeConfigs
-      .filter((c) => c.enabled)
-      .map((c) => c.dayType as DayType);
-    return enabled.length > 0 ? enabled : ALL_DAY_TYPES;
+  const enabledDayTypes = useMemo(() => {
+    if (!dayTypeConfigs || dayTypeConfigs.length === 0) return [];
+    return dayTypeConfigs.filter((c) => c.enabled);
   }, [dayTypeConfigs]);
 
   useEffect(() => {
-    if (!enabledDayTypes.includes(dayType)) {
-      setDayType(enabledDayTypes[0]);
+    if (enabledDayTypes.length === 0) return;
+    if (!enabledDayTypes.find((c) => c.dayType === dayType)) {
+      setDayType(enabledDayTypes[0].dayType);
     }
   }, [enabledDayTypes]);
 
@@ -143,19 +131,19 @@ export default function Home() {
             </div>
             {enabledDayTypes.length > 1 && (
               <div className="flex p-1 bg-secondary rounded-md shadow-inner">
-                {enabledDayTypes.map((dt) => (
+                {enabledDayTypes.map((cfg) => (
                   <button
-                    key={dt}
-                    data-testid={`btn-${dt}`}
+                    key={cfg.dayType}
+                    data-testid={`btn-${cfg.dayType}`}
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded transition-colors",
-                      dayType === dt
+                      dayType === cfg.dayType
                         ? "bg-background text-foreground shadow-sm ring-1 ring-border"
                         : "text-muted-foreground hover:text-foreground"
                     )}
-                    onClick={() => setDayType(dt)}
+                    onClick={() => setDayType(cfg.dayType)}
                   >
-                    {DAY_TYPE_LABELS[dt]}
+                    {cfg.name}
                   </button>
                 ))}
               </div>

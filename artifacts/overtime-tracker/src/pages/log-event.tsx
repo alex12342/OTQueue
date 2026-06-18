@@ -252,21 +252,13 @@ export default function LogEvent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(dayTypeConfigs ?? []).filter((c) => c.enabled).length > 0
-                    ? (dayTypeConfigs ?? [])
-                        .filter((c) => c.enabled)
-                        .map((c) => (
-                          <SelectItem key={c.dayType} value={c.dayType}>
-                            {c.name}
-                          </SelectItem>
-                        ))
-                    : (
-                      <>
-                        <SelectItem value="weekday">Weekday</SelectItem>
-                        <SelectItem value="weekend">Weekend</SelectItem>
-                        <SelectItem value="holiday">Holiday</SelectItem>
-                      </>
-                    )}
+                  {(dayTypeConfigs ?? [])
+                    .filter((c) => c.enabled)
+                    .map((c) => (
+                      <SelectItem key={c.dayType} value={c.dayType}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
