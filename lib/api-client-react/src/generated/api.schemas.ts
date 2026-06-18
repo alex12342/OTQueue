@@ -36,27 +36,31 @@ export interface RosterSettingsInput {
   useSubclassOrdering?: boolean;
 }
 
-export type DayTypeConfigDayType = typeof DayTypeConfigDayType[keyof typeof DayTypeConfigDayType];
-
-
-export const DayTypeConfigDayType = {
-  weekday: 'weekday',
-  weekend: 'weekend',
-  holiday: 'holiday',
-} as const;
-
 export interface DayTypeConfig {
   rosterId: number;
-  dayType: DayTypeConfigDayType;
+  dayType: string;
+  name: string;
   enabled: boolean;
   /** @nullable */
   multiplier?: number | null;
+  sortOrder: number;
 }
 
 export interface DayTypeConfigInput {
+  name?: string;
   enabled?: boolean;
   /** @nullable */
   multiplier?: number | null;
+  sortOrder?: number;
+}
+
+export interface CreateDayTypeConfigInput {
+  dayType: string;
+  name: string;
+  enabled?: boolean;
+  /** @nullable */
+  multiplier?: number | null;
+  sortOrder?: number;
 }
 
 export interface Role {

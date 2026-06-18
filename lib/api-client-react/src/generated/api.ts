@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CreateDayTypeConfigInput,
   DayTypeConfig,
   DayTypeConfigInput,
   DayTypeSuggestion,
@@ -729,8 +730,80 @@ export function useListDayTypeConfig<TData = Awaited<ReturnType<typeof listDayTy
 
 
 
+export const getCreateDayTypeConfigUrl = (id: number,) => {
+
+
+
+
+  return `/api/rosters/${id}/day-type-config`
+}
+
+/**
+ * @summary Create a new day type config entry
+ */
+export const createDayTypeConfig = async (id: number,
+    createDayTypeConfigInput: CreateDayTypeConfigInput, options?: RequestInit): Promise<DayTypeConfig> => {
+
+  return customFetch<DayTypeConfig>(getCreateDayTypeConfigUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createDayTypeConfigInput,)
+  }
+);}
+
+
+
+
+export const getCreateDayTypeConfigMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDayTypeConfig>>, TError,{id: number;data: BodyType<CreateDayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDayTypeConfig>>, TError,{id: number;data: BodyType<CreateDayTypeConfigInput>}, TContext> => {
+
+const mutationKey = ['createDayTypeConfig'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDayTypeConfig>>, {id: number;data: BodyType<CreateDayTypeConfigInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createDayTypeConfig(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDayTypeConfigMutationResult = NonNullable<Awaited<ReturnType<typeof createDayTypeConfig>>>
+    export type CreateDayTypeConfigMutationBody = BodyType<CreateDayTypeConfigInput>
+    export type CreateDayTypeConfigMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new day type config entry
+ */
+export const useCreateDayTypeConfig = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDayTypeConfig>>, TError,{id: number;data: BodyType<CreateDayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDayTypeConfig>>,
+        TError,
+        {id: number;data: BodyType<CreateDayTypeConfigInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDayTypeConfigMutationOptions(options));
+    }
+
 export const getUpsertDayTypeConfigUrl = (id: number,
-    dayType: 'weekday' | 'weekend' | 'holiday',) => {
+    dayType: string,) => {
 
 
 
@@ -742,7 +815,7 @@ export const getUpsertDayTypeConfigUrl = (id: number,
  * @summary Upsert a day type config entry
  */
 export const upsertDayTypeConfig = async (id: number,
-    dayType: 'weekday' | 'weekend' | 'holiday',
+    dayType: string,
     dayTypeConfigInput: DayTypeConfigInput, options?: RequestInit): Promise<DayTypeConfig> => {
 
   return customFetch<DayTypeConfig>(getUpsertDayTypeConfigUrl(id,dayType),
@@ -759,8 +832,8 @@ export const upsertDayTypeConfig = async (id: number,
 
 
 export const getUpsertDayTypeConfigMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: string;data: BodyType<DayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: string;data: BodyType<DayTypeConfigInput>}, TContext> => {
 
 const mutationKey = ['upsertDayTypeConfig'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -772,7 +845,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertDayTypeConfig>>, {id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertDayTypeConfig>>, {id: number;dayType: string;data: BodyType<DayTypeConfigInput>}> = (props) => {
           const {id,dayType,data} = props ?? {};
 
           return  upsertDayTypeConfig(id,dayType,data,requestOptions)
@@ -793,14 +866,86 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Upsert a day type config entry
  */
 export const useUpsertDayTypeConfig = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: string;data: BodyType<DayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof upsertDayTypeConfig>>,
         TError,
-        {id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>},
+        {id: number;dayType: string;data: BodyType<DayTypeConfigInput>},
         TContext
       > => {
       return useMutation(getUpsertDayTypeConfigMutationOptions(options));
+    }
+
+export const getDeleteDayTypeConfigUrl = (id: number,
+    dayType: string,) => {
+
+
+
+
+  return `/api/rosters/${id}/day-type-config/${dayType}`
+}
+
+/**
+ * @summary Delete a day type config entry
+ */
+export const deleteDayTypeConfig = async (id: number,
+    dayType: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteDayTypeConfigUrl(id,dayType),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteDayTypeConfigMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDayTypeConfig>>, TError,{id: number;dayType: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDayTypeConfig>>, TError,{id: number;dayType: string}, TContext> => {
+
+const mutationKey = ['deleteDayTypeConfig'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDayTypeConfig>>, {id: number;dayType: string}> = (props) => {
+          const {id,dayType} = props ?? {};
+
+          return  deleteDayTypeConfig(id,dayType,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDayTypeConfigMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDayTypeConfig>>>
+
+    export type DeleteDayTypeConfigMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a day type config entry
+ */
+export const useDeleteDayTypeConfig = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDayTypeConfig>>, TError,{id: number;dayType: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDayTypeConfig>>,
+        TError,
+        {id: number;dayType: string},
+        TContext
+      > => {
+      return useMutation(getDeleteDayTypeConfigMutationOptions(options));
     }
 
 export const getListRolesUrl = (rosterId: number,) => {

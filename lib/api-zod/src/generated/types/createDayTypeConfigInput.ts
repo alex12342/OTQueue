@@ -6,8 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface DayTypeConfigInput {
-  name?: string;
+export interface CreateDayTypeConfigInput {
+  dayType: string;
+  name: string;
   enabled?: boolean;
   /** @nullable */
   multiplier?: number | null;

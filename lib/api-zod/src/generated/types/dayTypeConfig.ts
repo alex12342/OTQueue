@@ -5,12 +5,13 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { DayTypeConfigDayType } from './dayTypeConfigDayType';
 
 export interface DayTypeConfig {
   rosterId: number;
-  dayType: DayTypeConfigDayType;
+  dayType: string;
+  name: string;
   enabled: boolean;
   /** @nullable */
   multiplier?: number | null;
+  sortOrder: number;
 }

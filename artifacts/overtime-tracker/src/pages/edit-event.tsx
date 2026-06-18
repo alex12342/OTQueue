@@ -9,6 +9,8 @@ import {
   getListEventsQueryKey,
   getGetUpNextQueryKey,
   getGetStatsQueryKey,
+  useListDayTypeConfig,
+  getListDayTypeConfigQueryKey,
 } from "@workspace/api-client-react";
 import { useRoster } from "@/hooks/use-roster";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,7 +48,7 @@ export default function EditEvent() {
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [defaultHours, setDefaultHours] = useState("4");
-  const [dayType, setDayType] = useState<"weekday" | "weekend" | "holiday">("weekday");
+  const [dayType, setDayType] = useState<string>("weekday");
   const [entries, setEntries] = useState<Record<number, EntryState>>({});
 
   const { data: event, isLoading: eventLoading } = useGetEvent(eventId, {
@@ -54,6 +56,13 @@ export default function EditEvent() {
   });
 
   const { activeRosterId } = useRoster();
+
+  const { data: dayTypeConfigs } = useListDayTypeConfig(activeRosterId ?? 0, {
+    query: {
+      queryKey: getListDayTypeConfigQueryKey(activeRosterId ?? 0),
+      enabled: activeRosterId != null,
+    },
+  });
 
   const { data: employees, isLoading: employeesLoading } = useListEmployees(
     { rosterId: activeRosterId ?? undefined },
@@ -68,7 +77,7 @@ export default function EditEvent() {
     setDate(parseISO(event.date));
     setDescription(event.description);
     setDefaultHours(String(event.defaultHours));
-    setDayType((event.dayType as "weekday" | "weekend") ?? "weekday");
+    setDayType(event.dayType ?? "weekday");
 
     const preloaded: Record<number, EntryState> = {};
     for (const entry of event.entries ?? []) {
@@ -241,14 +250,26 @@ export default function EditEvent() {
 
             <div className="space-y-2">
               <Label>Day Type</Label>
-              <Select value={dayType} onValueChange={(v: "weekday" | "weekend") => setDayType(v)}>
+              <Select value={dayType} onValueChange={(v: string) => setDayType(v)}>
                 <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="weekday">Weekday</SelectItem>
-                  <SelectItem value="weekend">Weekend</SelectItem>
-                  <SelectItem value="holiday">Holiday</SelectItem>
+                  {(dayTypeConfigs ?? []).filter((c) => c.enabled).length > 0
+                    ? (dayTypeConfigs ?? [])
+                        .filter((c) => c.enabled)
+                        .map((c) => (
+                          <SelectItem key={c.dayType} value={c.dayType}>
+                            {c.name}
+                          </SelectItem>
+                        ))
+                    : (
+                      <>
+                        <SelectItem value="weekday">Weekday</SelectItem>
+                        <SelectItem value="weekend">Weekend</SelectItem>
+                        <SelectItem value="holiday">Holiday</SelectItem>
+                      </>
+                    )}
                 </SelectContent>
               </Select>
             </div>

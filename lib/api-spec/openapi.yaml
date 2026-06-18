@@ -186,6 +186,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/DayTypeConfig"
+    post:
+      operationId: createDayTypeConfig
+      tags: [rosters]
+      summary: Create a new day type config entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDayTypeConfigInput"
+      responses:
+        "201":
+          description: Created day type config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DayTypeConfig"
 
   /rosters/{id}/day-type-config/{dayType}:
     put:
@@ -203,7 +226,6 @@ paths:
           required: true
           schema:
             type: string
-            enum: [weekday, weekend, holiday]
       requestBody:
         required: true
         content:
@@ -217,6 +239,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DayTypeConfig"
+    delete:
+      operationId: deleteDayTypeConfig
+      tags: [rosters]
+      summary: Delete a day type config entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayType
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 
   # ── Roles ─────────────────────────────────────────────────────────────────
   /rosters/{rosterId}/roles:
@@ -746,25 +786,50 @@ components:
 
     DayTypeConfig:
       type: object
-      required: [rosterId, dayType, enabled]
+      required: [rosterId, dayType, name, enabled, sortOrder]
       properties:
         rosterId:
           type: integer
         dayType:
           type: string
-          enum: [weekday, weekend, holiday]
+        name:
+          type: string
         enabled:
           type: boolean
         multiplier:
           type: ["number", "null"]
+        sortOrder:
+          type: integer
+          default: 0
 
     DayTypeConfigInput:
       type: object
       properties:
+        name:
+          type: string
         enabled:
           type: boolean
         multiplier:
           type: ["number", "null"]
+        sortOrder:
+          type: integer
+
+    CreateDayTypeConfigInput:
+      type: object
+      required: [dayType, name]
+      properties:
+        dayType:
+          type: string
+        name:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+        multiplier:
+          type: ["number", "null"]
+        sortOrder:
+          type: integer
+          default: 0
 
     # ── Classifications ───────────────────────────────────────────────────────
     Role:

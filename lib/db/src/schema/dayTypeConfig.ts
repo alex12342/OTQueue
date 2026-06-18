@@ -10,9 +10,11 @@ export const dayTypeConfigTable = pgTable(
     rosterId: integer("roster_id")
       .notNull()
       .references(() => rostersTable.id, { onDelete: "cascade" }),
-    dayType: text("day_type").notNull().$type<"weekday" | "weekend" | "holiday">(),
+    dayType: text("day_type").notNull(),
+    name: text("name").notNull().default(""),
     enabled: boolean("enabled").notNull().default(true),
     multiplier: text("multiplier"),
+    sortOrder: integer("sort_order").notNull().default(0),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("roster_day_type_config_unique").on(t.rosterId, t.dayType)]

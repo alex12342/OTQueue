@@ -126,13 +126,36 @@ export const ListDayTypeConfigParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const listDayTypeConfigResponseSortOrderDefault = 0;
+
 export const ListDayTypeConfigResponseItem = zod.object({
   "rosterId": zod.number(),
-  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "dayType": zod.string(),
+  "name": zod.string(),
   "enabled": zod.boolean(),
-  "multiplier": zod.number().nullish()
+  "multiplier": zod.number().nullish(),
+  "sortOrder": zod.number().default(listDayTypeConfigResponseSortOrderDefault)
 })
 export const ListDayTypeConfigResponse = zod.array(ListDayTypeConfigResponseItem)
+
+
+/**
+ * @summary Create a new day type config entry
+ */
+export const CreateDayTypeConfigParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const createDayTypeConfigBodyEnabledDefault = true;
+export const createDayTypeConfigBodySortOrderDefault = 0;
+
+export const CreateDayTypeConfigBody = zod.object({
+  "dayType": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean().default(createDayTypeConfigBodyEnabledDefault),
+  "multiplier": zod.number().nullish(),
+  "sortOrder": zod.number().default(createDayTypeConfigBodySortOrderDefault)
+})
 
 
 /**
@@ -140,19 +163,34 @@ export const ListDayTypeConfigResponse = zod.array(ListDayTypeConfigResponseItem
  */
 export const UpsertDayTypeConfigParams = zod.object({
   "id": zod.coerce.number(),
-  "dayType": zod.enum(['weekday', 'weekend', 'holiday'])
+  "dayType": zod.coerce.string()
 })
 
 export const UpsertDayTypeConfigBody = zod.object({
+  "name": zod.string().optional(),
   "enabled": zod.boolean().optional(),
-  "multiplier": zod.number().nullish()
+  "multiplier": zod.number().nullish(),
+  "sortOrder": zod.number().optional()
 })
+
+export const upsertDayTypeConfigResponseSortOrderDefault = 0;
 
 export const UpsertDayTypeConfigResponse = zod.object({
   "rosterId": zod.number(),
-  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "dayType": zod.string(),
+  "name": zod.string(),
   "enabled": zod.boolean(),
-  "multiplier": zod.number().nullish()
+  "multiplier": zod.number().nullish(),
+  "sortOrder": zod.number().default(upsertDayTypeConfigResponseSortOrderDefault)
+})
+
+
+/**
+ * @summary Delete a day type config entry
+ */
+export const DeleteDayTypeConfigParams = zod.object({
+  "id": zod.coerce.number(),
+  "dayType": zod.coerce.string()
 })
 
 

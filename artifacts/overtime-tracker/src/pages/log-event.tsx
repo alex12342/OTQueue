@@ -28,8 +28,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-type DayType = "weekday" | "weekend" | "holiday";
-
 type EntryState = {
   employeeId: number;
   offered: boolean;
@@ -46,7 +44,7 @@ export default function LogEvent() {
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [defaultHours, setDefaultHours] = useState("4");
-  const [dayType, setDayType] = useState<DayType>("weekday");
+  const [dayType, setDayType] = useState<string>("weekday");
   const [dayTypeOverridden, setDayTypeOverridden] = useState(false);
   const [multiplier, setMultiplier] = useState("1");
   const [multiplierOverridden, setMultiplierOverridden] = useState(false);
@@ -67,11 +65,19 @@ export default function LogEvent() {
     },
   });
 
+  // When suggestion arrives, pick the best matching enabled day type key
   useEffect(() => {
-    if (suggestion && !dayTypeOverridden) {
-      setDayType(suggestion.suggestedDayType as DayType);
+    if (suggestion && !dayTypeOverridden && dayTypeConfigs) {
+      const suggested = suggestion.suggestedDayType;
+      const enabledTypes = dayTypeConfigs.filter((c) => c.enabled);
+      const exact = enabledTypes.find((c) => c.dayType === suggested);
+      if (exact) {
+        setDayType(exact.dayType);
+      } else if (enabledTypes.length > 0) {
+        setDayType(enabledTypes[0].dayType);
+      }
     }
-  }, [suggestion, dayTypeOverridden]);
+  }, [suggestion, dayTypeOverridden, dayTypeConfigs]);
 
   useEffect(() => {
     if (!multiplierOverridden && dayTypeConfigs) {
@@ -236,7 +242,7 @@ export default function LogEvent() {
               )}
               <Select
                 value={dayType}
-                onValueChange={(v: DayType) => {
+                onValueChange={(v: string) => {
                   setDayType(v);
                   setDayTypeOverridden(true);
                   setMultiplierOverridden(false);
@@ -246,9 +252,21 @@ export default function LogEvent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="weekday">Weekday</SelectItem>
-                  <SelectItem value="weekend">Weekend</SelectItem>
-                  <SelectItem value="holiday">Holiday</SelectItem>
+                  {(dayTypeConfigs ?? []).filter((c) => c.enabled).length > 0
+                    ? (dayTypeConfigs ?? [])
+                        .filter((c) => c.enabled)
+                        .map((c) => (
+                          <SelectItem key={c.dayType} value={c.dayType}>
+                            {c.name}
+                          </SelectItem>
+                        ))
+                    : (
+                      <>
+                        <SelectItem value="weekday">Weekday</SelectItem>
+                        <SelectItem value="weekend">Weekend</SelectItem>
+                        <SelectItem value="holiday">Holiday</SelectItem>
+                      </>
+                    )}
                 </SelectContent>
               </Select>
             </div>

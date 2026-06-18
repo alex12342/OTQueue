@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useListRosters,
   getListRostersQueryKey,
@@ -21,8 +21,10 @@ import {
   useListDayTypeConfig,
   getListDayTypeConfigQueryKey,
   useUpsertDayTypeConfig,
+  useCreateDayTypeConfig,
+  useDeleteDayTypeConfig,
 } from "@workspace/api-client-react";
-import type { Roster, Role, Subclass } from "@workspace/api-client-react";
+import type { Roster, Role, Subclass, DayTypeConfig } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -181,113 +183,235 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
 
 // ── Day Types Tab ─────────────────────────────────────────────────────────────
 
-type DayTypeKey = "weekday" | "weekend" | "holiday";
-
-const DAY_TYPE_ROWS: { key: DayTypeKey; label: string; description: string }[] = [
-  { key: "weekday", label: "Weekday", description: "Mon–Fri shifts. Disable to hide the Weekday tab on Up Next." },
-  { key: "weekend", label: "Weekend", description: "Sat & Sun shifts. Disable to hide the Weekend tab on Up Next." },
-  { key: "holiday", label: "Holiday", description: "Public holiday shifts. Disable to hide the Holiday tab on Up Next." },
-];
-
 function DayTypesTab({ rosterId }: { rosterId: number }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const initialized = useRef(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingDt, setEditingDt] = useState<DayTypeConfig | null>(null);
   const [localMultipliers, setLocalMultipliers] = useState<Record<string, string>>({});
 
   const { data: configs = [], isLoading } = useListDayTypeConfig(rosterId, {
     query: { queryKey: getListDayTypeConfigQueryKey(rosterId) },
   });
 
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: getListDayTypeConfigQueryKey(rosterId) });
+
+  useEffect(() => {
+    const init: Record<string, string> = {};
+    for (const c of configs) {
+      if (!(c.dayType in localMultipliers)) {
+        init[c.dayType] = c.multiplier != null ? String(c.multiplier) : "";
+      }
+    }
+    if (Object.keys(init).length > 0) {
+      setLocalMultipliers((prev) => ({ ...init, ...prev }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configs]);
+
   const upsertMutation = useUpsertDayTypeConfig({
     mutation: {
-      onSuccess: () => {
-        toast({ title: "Day type settings saved" });
-        queryClient.invalidateQueries({ queryKey: getListDayTypeConfigQueryKey(rosterId) });
-      },
-      onError: () => toast({ title: "Error saving day type settings", variant: "destructive" }),
+      onSuccess: () => { toast({ title: "Saved" }); invalidate(); },
+      onError: () => toast({ title: "Error", variant: "destructive" }),
     },
   });
 
-  useEffect(() => {
-    if (!initialized.current && configs.length > 0) {
-      initialized.current = true;
-      const init: Record<string, string> = {};
-      for (const c of configs) {
-        init[c.dayType] = c.multiplier != null ? String(c.multiplier) : "";
-      }
-      setLocalMultipliers(init);
-    }
-  }, [configs]);
+  const createMutation = useCreateDayTypeConfig({
+    mutation: {
+      onSuccess: () => { toast({ title: "Day type created" }); setIsCreateOpen(false); invalidate(); },
+      onError: () => toast({ title: "Error creating day type", variant: "destructive" }),
+    },
+  });
 
-  const getEnabled = (dayType: DayTypeKey) =>
-    configs.find((c) => c.dayType === dayType)?.enabled ?? true;
+  const deleteMutation = useDeleteDayTypeConfig({
+    mutation: {
+      onSuccess: () => { toast({ title: "Day type deleted" }); invalidate(); },
+      onError: () => toast({ title: "Error deleting day type", variant: "destructive" }),
+    },
+  });
 
-  const handleToggle = (dayType: DayTypeKey, enabled: boolean) => {
-    const mult = localMultipliers[dayType];
+  const handleToggle = (cfg: DayTypeConfig, enabled: boolean) => {
     upsertMutation.mutate({
       id: rosterId,
-      dayType,
-      data: { enabled, multiplier: mult ? parseFloat(mult) : null },
+      dayType: cfg.dayType,
+      data: {
+        name: cfg.name,
+        enabled,
+        multiplier: localMultipliers[cfg.dayType] ? parseFloat(localMultipliers[cfg.dayType]) : null,
+        sortOrder: cfg.sortOrder,
+      },
     });
   };
 
-  const handleMultiplierBlur = (dayType: DayTypeKey) => {
-    const mult = localMultipliers[dayType];
+  const handleMultiplierBlur = (cfg: DayTypeConfig) => {
+    const mult = localMultipliers[cfg.dayType];
     upsertMutation.mutate({
       id: rosterId,
-      dayType,
-      data: { enabled: getEnabled(dayType), multiplier: mult ? parseFloat(mult) : null },
+      dayType: cfg.dayType,
+      data: {
+        name: cfg.name,
+        enabled: cfg.enabled,
+        multiplier: mult ? parseFloat(mult) : null,
+        sortOrder: cfg.sortOrder,
+      },
     });
+  };
+
+  const handleMoveUp = (cfg: DayTypeConfig, idx: number) => {
+    if (idx === 0) return;
+    const prev = configs[idx - 1];
+    upsertMutation.mutate({ id: rosterId, dayType: cfg.dayType, data: { name: cfg.name, enabled: cfg.enabled, multiplier: cfg.multiplier, sortOrder: prev.sortOrder } });
+    upsertMutation.mutate({ id: rosterId, dayType: prev.dayType, data: { name: prev.name, enabled: prev.enabled, multiplier: prev.multiplier, sortOrder: cfg.sortOrder } });
+  };
+
+  const handleMoveDown = (cfg: DayTypeConfig, idx: number) => {
+    if (idx === configs.length - 1) return;
+    const next = configs[idx + 1];
+    upsertMutation.mutate({ id: rosterId, dayType: cfg.dayType, data: { name: cfg.name, enabled: cfg.enabled, multiplier: cfg.multiplier, sortOrder: next.sortOrder } });
+    upsertMutation.mutate({ id: rosterId, dayType: next.dayType, data: { name: next.name, enabled: next.enabled, multiplier: next.multiplier, sortOrder: cfg.sortOrder } });
+  };
+
+  const handleRename = (cfg: DayTypeConfig, name: string) => {
+    upsertMutation.mutate({
+      id: rosterId,
+      dayType: cfg.dayType,
+      data: { name, enabled: cfg.enabled, multiplier: cfg.multiplier, sortOrder: cfg.sortOrder },
+    });
+    setEditingDt(null);
   };
 
   if (isLoading) return <Skeleton className="h-48 w-full mt-4" />;
 
   return (
     <Card className="mt-4">
-      <CardHeader>
-        <CardTitle>Day Types</CardTitle>
-        <CardDescription>
-          Enable or disable each day type tab on the Up Next page. Set a multiplier to weight those hours toward fairness — it will auto-populate when logging events of that type.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Day Types</CardTitle>
+          <CardDescription>
+            Configure which day types are available when logging events. The multiplier auto-populates when logging and weights hours toward fairness. Disable a type to hide it from the Up Next tab.
+          </CardDescription>
+        </div>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-1 shrink-0"><PlusCircle className="h-4 w-4" /> Add</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>New Day Type</DialogTitle></DialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                const name = fd.get("name") as string;
+                // Slugify the dayType key
+                const dayType = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "custom";
+                createMutation.mutate({
+                  id: rosterId,
+                  data: {
+                    dayType,
+                    name,
+                    enabled: true,
+                    sortOrder: configs.length,
+                    multiplier: fd.get("multiplier") ? parseFloat(fd.get("multiplier") as string) : null,
+                  },
+                });
+              }}
+              className="space-y-4 pt-2"
+            >
+              <div className="space-y-2">
+                <Label>Display Name</Label>
+                <Input name="name" placeholder="e.g. Public Holiday" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Multiplier (optional)</Label>
+                <Input name="multiplier" type="number" step="0.1" min="0" placeholder="e.g. 1.5" />
+              </div>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={createMutation.isPending}>Create</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="p-0">
-        {DAY_TYPE_ROWS.map(({ key, label, description }, idx) => (
-          <div
-            key={key}
-            className={`flex items-start justify-between px-6 py-5 gap-4 ${idx < DAY_TYPE_ROWS.length - 1 ? "border-b" : ""}`}
-          >
-            <div className="flex-1 min-w-0">
-              <p className="font-medium">{label}</p>
-              <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-            </div>
-            <div className="flex items-center gap-6 shrink-0">
-              <div className="flex flex-col items-end gap-1">
-                <Label className="text-xs text-muted-foreground">Multiplier</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  placeholder="None"
-                  className="w-24 h-8 text-sm bg-background"
-                  value={localMultipliers[key] ?? ""}
-                  onChange={(e) =>
-                    setLocalMultipliers((prev) => ({ ...prev, [key]: e.target.value }))
-                  }
-                  onBlur={() => handleMultiplierBlur(key)}
-                />
+        {!configs.length ? (
+          <p className="text-muted-foreground p-6 text-sm">No day types configured. Add one to get started.</p>
+        ) : (
+          <div className="divide-y">
+            {configs.map((cfg, idx) => (
+              <div key={cfg.dayType} className="flex items-center gap-3 px-6 py-4">
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-6 w-6 text-muted-foreground disabled:opacity-30"
+                    disabled={idx === 0 || upsertMutation.isPending}
+                    onClick={() => handleMoveUp(cfg, idx)}
+                  ><ChevronUp className="h-3.5 w-3.5" /></Button>
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-6 w-6 text-muted-foreground disabled:opacity-30"
+                    disabled={idx === configs.length - 1 || upsertMutation.isPending}
+                    onClick={() => handleMoveDown(cfg, idx)}
+                  ><ChevronDown className="h-3.5 w-3.5" /></Button>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  {editingDt?.dayType === cfg.dayType ? (
+                    <form
+                      className="flex items-center gap-2"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const fd = new FormData(e.currentTarget);
+                        handleRename(cfg, fd.get("name") as string);
+                      }}
+                    >
+                      <Input name="name" defaultValue={cfg.name} className="h-7 text-sm" autoFocus />
+                      <Button type="submit" size="sm" disabled={upsertMutation.isPending}>Save</Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setEditingDt(null)}>Cancel</Button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{cfg.name}</span>
+                      <span className="text-xs text-muted-foreground font-mono bg-muted px-1 rounded">{cfg.dayType}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => setEditingDt(cfg)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex flex-col items-end gap-1">
+                    <Label className="text-xs text-muted-foreground">Multiplier</Label>
+                    <Input
+                      type="number" step="0.1" min="0" placeholder="None"
+                      className="w-20 h-8 text-sm bg-background"
+                      value={localMultipliers[cfg.dayType] ?? ""}
+                      onChange={(e) => setLocalMultipliers((prev) => ({ ...prev, [cfg.dayType]: e.target.value }))}
+                      onBlur={() => handleMultiplierBlur(cfg)}
+                    />
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Label className="text-xs text-muted-foreground">Visible</Label>
+                    <Switch
+                      checked={cfg.enabled}
+                      onCheckedChange={(v) => handleToggle(cfg, v)}
+                      disabled={upsertMutation.isPending}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => {
+                      if (confirm(`Delete day type "${cfg.name}"? This won't change existing logged events.`)) {
+                        deleteMutation.mutate({ id: rosterId, dayType: cfg.dayType });
+                      }
+                    }}
+                  ><Trash2 className="h-4 w-4" /></Button>
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <Label className="text-xs text-muted-foreground">Visible</Label>
-                <Switch
-                  checked={getEnabled(key)}
-                  onCheckedChange={(v) => handleToggle(key, v)}
-                  disabled={upsertMutation.isPending}
-                />
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
+        )}
       </CardContent>
     </Card>
   );

@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createDayTypeConfigInput';
 export * from './dayTypeConfig';
-export * from './dayTypeConfigDayType';
 export * from './dayTypeConfigInput';
 export * from './dayTypeSuggestion';
 export * from './dayTypeSuggestionSuggestedDayType';
