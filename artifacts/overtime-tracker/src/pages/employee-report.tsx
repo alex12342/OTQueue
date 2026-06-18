@@ -28,9 +28,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Clock, History, BarChart, CheckCircle2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, History, BarChart, CheckCircle2, Pencil, Trash2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { format as formatDate } from "date-fns";
+
+function downloadCsv(filename: string, rows: string[][]) {
+  const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = rows.map((r) => r.map(escape).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function EmployeeReport() {
   const { id } = useParams<{ id: string }>();
@@ -72,6 +85,26 @@ export default function EmployeeReport() {
       onError: () => toast({ title: "Error", description: "Failed to delete employee", variant: "destructive" }),
     },
   });
+
+  const handleExport = () => {
+    if (!report) return;
+    const header = ["Date", "Event Description", "Status", "Hours Override", "Hours Offered", "Hours Awarded"];
+    const rows: string[][] = [header];
+    for (const evt of report.events ?? []) {
+      const status = evt.worked ? "Worked" : evt.offered ? "Declined" : "";
+      rows.push([
+        evt.date,
+        evt.description,
+        status,
+        evt.hoursOverride != null ? String(evt.hoursOverride) : "",
+        String(evt.hoursOffered),
+        String(evt.hoursAwarded),
+      ]);
+    }
+    const name = report.employee.name.replace(/\s+/g, "-").toLowerCase();
+    downloadCsv(`otqueue-report-${name}-${formatDate(new Date(), "yyyy-MM-dd")}.csv`, rows);
+    toast({ title: "Export ready", description: `${report.events.length} event(s) exported.` });
+  };
 
   const openEdit = () => {
     if (!report?.employee) return;
@@ -137,6 +170,17 @@ export default function EmployeeReport() {
 
         {!isLoading && report?.employee && (
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExport}
+              disabled={!report.events?.length}
+              data-testid="button-export-report"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </Button>
             <Button
               variant="outline"
               size="sm"
