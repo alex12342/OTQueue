@@ -6,6 +6,7 @@ import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import LogEvent from "@/pages/log-event";
+import EditEvent from "@/pages/edit-event";
 import EventLog from "@/pages/event-log";
 import Employees from "@/pages/employees";
 import EmployeeReport from "@/pages/employee-report";
@@ -25,6 +26,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/events/new" component={LogEvent} />
+        <Route path="/events/:id/edit" component={EditEvent} />
         <Route path="/log" component={EventLog} />
         <Route path="/employees" component={Employees} />
         <Route path="/employees/:id/report" component={EmployeeReport} />

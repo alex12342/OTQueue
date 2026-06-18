@@ -207,6 +207,51 @@ export const GetEventResponse = zod.object({
 
 
 /**
+ * @summary Update an existing event and its entries
+ */
+export const UpdateEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+export const updateEventBodyDefaultHoursMin = 0;
+
+
+
+
+export const UpdateEventBody = zod.object({
+  "date": zod.coerce.date(),
+  "description": zod.string().min(1),
+  "defaultHours": zod.number().min(updateEventBodyDefaultHoursMin),
+  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "entries": zod.array(zod.object({
+  "employeeId": zod.number(),
+  "offered": zod.boolean(),
+  "worked": zod.boolean(),
+  "hoursOverride": zod.number().nullish()
+})).min(1)
+})
+
+export const UpdateEventResponse = zod.object({
+  "id": zod.number(),
+  "date": zod.coerce.date(),
+  "description": zod.string(),
+  "defaultHours": zod.number(),
+  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "entries": zod.array(zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string(),
+  "offered": zod.boolean(),
+  "worked": zod.boolean(),
+  "hoursOverride": zod.number().nullish(),
+  "hoursAwarded": zod.number().optional().describe('Actual hours counted (override or defaultHours if worked)'),
+  "hoursOffered": zod.number().optional().describe('Hours counted toward offered total')
+}))
+})
+
+
+/**
  * @summary Delete an event
  */
 export const DeleteEventParams = zod.object({

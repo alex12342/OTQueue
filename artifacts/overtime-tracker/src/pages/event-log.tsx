@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarIcon, Clock, Users, Trash2, CheckCircle2 } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,9 +87,15 @@ export default function EventLog() {
                     <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {event.entries?.length || 0} Involved</span>
                   </CardDescription>
                 </div>
-                <AlertDialog>
+                <div className="flex items-center gap-1">
+                  <Link href={`/events/${event.id}/edit`}>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" data-testid={`button-edit-event-${event.id}`}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" data-testid={`button-delete-event-${event.id}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -110,6 +117,7 @@ export default function EventLog() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">

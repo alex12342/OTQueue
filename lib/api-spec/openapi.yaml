@@ -194,6 +194,31 @@ paths:
                 $ref: "#/components/schemas/Event"
         "404":
           description: Not found
+    patch:
+      operationId: updateEvent
+      tags: [events]
+      summary: Update an existing event and its entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "404":
+          description: Not found
     delete:
       operationId: deleteEvent
       tags: [events]

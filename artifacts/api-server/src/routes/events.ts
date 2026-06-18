@@ -127,6 +127,69 @@ router.get("/events/:id", async (req, res): Promise<void> => {
   res.json(event);
 });
 
+router.patch("/events/:id", async (req, res): Promise<void> => {
+  const params = GetEventParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = CreateEventBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { date, description, defaultHours, dayType, entries } = parsed.data;
+
+  const [existing] = await db.select().from(eventsTable).where(eq(eventsTable.id, params.data.id));
+  if (!existing) {
+    res.status(404).json({ error: "Event not found" });
+    return;
+  }
+
+  if (!entries || entries.length === 0) {
+    res.status(400).json({ error: "At least one entry is required" });
+    return;
+  }
+
+  const hasAnySelected = entries.some((e) => e.offered || e.worked);
+  if (!hasAnySelected) {
+    res.status(400).json({ error: "At least one employee must be marked as offered or worked" });
+    return;
+  }
+
+  // Update the event record
+  await db
+    .update(eventsTable)
+    .set({
+      date,
+      description,
+      defaultHours: String(defaultHours),
+      dayType: dayType ?? "weekday",
+    })
+    .where(eq(eventsTable.id, params.data.id));
+
+  // Replace all entries: delete old ones, insert new ones
+  await db.delete(eventEntriesTable).where(eq(eventEntriesTable.eventId, params.data.id));
+
+  const filteredEntries = entries.filter((e) => e.offered || e.worked);
+  if (filteredEntries.length > 0) {
+    await db.insert(eventEntriesTable).values(
+      filteredEntries.map((e) => ({
+        eventId: params.data.id,
+        employeeId: e.employeeId,
+        offered: e.worked ? true : e.offered,
+        worked: e.worked,
+        hoursOverride: e.hoursOverride != null ? String(e.hoursOverride) : null,
+      }))
+    );
+  }
+
+  const result = await getEventWithEntries(params.data.id);
+  res.json(result);
+});
+
 router.delete("/events/:id", async (req, res): Promise<void> => {
   const params = DeleteEventParams.safeParse(req.params);
   if (!params.success) {
