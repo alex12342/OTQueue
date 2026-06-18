@@ -19,7 +19,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
       <div className="hidden w-64 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
           <ClipboardList className="h-6 w-6 mr-3 text-sidebar-primary" />
-          <span className="font-bold text-lg tracking-tight">ShiftTracker</span>
+          <span className="font-bold text-lg tracking-tight">OTQueue</span>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto">
           <nav className="flex-1 space-y-1 px-4 py-6">
@@ -60,7 +60,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:hidden">
           <div className="flex items-center">
             <ClipboardList className="h-6 w-6 mr-3 text-primary" />
-            <span className="font-bold text-lg">ShiftTracker</span>
+            <span className="font-bold text-lg">OTQueue</span>
           </div>
         </header>
 
