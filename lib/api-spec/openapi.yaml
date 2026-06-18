@@ -1,22 +1,27 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Overtime Tracker API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: employees
+    description: Employee management
+  - name: events
+    description: Overtime event management
+  - name: reports
+    description: Reporting and ordering
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,219 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List all employees
+      responses:
+        "200":
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create a new employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Created employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/{id}:
+    get:
+      operationId: getEmployee
+      tags: [employees]
+      summary: Get employee by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateEmployee
+      tags: [employees]
+      summary: Update an employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeUpdate"
+      responses:
+        "200":
+          description: Updated employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEmployee
+      tags: [employees]
+      summary: Delete an employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /employees/{id}/report:
+    get:
+      operationId: getEmployeeReport
+      tags: [reports]
+      summary: Get overtime history and totals for an employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employee report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeReport"
+        "404":
+          description: Not found
+
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List all events with their entries
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Submit a new overtime event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get a single event with its entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /up-next:
+    get:
+      operationId: getUpNext
+      tags: [reports]
+      summary: Get ordered overtime rotation list
+      parameters:
+        - name: dayType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [weekday, weekend]
+            default: weekday
+      responses:
+        "200":
+          description: Ordered list of employees for the next overtime offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpNextResult"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [reports]
+      summary: Get summary statistics across all employees
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +252,240 @@ components:
       required:
         - status
 
+    Employee:
+      type: object
+      required: [id, name, seniority, category, active]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        seniority:
+          type: integer
+          description: Lower number = higher seniority priority
+        category:
+          type: string
+          enum: [four_hour, full_time]
+        active:
+          type: boolean
+        totalOfferedHours:
+          type: number
+          description: Total hours where employee was offered overtime
+        totalWorkedHours:
+          type: number
+          description: Total hours employee actually worked
+
+    EmployeeInput:
+      type: object
+      required: [name, seniority, category]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        seniority:
+          type: integer
+          minimum: 1
+        category:
+          type: string
+          enum: [four_hour, full_time]
+        active:
+          type: boolean
+          default: true
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        seniority:
+          type: integer
+          minimum: 1
+        category:
+          type: string
+          enum: [four_hour, full_time]
+        active:
+          type: boolean
+
+    Event:
+      type: object
+      required: [id, date, description, defaultHours, entries]
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        defaultHours:
+          type: number
+        dayType:
+          type: string
+          enum: [weekday, weekend]
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventEntry"
+
+    EventEntry:
+      type: object
+      required: [id, employeeId, employeeName, offered, worked]
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+        offered:
+          type: boolean
+        worked:
+          type: boolean
+        hoursOverride:
+          type: ["number", "null"]
+        hoursAwarded:
+          type: number
+          description: Actual hours counted (override or defaultHours if worked)
+        hoursOffered:
+          type: number
+          description: Hours counted toward offered total
+
+    EventInput:
+      type: object
+      required: [date, description, defaultHours, entries]
+      properties:
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          minLength: 1
+        defaultHours:
+          type: number
+          minimum: 0
+        dayType:
+          type: string
+          enum: [weekday, weekend]
+        entries:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/EventEntryInput"
+
+    EventEntryInput:
+      type: object
+      required: [employeeId, offered, worked]
+      properties:
+        employeeId:
+          type: integer
+        offered:
+          type: boolean
+        worked:
+          type: boolean
+        hoursOverride:
+          type: ["number", "null"]
+
+    UpNextResult:
+      type: object
+      required: [dayType, employees]
+      properties:
+        dayType:
+          type: string
+          enum: [weekday, weekend]
+        employees:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpNextEmployee"
+
+    UpNextEmployee:
+      type: object
+      required: [id, name, category, seniority, totalOfferedHours, rank]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+          enum: [four_hour, full_time]
+        seniority:
+          type: integer
+        totalOfferedHours:
+          type: number
+        rank:
+          type: integer
+
+    EmployeeReport:
+      type: object
+      required: [employee, totalOfferedHours, totalWorkedHours, events]
+      properties:
+        employee:
+          $ref: "#/components/schemas/Employee"
+        totalOfferedHours:
+          type: number
+        totalWorkedHours:
+          type: number
+        acceptanceRate:
+          type: number
+          description: Percentage of offered events that were worked
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeEventRecord"
+
+    EmployeeEventRecord:
+      type: object
+      required: [eventId, date, description, offered, worked, hoursOffered, hoursAwarded]
+      properties:
+        eventId:
+          type: integer
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        offered:
+          type: boolean
+        worked:
+          type: boolean
+        hoursOffered:
+          type: number
+        hoursAwarded:
+          type: number
+        hoursOverride:
+          type: ["number", "null"]
+
+    Stats:
+      type: object
+      required: [totalEvents, totalOfferedHours, totalWorkedHours, employeeCount]
+      properties:
+        totalEvents:
+          type: integer
+        totalOfferedHours:
+          type: number
+        totalWorkedHours:
+          type: number
+        employeeCount:
+          type: integer
+        topWorkers:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeStat"
+        recentEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+
+    EmployeeStat:
+      type: object
+      required: [id, name, totalWorkedHours, totalOfferedHours]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        totalWorkedHours:
+          type: number
+        totalOfferedHours:
+          type: number

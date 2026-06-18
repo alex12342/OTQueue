@@ -1,0 +1,50 @@
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarLayout } from "@/components/layout/sidebar-layout";
+import NotFound from "@/pages/not-found";
+import Home from "@/pages/home";
+import LogEvent from "@/pages/log-event";
+import EventLog from "@/pages/event-log";
+import Employees from "@/pages/employees";
+import EmployeeReport from "@/pages/employee-report";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function Router() {
+  return (
+    <SidebarLayout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/events/new" component={LogEvent} />
+        <Route path="/log" component={EventLog} />
+        <Route path="/employees" component={Employees} />
+        <Route path="/employees/:id/report" component={EmployeeReport} />
+        <Route component={NotFound} />
+      </Switch>
+    </SidebarLayout>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
