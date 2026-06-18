@@ -140,7 +140,6 @@ router.get("/up-next", async (req, res): Promise<void> => {
   const useOfferedHours = settings?.useOfferedHours ?? true;
   const useSeniority = settings?.useSeniority ?? true;
   const useSubclassOrdering = settings?.useSubclassOrdering ?? true;
-  const useWeightedHours = settings?.useWeightedHours ?? false;
 
   const employees = await db
     .select()
@@ -159,15 +158,15 @@ router.get("/up-next", async (req, res): Promise<void> => {
       const [hrs] = await db
         .select({
           totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
+          fairnessScore: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) * ${eventsTable.multiplier}::numeric ELSE 0 END), 0)`,
         })
         .from(eventEntriesTable)
         .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
         .where(eq(eventEntriesTable.employeeId, emp.id));
 
       const rawOfferedHours = Number(hrs?.totalOfferedHours ?? 0);
+      const fairnessScore = Number(hrs?.fairnessScore ?? 0);
       const subclass = emp.subclassId ? subclassMap.get(emp.subclassId) : null;
-      const offeredMult = useWeightedHours ? Number(subclass?.offeredMultiplier ?? 1) : 1;
-      const fairnessScore = rawOfferedHours * offeredMult;
 
       const priorityField =
         dayType === "weekday"

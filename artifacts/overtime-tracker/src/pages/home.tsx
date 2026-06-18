@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   useGetUpNext,
   getGetUpNextQueryKey,
   useGetStats,
   getGetStatsQueryKey,
+  useListDayTypeConfig,
+  getListDayTypeConfigQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +16,8 @@ import { cn } from "@/lib/utils";
 
 type DayType = "weekday" | "weekend" | "holiday";
 
+const ALL_DAY_TYPES: DayType[] = ["weekday", "weekend", "holiday"];
+
 const DAY_TYPE_LABELS: Record<DayType, string> = {
   weekday: "Weekday",
   weekend: "Weekend",
@@ -21,8 +25,29 @@ const DAY_TYPE_LABELS: Record<DayType, string> = {
 };
 
 export default function Home() {
-  const [dayType, setDayType] = useState<DayType>("weekday");
   const { activeRosterId, activeRoster } = useRoster();
+  const [dayType, setDayType] = useState<DayType>("weekday");
+
+  const { data: dayTypeConfigs } = useListDayTypeConfig(activeRosterId ?? 0, {
+    query: {
+      queryKey: getListDayTypeConfigQueryKey(activeRosterId ?? 0),
+      enabled: activeRosterId != null,
+    },
+  });
+
+  const enabledDayTypes = useMemo<DayType[]>(() => {
+    if (!dayTypeConfigs || dayTypeConfigs.length === 0) return ALL_DAY_TYPES;
+    const enabled = dayTypeConfigs
+      .filter((c) => c.enabled)
+      .map((c) => c.dayType as DayType);
+    return enabled.length > 0 ? enabled : ALL_DAY_TYPES;
+  }, [dayTypeConfigs]);
+
+  useEffect(() => {
+    if (!enabledDayTypes.includes(dayType)) {
+      setDayType(enabledDayTypes[0]);
+    }
+  }, [enabledDayTypes]);
 
   const { data: upNextData, isLoading: isLoadingUpNext } = useGetUpNext(
     { rosterId: activeRosterId ?? 0, dayType },
@@ -116,23 +141,25 @@ export default function Home() {
                 Ordered by subclass priority → fairness hours → seniority.
               </CardDescription>
             </div>
-            <div className="flex p-1 bg-secondary rounded-md shadow-inner">
-              {(["weekday", "weekend", "holiday"] as DayType[]).map((dt) => (
-                <button
-                  key={dt}
-                  data-testid={`btn-${dt}`}
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-medium rounded transition-colors",
-                    dayType === dt
-                      ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  onClick={() => setDayType(dt)}
-                >
-                  {DAY_TYPE_LABELS[dt]}
-                </button>
-              ))}
-            </div>
+            {enabledDayTypes.length > 1 && (
+              <div className="flex p-1 bg-secondary rounded-md shadow-inner">
+                {enabledDayTypes.map((dt) => (
+                  <button
+                    key={dt}
+                    data-testid={`btn-${dt}`}
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-medium rounded transition-colors",
+                      dayType === dt
+                        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setDayType(dt)}
+                  >
+                    {DAY_TYPE_LABELS[dt]}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </CardHeader>
         <div className="p-0">

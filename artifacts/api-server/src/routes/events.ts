@@ -37,6 +37,7 @@ async function getEventWithEntries(id: number) {
     description: event.description,
     defaultHours,
     dayType: event.dayType,
+    multiplier: Number(event.multiplier),
     entries: entries.map((e) => {
       const override = e.hoursOverride ? Number(e.hoursOverride) : null;
       const hoursOffered = e.offered ? (override ?? defaultHours) : 0;
@@ -79,7 +80,7 @@ router.post("/events", async (req, res): Promise<void> => {
     return;
   }
 
-  const { rosterId, date, description, defaultHours, dayType, entries } = parsed.data;
+  const { rosterId, date, description, defaultHours, dayType, multiplier, entries } = parsed.data;
   const dateStr = date instanceof Date ? date.toISOString().split("T")[0] : String(date);
 
   const hasAnySelected = entries.some((e) => e.offered || e.worked);
@@ -96,6 +97,7 @@ router.post("/events", async (req, res): Promise<void> => {
       description,
       defaultHours: String(defaultHours),
       dayType: dayType ?? "weekday",
+      multiplier: String(multiplier ?? 1),
     })
     .returning();
 
@@ -145,7 +147,7 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const { date, description, defaultHours, dayType, entries } = parsed.data;
+  const { date, description, defaultHours, dayType, multiplier, entries } = parsed.data;
   const dateStr = date instanceof Date ? date.toISOString().split("T")[0] : String(date);
 
   const [existing] = await db.select().from(eventsTable).where(eq(eventsTable.id, params.data.id));
@@ -167,6 +169,7 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
       description,
       defaultHours: String(defaultHours),
       dayType: dayType ?? "weekday",
+      multiplier: String(multiplier ?? 1),
     })
     .where(eq(eventsTable.id, params.data.id));
 

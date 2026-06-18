@@ -15,5 +15,6 @@ export interface Event {
   description: string;
   defaultHours: number;
   dayType: EventDayType;
+  multiplier: number;
   entries: EventEntry[];
 }

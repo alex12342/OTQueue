@@ -8,10 +8,12 @@ import {
   getListEventsQueryKey,
   getGetStatsQueryKey,
   useSuggestDayType,
+  useListDayTypeConfig,
+  getListDayTypeConfigQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon, Save, Info } from "lucide-react";
+import { CalendarIcon, Save, Info, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
 
@@ -46,6 +48,8 @@ export default function LogEvent() {
   const [defaultHours, setDefaultHours] = useState("4");
   const [dayType, setDayType] = useState<DayType>("weekday");
   const [dayTypeOverridden, setDayTypeOverridden] = useState(false);
+  const [multiplier, setMultiplier] = useState("1");
+  const [multiplierOverridden, setMultiplierOverridden] = useState(false);
 
   const [entries, setEntries] = useState<Record<number, EntryState>>({});
 
@@ -56,11 +60,29 @@ export default function LogEvent() {
     { query: { queryKey: ["/api/suggest-day-type", dateStr], enabled: !!dateStr } }
   );
 
+  const { data: dayTypeConfigs } = useListDayTypeConfig(activeRosterId ?? 0, {
+    query: {
+      queryKey: getListDayTypeConfigQueryKey(activeRosterId ?? 0),
+      enabled: activeRosterId != null,
+    },
+  });
+
   useEffect(() => {
     if (suggestion && !dayTypeOverridden) {
       setDayType(suggestion.suggestedDayType as DayType);
     }
   }, [suggestion, dayTypeOverridden]);
+
+  useEffect(() => {
+    if (!multiplierOverridden && dayTypeConfigs) {
+      const config = dayTypeConfigs.find((c) => c.dayType === dayType);
+      if (config?.multiplier != null) {
+        setMultiplier(String(config.multiplier));
+      } else {
+        setMultiplier("1");
+      }
+    }
+  }, [dayType, dayTypeConfigs, multiplierOverridden]);
 
   const handleDateChange = (d: Date | undefined) => {
     if (d) {
@@ -134,6 +156,7 @@ export default function LogEvent() {
         description,
         defaultHours: parseFloat(defaultHours) || 0,
         dayType,
+        multiplier: parseFloat(multiplier) || 1,
         entries: activeEntries.map((e) => ({
           employeeId: e.employeeId,
           offered: e.offered,
@@ -143,6 +166,8 @@ export default function LogEvent() {
       },
     });
   };
+
+  const configMultiplier = dayTypeConfigs?.find((c) => c.dayType === dayType)?.multiplier;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl">
@@ -214,6 +239,7 @@ export default function LogEvent() {
                 onValueChange={(v: DayType) => {
                   setDayType(v);
                   setDayTypeOverridden(true);
+                  setMultiplierOverridden(false);
                 }}
               >
                 <SelectTrigger className="bg-background">
@@ -225,6 +251,28 @@ export default function LogEvent() {
                   <SelectItem value="holiday">Holiday</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="multiplier">Hour Multiplier</Label>
+              {configMultiplier != null && !multiplierOverridden && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  Auto-set from day type config
+                </p>
+              )}
+              <Input
+                id="multiplier"
+                type="number"
+                step="0.1"
+                min="0"
+                value={multiplier}
+                onChange={(e) => {
+                  setMultiplier(e.target.value);
+                  setMultiplierOverridden(true);
+                }}
+                className="bg-background"
+              />
             </div>
           </div>
         </CardContent>

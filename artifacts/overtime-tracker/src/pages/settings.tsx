@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   useListRosters,
   getListRostersQueryKey,
@@ -18,8 +18,11 @@ import {
   useCreateSubclass,
   useUpdateSubclass,
   useDeleteSubclass,
+  useListDayTypeConfig,
+  getListDayTypeConfigQueryKey,
+  useUpsertDayTypeConfig,
 } from "@workspace/api-client-react";
-import type { Roster, Role, Subclass } from "@workspace/api-client-react";
+import type { Roster, Role, Subclass, DayTypeConfig } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
-import { PlusCircle, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -47,8 +50,9 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="criteria">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="criteria">Criteria</TabsTrigger>
+          <TabsTrigger value="day-types">Day Types</TabsTrigger>
           <TabsTrigger value="subclasses">Subclasses</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="rosters">Rosters</TabsTrigger>
@@ -59,6 +63,14 @@ export default function Settings() {
             <CriteriaTab rosterId={activeRosterId} />
           ) : (
             <Card><CardContent className="p-6 text-muted-foreground">Select a roster to manage criteria.</CardContent></Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="day-types">
+          {activeRosterId ? (
+            <DayTypesTab rosterId={activeRosterId} />
+          ) : (
+            <Card><CardContent className="p-6 text-muted-foreground">Select a roster to manage day types.</CardContent></Card>
           )}
         </TabsContent>
 
@@ -89,7 +101,7 @@ export default function Settings() {
   );
 }
 
-// ── Criteria Tab ─────────────────────────────────────────────────────────────
+// ── Criteria Tab ──────────────────────────────────────────────────────────────
 
 function CriteriaTab({ rosterId }: { rosterId: number }) {
   const { toast } = useToast();
@@ -109,7 +121,7 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
     },
   });
 
-  const handleToggle = (key: "useOfferedHours" | "useSeniority" | "useSubclassOrdering" | "useWeightedHours", value: boolean) => {
+  const handleToggle = (key: "useOfferedHours" | "useSeniority" | "useSubclassOrdering", value: boolean) => {
     updateMutation.mutate({ id: rosterId, data: { [key]: value } });
   };
 
@@ -148,7 +160,7 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
             onCheckedChange={(v) => handleToggle("useOfferedHours", v)}
           />
         </div>
-        <div className="flex items-center justify-between py-3 border-b">
+        <div className="flex items-center justify-between py-3">
           <div>
             <p className="font-medium">Seniority Tie-Breaker</p>
             <p className="text-sm text-muted-foreground">
@@ -160,24 +172,126 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
             onCheckedChange={(v) => handleToggle("useSeniority", v)}
           />
         </div>
-        <div className="flex items-center justify-between py-3">
-          <div>
-            <p className="font-medium">Weighted Hours</p>
-            <p className="text-sm text-muted-foreground">
-              Apply per-subclass multipliers when calculating fairness score. Configure multipliers in the Subclasses tab.
-            </p>
-          </div>
-          <Switch
-            checked={settings?.useWeightedHours ?? false}
-            onCheckedChange={(v) => handleToggle("useWeightedHours", v)}
-          />
-        </div>
       </CardContent>
     </Card>
   );
 }
 
-// ── Subclasses Tab ────────────────────────────────────────────────────────────
+// ── Day Types Tab ─────────────────────────────────────────────────────────────
+
+type DayTypeKey = "weekday" | "weekend" | "holiday";
+
+const DAY_TYPE_ROWS: { key: DayTypeKey; label: string; description: string }[] = [
+  { key: "weekday", label: "Weekday", description: "Mon–Fri shifts. Disable to hide the Weekday tab on Up Next." },
+  { key: "weekend", label: "Weekend", description: "Sat & Sun shifts. Disable to hide the Weekend tab on Up Next." },
+  { key: "holiday", label: "Holiday", description: "Public holiday shifts. Disable to hide the Holiday tab on Up Next." },
+];
+
+function DayTypesTab({ rosterId }: { rosterId: number }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const initialized = useRef(false);
+  const [localMultipliers, setLocalMultipliers] = useState<Record<string, string>>({});
+
+  const { data: configs = [], isLoading } = useListDayTypeConfig(rosterId, {
+    query: { queryKey: getListDayTypeConfigQueryKey(rosterId) },
+  });
+
+  const upsertMutation = useUpsertDayTypeConfig({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Day type settings saved" });
+        queryClient.invalidateQueries({ queryKey: getListDayTypeConfigQueryKey(rosterId) });
+      },
+      onError: () => toast({ title: "Error saving day type settings", variant: "destructive" }),
+    },
+  });
+
+  useEffect(() => {
+    if (!initialized.current && configs.length > 0) {
+      initialized.current = true;
+      const init: Record<string, string> = {};
+      for (const c of configs) {
+        init[c.dayType] = c.multiplier != null ? String(c.multiplier) : "";
+      }
+      setLocalMultipliers(init);
+    }
+  }, [configs]);
+
+  const getEnabled = (dayType: DayTypeKey) =>
+    configs.find((c) => c.dayType === dayType)?.enabled ?? true;
+
+  const handleToggle = (dayType: DayTypeKey, enabled: boolean) => {
+    const mult = localMultipliers[dayType];
+    upsertMutation.mutate({
+      id: rosterId,
+      dayType,
+      data: { enabled, multiplier: mult ? parseFloat(mult) : null },
+    });
+  };
+
+  const handleMultiplierBlur = (dayType: DayTypeKey) => {
+    const mult = localMultipliers[dayType];
+    upsertMutation.mutate({
+      id: rosterId,
+      dayType,
+      data: { enabled: getEnabled(dayType), multiplier: mult ? parseFloat(mult) : null },
+    });
+  };
+
+  if (isLoading) return <Skeleton className="h-48 w-full mt-4" />;
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle>Day Types</CardTitle>
+        <CardDescription>
+          Enable or disable each day type tab on the Up Next page. Set a multiplier to weight those hours toward fairness — it will auto-populate when logging events of that type.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        {DAY_TYPE_ROWS.map(({ key, label, description }, idx) => (
+          <div
+            key={key}
+            className={`flex items-start justify-between px-6 py-5 gap-4 ${idx < DAY_TYPE_ROWS.length - 1 ? "border-b" : ""}`}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="font-medium">{label}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+            </div>
+            <div className="flex items-center gap-6 shrink-0">
+              <div className="flex flex-col items-end gap-1">
+                <Label className="text-xs text-muted-foreground">Multiplier</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="None"
+                  className="w-24 h-8 text-sm bg-background"
+                  value={localMultipliers[key] ?? ""}
+                  onChange={(e) =>
+                    setLocalMultipliers((prev) => ({ ...prev, [key]: e.target.value }))
+                  }
+                  onBlur={() => handleMultiplierBlur(key)}
+                />
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <Label className="text-xs text-muted-foreground">Visible</Label>
+                <Switch
+                  checked={getEnabled(key)}
+                  onCheckedChange={(v) => handleToggle(key, v)}
+                  disabled={upsertMutation.isPending}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── Subclasses Tab ─────────────────────────────────────────────────────────────
 
 function SubclassesTab({ rosterId }: { rosterId: number }) {
   const { toast } = useToast();
@@ -222,8 +336,6 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
         weekdayPriority: parseInt(fd.get("weekdayPriority") as string, 10) || 1,
         weekendPriority: parseInt(fd.get("weekendPriority") as string, 10) || 1,
         holidayPriority: parseInt(fd.get("holidayPriority") as string, 10) || 1,
-        workedMultiplier: parseFloat(fd.get("workedMultiplier") as string) || 1,
-        offeredMultiplier: parseFloat(fd.get("offeredMultiplier") as string) || 1,
       },
     });
   };
@@ -240,8 +352,6 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
         weekdayPriority: parseInt(fd.get("weekdayPriority") as string, 10) || 1,
         weekendPriority: parseInt(fd.get("weekendPriority") as string, 10) || 1,
         holidayPriority: parseInt(fd.get("holidayPriority") as string, 10) || 1,
-        workedMultiplier: parseFloat(fd.get("workedMultiplier") as string) || 1,
-        offeredMultiplier: parseFloat(fd.get("offeredMultiplier") as string) || 1,
       },
     });
   };
@@ -259,6 +369,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
       </div>
       <div className="border rounded-md p-4 space-y-3 bg-muted/20">
         <p className="text-sm font-medium">Priority (lower = higher priority)</p>
+        <p className="text-xs text-muted-foreground">Sets order in the Up Next rotation when Subclass Ordering is enabled.</p>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Weekday</Label>
@@ -274,20 +385,6 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
           </div>
         </div>
       </div>
-      <div className="border rounded-md p-4 space-y-3 bg-muted/20">
-        <p className="text-sm font-medium">Weighted Hours Multipliers</p>
-        <p className="text-xs text-muted-foreground">Applied to hours when "Weighted Hours" is enabled in Criteria.</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs">Offered Multiplier</Label>
-            <Input name="offeredMultiplier" type="number" step="0.1" min="0" defaultValue={defaultValues?.offeredMultiplier ?? 1.0} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Worked Multiplier</Label>
-            <Input name="workedMultiplier" type="number" step="0.1" min="0" defaultValue={defaultValues?.workedMultiplier ?? 1.0} />
-          </div>
-        </div>
-      </div>
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isPending}>{submitLabel}</Button>
       </div>
@@ -299,7 +396,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Subclasses</CardTitle>
-          <CardDescription>Define employment types (e.g. Full-Time, 4-Hour) with their priority and optional hour multipliers.</CardDescription>
+          <CardDescription>Define employment types (e.g. Full-Time, 4-Hour) with their priority per day type.</CardDescription>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -320,15 +417,11 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
           <div className="divide-y">
             {subclasses.map((s) => (
               <div key={s.id} className="flex items-center justify-between px-6 py-4">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Priority — Weekday: {s.weekdayPriority}, Weekend: {s.weekendPriority}, Holiday: {s.holidayPriority}
-                      {" · "}
-                      Multipliers — Offered: {s.offeredMultiplier}×, Worked: {s.workedMultiplier}×
-                    </p>
-                  </div>
+                <div>
+                  <p className="font-medium">{s.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Priority — Weekday: {s.weekdayPriority}, Weekend: {s.weekendPriority}, Holiday: {s.holidayPriority}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Dialog open={editingSubclass?.id === s.id} onOpenChange={(open) => !open && setEditingSubclass(null)}>

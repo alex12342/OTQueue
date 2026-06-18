@@ -36,7 +36,6 @@ router.post("/rosters", async (req, res): Promise<void> => {
     useOfferedHours: true,
     useSeniority: true,
     useSubclassOrdering: true,
-    useWeightedHours: false,
   });
 
   res.status(201).json(roster);
@@ -124,7 +123,6 @@ router.get("/rosters/:id/settings", async (req, res): Promise<void> => {
     useOfferedHours: settings.useOfferedHours,
     useSeniority: settings.useSeniority,
     useSubclassOrdering: settings.useSubclassOrdering,
-    useWeightedHours: settings.useWeightedHours,
   });
 });
 
@@ -157,7 +155,6 @@ router.put("/rosters/:id/settings", async (req, res): Promise<void> => {
       ...(parsed.data.useOfferedHours !== undefined && { useOfferedHours: parsed.data.useOfferedHours }),
       ...(parsed.data.useSeniority !== undefined && { useSeniority: parsed.data.useSeniority }),
       ...(parsed.data.useSubclassOrdering !== undefined && { useSubclassOrdering: parsed.data.useSubclassOrdering }),
-      ...(parsed.data.useWeightedHours !== undefined && { useWeightedHours: parsed.data.useWeightedHours }),
       updatedAt: new Date(),
     })
     .where(eq(rosterSettingsTable.rosterId, params.data.id))
@@ -168,7 +165,6 @@ router.put("/rosters/:id/settings", async (req, res): Promise<void> => {
     useOfferedHours: updated.useOfferedHours,
     useSeniority: updated.useSeniority,
     useSubclassOrdering: updated.useSubclassOrdering,
-    useWeightedHours: updated.useWeightedHours,
   });
 });
 

@@ -11,5 +11,4 @@ export interface RosterSettings {
   useOfferedHours: boolean;
   useSeniority: boolean;
   useSubclassOrdering: boolean;
-  useWeightedHours: boolean;
 }

@@ -16,6 +16,8 @@ export interface EventInput {
   /** @minimum 0 */
   defaultHours: number;
   dayType: EventInputDayType;
+  /** @minimum 0 */
+  multiplier?: number;
   /** @minItems 1 */
   entries: EventEntryInput[];
 }

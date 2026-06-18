@@ -23,31 +23,15 @@ async function computeFairnessScore(
     .from(rosterSettingsTable)
     .where(eq(rosterSettingsTable.rosterId, rosterId));
 
-  const useWeighted = settings?.useWeightedHours ?? false;
-
-  if (!useWeighted || !subclassId) {
-    const [hrs] = await db
-      .select({
-        total: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
-      })
-      .from(eventEntriesTable)
-      .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-      .where(eq(eventEntriesTable.employeeId, employeeId));
-    return Number(hrs?.total ?? 0);
-  }
-
-  const [subclass] = await db.select().from(subclassesTable).where(eq(subclassesTable.id, subclassId));
-  const offeredMult = Number(subclass?.offeredMultiplier ?? 1);
-
   const [hrs] = await db
     .select({
-      total: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
+      total: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) * ${eventsTable.multiplier}::numeric ELSE 0 END), 0)`,
     })
     .from(eventEntriesTable)
     .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
     .where(eq(eventEntriesTable.employeeId, employeeId));
 
-  return Number(hrs?.total ?? 0) * offeredMult;
+  return Number(hrs?.total ?? 0);
 }
 
 async function getEmployeeWithHours(id: number) {

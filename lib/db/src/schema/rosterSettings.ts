@@ -9,7 +9,6 @@ export const rosterSettingsTable = pgTable("roster_settings", {
   useOfferedHours: boolean("use_offered_hours").notNull().default(true),
   useSeniority: boolean("use_seniority").notNull().default(true),
   useSubclassOrdering: boolean("use_subclass_ordering").notNull().default(true),
-  useWeightedHours: boolean("use_weighted_hours").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -15,8 +15,4 @@ export interface SubclassInput {
   weekendPriority?: number;
   /** @minimum 1 */
   holidayPriority?: number;
-  /** @minimum 0 */
-  workedMultiplier?: number;
-  /** @minimum 0 */
-  offeredMultiplier?: number;
 }

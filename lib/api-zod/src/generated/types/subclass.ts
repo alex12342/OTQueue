@@ -13,6 +13,4 @@ export interface Subclass {
   weekdayPriority: number;
   weekendPriority: number;
   holidayPriority: number;
-  workedMultiplier: number;
-  offeredMultiplier: number;
 }

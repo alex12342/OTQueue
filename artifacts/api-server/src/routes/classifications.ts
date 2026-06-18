@@ -127,8 +127,6 @@ router.get("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => {
       weekdayPriority: s.weekdayPriority,
       weekendPriority: s.weekendPriority,
       holidayPriority: s.holidayPriority,
-      workedMultiplier: Number(s.workedMultiplier),
-      offeredMultiplier: Number(s.offeredMultiplier),
     }))
   );
 });
@@ -154,8 +152,6 @@ router.post("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => 
       weekdayPriority: parsed.data.weekdayPriority ?? 1,
       weekendPriority: parsed.data.weekendPriority ?? 1,
       holidayPriority: parsed.data.holidayPriority ?? 1,
-      workedMultiplier: String(parsed.data.workedMultiplier ?? 1.0),
-      offeredMultiplier: String(parsed.data.offeredMultiplier ?? 1.0),
     })
     .returning();
 
@@ -166,8 +162,6 @@ router.post("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => 
     weekdayPriority: subclass.weekdayPriority,
     weekendPriority: subclass.weekendPriority,
     holidayPriority: subclass.holidayPriority,
-    workedMultiplier: Number(subclass.workedMultiplier),
-    offeredMultiplier: Number(subclass.offeredMultiplier),
   });
 });
 
@@ -189,8 +183,6 @@ router.patch("/rosters/:rosterId/subclasses/:id", async (req, res): Promise<void
   if (parsed.data.weekdayPriority !== undefined) updateData.weekdayPriority = parsed.data.weekdayPriority;
   if (parsed.data.weekendPriority !== undefined) updateData.weekendPriority = parsed.data.weekendPriority;
   if (parsed.data.holidayPriority !== undefined) updateData.holidayPriority = parsed.data.holidayPriority;
-  if (parsed.data.workedMultiplier !== undefined) updateData.workedMultiplier = String(parsed.data.workedMultiplier);
-  if (parsed.data.offeredMultiplier !== undefined) updateData.offeredMultiplier = String(parsed.data.offeredMultiplier);
 
   const [updated] = await db
     .update(subclassesTable)
@@ -210,8 +202,6 @@ router.patch("/rosters/:rosterId/subclasses/:id", async (req, res): Promise<void
     weekdayPriority: updated.weekdayPriority,
     weekendPriority: updated.weekendPriority,
     holidayPriority: updated.holidayPriority,
-    workedMultiplier: Number(updated.workedMultiplier),
-    offeredMultiplier: Number(updated.offeredMultiplier),
   });
 });
 

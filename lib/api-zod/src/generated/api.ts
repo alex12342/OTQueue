@@ -94,8 +94,7 @@ export const GetRosterSettingsResponse = zod.object({
   "rosterId": zod.number(),
   "useOfferedHours": zod.boolean(),
   "useSeniority": zod.boolean(),
-  "useSubclassOrdering": zod.boolean(),
-  "useWeightedHours": zod.boolean()
+  "useSubclassOrdering": zod.boolean()
 })
 
 
@@ -109,16 +108,51 @@ export const UpdateRosterSettingsParams = zod.object({
 export const UpdateRosterSettingsBody = zod.object({
   "useOfferedHours": zod.boolean().optional(),
   "useSeniority": zod.boolean().optional(),
-  "useSubclassOrdering": zod.boolean().optional(),
-  "useWeightedHours": zod.boolean().optional()
+  "useSubclassOrdering": zod.boolean().optional()
 })
 
 export const UpdateRosterSettingsResponse = zod.object({
   "rosterId": zod.number(),
   "useOfferedHours": zod.boolean(),
   "useSeniority": zod.boolean(),
-  "useSubclassOrdering": zod.boolean(),
-  "useWeightedHours": zod.boolean()
+  "useSubclassOrdering": zod.boolean()
+})
+
+
+/**
+ * @summary List day type configuration for a roster
+ */
+export const ListDayTypeConfigParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListDayTypeConfigResponseItem = zod.object({
+  "rosterId": zod.number(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "enabled": zod.boolean(),
+  "multiplier": zod.number().nullish()
+})
+export const ListDayTypeConfigResponse = zod.array(ListDayTypeConfigResponseItem)
+
+
+/**
+ * @summary Upsert a day type config entry
+ */
+export const UpsertDayTypeConfigParams = zod.object({
+  "id": zod.coerce.number(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday'])
+})
+
+export const UpsertDayTypeConfigBody = zod.object({
+  "enabled": zod.boolean().optional(),
+  "multiplier": zod.number().nullish()
+})
+
+export const UpsertDayTypeConfigResponse = zod.object({
+  "rosterId": zod.number(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "enabled": zod.boolean(),
+  "multiplier": zod.number().nullish()
 })
 
 
@@ -196,9 +230,7 @@ export const ListSubclassesResponseItem = zod.object({
   "name": zod.string(),
   "weekdayPriority": zod.number(),
   "weekendPriority": zod.number(),
-  "holidayPriority": zod.number(),
-  "workedMultiplier": zod.number(),
-  "offeredMultiplier": zod.number()
+  "holidayPriority": zod.number()
 })
 export const ListSubclassesResponse = zod.array(ListSubclassesResponseItem)
 
@@ -214,19 +246,13 @@ export const CreateSubclassParams = zod.object({
 
 
 
-export const createSubclassBodyWorkedMultiplierMin = 0;
-
-export const createSubclassBodyOfferedMultiplierMin = 0;
-
 
 
 export const CreateSubclassBody = zod.object({
   "name": zod.string().min(1),
   "weekdayPriority": zod.number().min(1).optional(),
   "weekendPriority": zod.number().min(1).optional(),
-  "holidayPriority": zod.number().min(1).optional(),
-  "workedMultiplier": zod.number().min(createSubclassBodyWorkedMultiplierMin).optional(),
-  "offeredMultiplier": zod.number().min(createSubclassBodyOfferedMultiplierMin).optional()
+  "holidayPriority": zod.number().min(1).optional()
 })
 
 
@@ -242,19 +268,13 @@ export const UpdateSubclassParams = zod.object({
 
 
 
-export const updateSubclassBodyWorkedMultiplierMin = 0;
-
-export const updateSubclassBodyOfferedMultiplierMin = 0;
-
 
 
 export const UpdateSubclassBody = zod.object({
   "name": zod.string().min(1),
   "weekdayPriority": zod.number().min(1).optional(),
   "weekendPriority": zod.number().min(1).optional(),
-  "holidayPriority": zod.number().min(1).optional(),
-  "workedMultiplier": zod.number().min(updateSubclassBodyWorkedMultiplierMin).optional(),
-  "offeredMultiplier": zod.number().min(updateSubclassBodyOfferedMultiplierMin).optional()
+  "holidayPriority": zod.number().min(1).optional()
 })
 
 export const UpdateSubclassResponse = zod.object({
@@ -263,9 +283,7 @@ export const UpdateSubclassResponse = zod.object({
   "name": zod.string(),
   "weekdayPriority": zod.number(),
   "weekendPriority": zod.number(),
-  "holidayPriority": zod.number(),
-  "workedMultiplier": zod.number(),
-  "offeredMultiplier": zod.number()
+  "holidayPriority": zod.number()
 })
 
 
@@ -431,6 +449,8 @@ export const ListEventsQueryParams = zod.object({
   "rosterId": zod.coerce.number().optional()
 })
 
+export const listEventsResponseMultiplierDefault = 1;
+
 export const ListEventsResponseItem = zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
@@ -438,6 +458,7 @@ export const ListEventsResponseItem = zod.object({
   "description": zod.string(),
   "defaultHours": zod.number(),
   "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "multiplier": zod.number().default(listEventsResponseMultiplierDefault),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -458,6 +479,9 @@ export const ListEventsResponse = zod.array(ListEventsResponseItem)
 
 export const createEventBodyDefaultHoursMin = 0;
 
+export const createEventBodyMultiplierDefault = 1;
+export const createEventBodyMultiplierMin = 0;
+
 
 
 
@@ -467,6 +491,7 @@ export const CreateEventBody = zod.object({
   "description": zod.string().min(1),
   "defaultHours": zod.number().min(createEventBodyDefaultHoursMin),
   "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "multiplier": zod.number().min(createEventBodyMultiplierMin).default(createEventBodyMultiplierDefault),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),
   "offered": zod.boolean(),
@@ -483,6 +508,8 @@ export const GetEventParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const getEventResponseMultiplierDefault = 1;
+
 export const GetEventResponse = zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
@@ -490,6 +517,7 @@ export const GetEventResponse = zod.object({
   "description": zod.string(),
   "defaultHours": zod.number(),
   "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "multiplier": zod.number().default(getEventResponseMultiplierDefault),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -513,6 +541,9 @@ export const UpdateEventParams = zod.object({
 
 export const updateEventBodyDefaultHoursMin = 0;
 
+export const updateEventBodyMultiplierDefault = 1;
+export const updateEventBodyMultiplierMin = 0;
+
 
 
 
@@ -522,6 +553,7 @@ export const UpdateEventBody = zod.object({
   "description": zod.string().min(1),
   "defaultHours": zod.number().min(updateEventBodyDefaultHoursMin),
   "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "multiplier": zod.number().min(updateEventBodyMultiplierMin).default(updateEventBodyMultiplierDefault),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),
   "offered": zod.boolean(),
@@ -530,6 +562,8 @@ export const UpdateEventBody = zod.object({
 })).min(1)
 })
 
+export const updateEventResponseMultiplierDefault = 1;
+
 export const UpdateEventResponse = zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
@@ -537,6 +571,7 @@ export const UpdateEventResponse = zod.object({
   "description": zod.string(),
   "defaultHours": zod.number(),
   "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "multiplier": zod.number().default(updateEventResponseMultiplierDefault),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -592,6 +627,8 @@ export const GetStatsQueryParams = zod.object({
   "rosterId": zod.coerce.number().optional()
 })
 
+export const getStatsResponseRecentEventsItemMultiplierDefault = 1;
+
 export const GetStatsResponse = zod.object({
   "totalEvents": zod.number(),
   "totalOfferedHours": zod.number(),
@@ -610,6 +647,7 @@ export const GetStatsResponse = zod.object({
   "description": zod.string(),
   "defaultHours": zod.number(),
   "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "multiplier": zod.number().default(getStatsResponseRecentEventsItemMultiplierDefault),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),

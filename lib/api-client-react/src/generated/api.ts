@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DayTypeConfig,
+  DayTypeConfigInput,
   DayTypeSuggestion,
   Employee,
   EmployeeInput,
@@ -648,6 +650,157 @@ export const useUpdateRosterSettings = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateRosterSettingsMutationOptions(options));
+    }
+
+export const getListDayTypeConfigUrl = (id: number,) => {
+
+
+
+
+  return `/api/rosters/${id}/day-type-config`
+}
+
+/**
+ * @summary List day type configuration for a roster
+ */
+export const listDayTypeConfig = async (id: number, options?: RequestInit): Promise<DayTypeConfig[]> => {
+
+  return customFetch<DayTypeConfig[]>(getListDayTypeConfigUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDayTypeConfigQueryKey = (id: number,) => {
+    return [
+    `/api/rosters/${id}/day-type-config`
+    ] as const;
+    }
+
+
+export const getListDayTypeConfigQueryOptions = <TData = Awaited<ReturnType<typeof listDayTypeConfig>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDayTypeConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDayTypeConfigQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDayTypeConfig>>> = ({ signal }) => listDayTypeConfig(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDayTypeConfig>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDayTypeConfigQueryResult = NonNullable<Awaited<ReturnType<typeof listDayTypeConfig>>>
+export type ListDayTypeConfigQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List day type configuration for a roster
+ */
+
+export function useListDayTypeConfig<TData = Awaited<ReturnType<typeof listDayTypeConfig>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDayTypeConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDayTypeConfigQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpsertDayTypeConfigUrl = (id: number,
+    dayType: 'weekday' | 'weekend' | 'holiday',) => {
+
+
+
+
+  return `/api/rosters/${id}/day-type-config/${dayType}`
+}
+
+/**
+ * @summary Upsert a day type config entry
+ */
+export const upsertDayTypeConfig = async (id: number,
+    dayType: 'weekday' | 'weekend' | 'holiday',
+    dayTypeConfigInput: DayTypeConfigInput, options?: RequestInit): Promise<DayTypeConfig> => {
+
+  return customFetch<DayTypeConfig>(getUpsertDayTypeConfigUrl(id,dayType),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      dayTypeConfigInput,)
+  }
+);}
+
+
+
+
+export const getUpsertDayTypeConfigMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}, TContext> => {
+
+const mutationKey = ['upsertDayTypeConfig'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertDayTypeConfig>>, {id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}> = (props) => {
+          const {id,dayType,data} = props ?? {};
+
+          return  upsertDayTypeConfig(id,dayType,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertDayTypeConfigMutationResult = NonNullable<Awaited<ReturnType<typeof upsertDayTypeConfig>>>
+    export type UpsertDayTypeConfigMutationBody = BodyType<DayTypeConfigInput>
+    export type UpsertDayTypeConfigMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upsert a day type config entry
+ */
+export const useUpsertDayTypeConfig = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertDayTypeConfig>>, TError,{id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertDayTypeConfig>>,
+        TError,
+        {id: number;dayType: 'weekday' | 'weekend' | 'holiday';data: BodyType<DayTypeConfigInput>},
+        TContext
+      > => {
+      return useMutation(getUpsertDayTypeConfigMutationOptions(options));
     }
 
 export const getListRolesUrl = (rosterId: number,) => {

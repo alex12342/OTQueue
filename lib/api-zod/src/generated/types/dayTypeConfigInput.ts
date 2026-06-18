@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RosterSettingsInput {
-  useOfferedHours?: boolean;
-  useSeniority?: boolean;
-  useSubclassOrdering?: boolean;
+export interface DayTypeConfigInput {
+  enabled?: boolean;
+  /** @nullable */
+  multiplier?: number | null;
 }

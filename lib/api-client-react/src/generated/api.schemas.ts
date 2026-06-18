@@ -28,14 +28,35 @@ export interface RosterSettings {
   useOfferedHours: boolean;
   useSeniority: boolean;
   useSubclassOrdering: boolean;
-  useWeightedHours: boolean;
 }
 
 export interface RosterSettingsInput {
   useOfferedHours?: boolean;
   useSeniority?: boolean;
   useSubclassOrdering?: boolean;
-  useWeightedHours?: boolean;
+}
+
+export type DayTypeConfigDayType = typeof DayTypeConfigDayType[keyof typeof DayTypeConfigDayType];
+
+
+export const DayTypeConfigDayType = {
+  weekday: 'weekday',
+  weekend: 'weekend',
+  holiday: 'holiday',
+} as const;
+
+export interface DayTypeConfig {
+  rosterId: number;
+  dayType: DayTypeConfigDayType;
+  enabled: boolean;
+  /** @nullable */
+  multiplier?: number | null;
+}
+
+export interface DayTypeConfigInput {
+  enabled?: boolean;
+  /** @nullable */
+  multiplier?: number | null;
 }
 
 export interface Role {
@@ -56,8 +77,6 @@ export interface Subclass {
   weekdayPriority: number;
   weekendPriority: number;
   holidayPriority: number;
-  workedMultiplier: number;
-  offeredMultiplier: number;
 }
 
 export interface SubclassInput {
@@ -69,10 +88,6 @@ export interface SubclassInput {
   weekendPriority?: number;
   /** @minimum 1 */
   holidayPriority?: number;
-  /** @minimum 0 */
-  workedMultiplier?: number;
-  /** @minimum 0 */
-  offeredMultiplier?: number;
 }
 
 export interface Employee {
@@ -148,6 +163,7 @@ export interface Event {
   description: string;
   defaultHours: number;
   dayType: EventDayType;
+  multiplier: number;
   entries: EventEntry[];
 }
 
@@ -176,6 +192,8 @@ export interface EventInput {
   /** @minimum 0 */
   defaultHours: number;
   dayType: EventInputDayType;
+  /** @minimum 0 */
+  multiplier?: number;
   /** @minItems 1 */
   entries: EventEntryInput[];
 }

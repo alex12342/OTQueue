@@ -23,7 +23,7 @@ A web app for tracking and fairly distributing overtime at shift-based jobs. Sup
 
 ## Where things live
 
-- `lib/db/src/schema/` — DB schema (rosters, employees, events, roles, subclasses, roster_settings)
+- `lib/db/src/schema/` — DB schema (rosters, employees, events, roles, subclasses, roster_settings, dayTypeConfig)
 - `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contract)
 - `lib/api-client-react/src/generated/` — generated hooks and Zod schemas (do not edit manually)
 - `artifacts/api-server/src/routes/` — Express route handlers
@@ -35,7 +35,8 @@ A web app for tracking and fairly distributing overtime at shift-based jobs. Sup
 - **Contract-first**: OpenAPI spec drives both server validation (Zod) and client hooks (Orval codegen). Always update spec first, then run codegen.
 - **Multi-roster**: Every employee, event, role, and subclass belongs to exactly one roster. All list endpoints accept `rosterId` query param.
 - **Roster context**: Active roster is stored in localStorage and provided via `useRoster()` hook. All pages pull from this context rather than accepting rosterId as a prop.
-- **Weighted fairness hours**: Per-subclass multipliers applied to offered/worked hours when `useWeightedHours` is enabled in roster settings.
+- **Event-level multiplier**: Each event stores a `multiplier` field (numeric, default 1.0). Fairness score = SUM(hours × event.multiplier). The multiplier auto-populates from the day type config when logging, and is editable per-event.
+- **Day type config**: Per-roster per-day-type settings stored in `roster_day_type_config`. Each row has `enabled` (controls Up Next tab visibility) and `multiplier` (auto-filled default when logging events of that type). Configured in Settings → Day Types tab.
 - **Holiday day type**: Third day type alongside weekday/weekend. API has `/suggest-day-type?date=` to auto-detect based on weekends (holiday detection is a stub — extend with a holiday library if needed).
 
 ## Product
