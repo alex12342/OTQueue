@@ -5,6 +5,7 @@ import {
   CreateEventBody,
   GetEventParams,
   DeleteEventParams,
+  ListEventsQueryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -31,6 +32,7 @@ async function getEventWithEntries(id: number) {
 
   return {
     id: event.id,
+    rosterId: event.rosterId,
     date: event.date,
     description: event.description,
     defaultHours,
@@ -53,12 +55,19 @@ async function getEventWithEntries(id: number) {
   };
 }
 
-router.get("/events", async (_req, res): Promise<void> => {
-  const events = await db
-    .select()
-    .from(eventsTable)
-    .orderBy(desc(eventsTable.date), desc(eventsTable.createdAt));
+router.get("/events", async (req, res): Promise<void> => {
+  const parsedQ = ListEventsQueryParams.safeParse(req.query);
+  if (!parsedQ.success) {
+    res.status(400).json({ error: parsedQ.error.message });
+    return;
+  }
 
+  let query = db.select().from(eventsTable).$dynamic();
+  if (parsedQ.data.rosterId !== undefined) {
+    query = query.where(eq(eventsTable.rosterId, parsedQ.data.rosterId));
+  }
+
+  const events = await query.orderBy(desc(eventsTable.date), desc(eventsTable.createdAt));
   const withEntries = await Promise.all(events.map((e) => getEventWithEntries(e.id)));
   res.json(withEntries.filter(Boolean));
 });
@@ -70,12 +79,8 @@ router.post("/events", async (req, res): Promise<void> => {
     return;
   }
 
-  const { date, description, defaultHours, dayType, entries } = parsed.data;
-
-  if (!entries || entries.length === 0) {
-    res.status(400).json({ error: "At least one entry is required" });
-    return;
-  }
+  const { rosterId, date, description, defaultHours, dayType, entries } = parsed.data;
+  const dateStr = date instanceof Date ? date.toISOString().split("T")[0] : String(date);
 
   const hasAnySelected = entries.some((e) => e.offered || e.worked);
   if (!hasAnySelected) {
@@ -86,7 +91,8 @@ router.post("/events", async (req, res): Promise<void> => {
   const [event] = await db
     .insert(eventsTable)
     .values({
-      date,
+      rosterId,
+      date: dateStr,
       description,
       defaultHours: String(defaultHours),
       dayType: dayType ?? "weekday",
@@ -94,7 +100,6 @@ router.post("/events", async (req, res): Promise<void> => {
     .returning();
 
   const filteredEntries = entries.filter((e) => e.offered || e.worked);
-
   if (filteredEntries.length > 0) {
     await db.insert(eventEntriesTable).values(
       filteredEntries.map((e) => ({
@@ -141,15 +146,11 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
   }
 
   const { date, description, defaultHours, dayType, entries } = parsed.data;
+  const dateStr = date instanceof Date ? date.toISOString().split("T")[0] : String(date);
 
   const [existing] = await db.select().from(eventsTable).where(eq(eventsTable.id, params.data.id));
   if (!existing) {
     res.status(404).json({ error: "Event not found" });
-    return;
-  }
-
-  if (!entries || entries.length === 0) {
-    res.status(400).json({ error: "At least one entry is required" });
     return;
   }
 
@@ -159,18 +160,16 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  // Update the event record
   await db
     .update(eventsTable)
     .set({
-      date,
+      date: dateStr,
       description,
       defaultHours: String(defaultHours),
       dayType: dayType ?? "weekday",
     })
     .where(eq(eventsTable.id, params.data.id));
 
-  // Replace all entries: delete old ones, insert new ones
   await db.delete(eventEntriesTable).where(eq(eventEntriesTable.eventId, params.data.id));
 
   const filteredEntries = entries.filter((e) => e.offered || e.worked);

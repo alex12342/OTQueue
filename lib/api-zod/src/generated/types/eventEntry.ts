@@ -14,8 +14,6 @@ export interface EventEntry {
   worked: boolean;
   /** @nullable */
   hoursOverride?: number | null;
-  /** Actual hours counted (override or defaultHours if worked) */
-  hoursAwarded?: number;
-  /** Hours counted toward offered total */
-  hoursOffered?: number;
+  hoursAwarded: number;
+  hoursOffered: number;
 }

@@ -8,13 +8,11 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: rosters
+  - name: classifications
   - name: employees
-    description: Employee management
   - name: events
-    description: Overtime event management
   - name: reports
-    description: Reporting and ordering
 
 paths:
   /healthz:
@@ -30,11 +28,346 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  # ── Rosters ──────────────────────────────────────────────────────────────
+  /rosters:
+    get:
+      operationId: listRosters
+      tags: [rosters]
+      summary: List all rosters
+      responses:
+        "200":
+          description: List of rosters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Roster"
+    post:
+      operationId: createRoster
+      tags: [rosters]
+      summary: Create a roster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RosterInput"
+      responses:
+        "201":
+          description: Created roster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roster"
+
+  /rosters/{id}:
+    get:
+      operationId: getRoster
+      tags: [rosters]
+      summary: Get a roster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Roster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roster"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateRoster
+      tags: [rosters]
+      summary: Update a roster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RosterInput"
+      responses:
+        "200":
+          description: Updated roster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roster"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteRoster
+      tags: [rosters]
+      summary: Delete a roster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rosters/{id}/settings:
+    get:
+      operationId: getRosterSettings
+      tags: [rosters]
+      summary: Get settings for a roster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Roster settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterSettings"
+        "404":
+          description: Not found
+    put:
+      operationId: updateRosterSettings
+      tags: [rosters]
+      summary: Update settings for a roster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RosterSettingsInput"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterSettings"
+        "404":
+          description: Not found
+
+  # ── Roles ─────────────────────────────────────────────────────────────────
+  /rosters/{rosterId}/roles:
+    get:
+      operationId: listRoles
+      tags: [classifications]
+      summary: List roles for a roster
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Role"
+    post:
+      operationId: createRole
+      tags: [classifications]
+      summary: Create a role
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleInput"
+      responses:
+        "201":
+          description: Created role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+
+  /rosters/{rosterId}/roles/{id}:
+    patch:
+      operationId: updateRole
+      tags: [classifications]
+      summary: Update a role
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleInput"
+      responses:
+        "200":
+          description: Updated role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteRole
+      tags: [classifications]
+      summary: Delete a role
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Subclasses ────────────────────────────────────────────────────────────
+  /rosters/{rosterId}/subclasses:
+    get:
+      operationId: listSubclasses
+      tags: [classifications]
+      summary: List subclasses for a roster
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of subclasses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subclass"
+    post:
+      operationId: createSubclass
+      tags: [classifications]
+      summary: Create a subclass
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubclassInput"
+      responses:
+        "201":
+          description: Created subclass
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subclass"
+
+  /rosters/{rosterId}/subclasses/{id}:
+    patch:
+      operationId: updateSubclass
+      tags: [classifications]
+      summary: Update a subclass
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubclassInput"
+      responses:
+        "200":
+          description: Updated subclass
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subclass"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSubclass
+      tags: [classifications]
+      summary: Delete a subclass
+      parameters:
+        - name: rosterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Employees ─────────────────────────────────────────────────────────────
   /employees:
     get:
       operationId: listEmployees
       tags: [employees]
-      summary: List all employees
+      summary: List employees, optionally filtered by roster
+      parameters:
+        - name: rosterId
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           description: List of employees
@@ -125,7 +458,7 @@ paths:
     get:
       operationId: getEmployeeReport
       tags: [reports]
-      summary: Get overtime history and totals for an employee
+      summary: Get overtime history for an employee
       parameters:
         - name: id
           in: path
@@ -142,11 +475,18 @@ paths:
         "404":
           description: Not found
 
+  # ── Events ────────────────────────────────────────────────────────────────
   /events:
     get:
       operationId: listEvents
       tags: [events]
-      summary: List all events with their entries
+      summary: List events, optionally filtered by roster
+      parameters:
+        - name: rosterId
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           description: List of events
@@ -178,7 +518,7 @@ paths:
     get:
       operationId: getEvent
       tags: [events]
-      summary: Get a single event with its entries
+      summary: Get a single event
       parameters:
         - name: id
           in: path
@@ -197,7 +537,7 @@ paths:
     patch:
       operationId: updateEvent
       tags: [events]
-      summary: Update an existing event and its entries
+      summary: Update an event
       parameters:
         - name: id
           in: path
@@ -233,22 +573,28 @@ paths:
         "204":
           description: Deleted
 
+  # ── Reports ───────────────────────────────────────────────────────────────
   /up-next:
     get:
       operationId: getUpNext
       tags: [reports]
-      summary: Get ordered overtime rotation list
+      summary: Get ordered overtime rotation for a roster
       parameters:
+        - name: rosterId
+          in: query
+          required: true
+          schema:
+            type: integer
         - name: dayType
           in: query
           required: false
           schema:
             type: string
-            enum: [weekday, weekend]
+            enum: [weekday, weekend, holiday]
             default: weekday
       responses:
         "200":
-          description: Ordered list of employees for the next overtime offer
+          description: Ordered rotation
           content:
             application/json:
               schema:
@@ -258,61 +604,210 @@ paths:
     get:
       operationId: getStats
       tags: [reports]
-      summary: Get summary statistics across all employees
+      summary: Get summary statistics
+      parameters:
+        - name: rosterId
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
-          description: Summary statistics
+          description: Summary stats
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Stats"
 
+  /suggest-day-type:
+    get:
+      operationId: suggestDayType
+      tags: [reports]
+      summary: Suggest a day type for a given date
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Suggested day type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DayTypeSuggestion"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
-    Employee:
+    # ── Rosters ──────────────────────────────────────────────────────────────
+    Roster:
       type: object
-      required: [id, name, seniority, category, active]
+      required: [id, name]
       properties:
         id:
           type: integer
         name:
           type: string
+        description:
+          type: ["string", "null"]
+
+    RosterInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+
+    RosterSettings:
+      type: object
+      required: [rosterId, useOfferedHours, useSeniority, useSubclassOrdering, useWeightedHours]
+      properties:
+        rosterId:
+          type: integer
+        useOfferedHours:
+          type: boolean
+        useSeniority:
+          type: boolean
+        useSubclassOrdering:
+          type: boolean
+        useWeightedHours:
+          type: boolean
+
+    RosterSettingsInput:
+      type: object
+      properties:
+        useOfferedHours:
+          type: boolean
+        useSeniority:
+          type: boolean
+        useSubclassOrdering:
+          type: boolean
+        useWeightedHours:
+          type: boolean
+
+    # ── Classifications ───────────────────────────────────────────────────────
+    Role:
+      type: object
+      required: [id, rosterId, name]
+      properties:
+        id:
+          type: integer
+        rosterId:
+          type: integer
+        name:
+          type: string
+
+    RoleInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+
+    Subclass:
+      type: object
+      required: [id, rosterId, name, weekdayPriority, weekendPriority, holidayPriority, workedMultiplier, offeredMultiplier]
+      properties:
+        id:
+          type: integer
+        rosterId:
+          type: integer
+        name:
+          type: string
+        weekdayPriority:
+          type: integer
+        weekendPriority:
+          type: integer
+        holidayPriority:
+          type: integer
+        workedMultiplier:
+          type: number
+        offeredMultiplier:
+          type: number
+
+    SubclassInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        weekdayPriority:
+          type: integer
+          minimum: 1
+        weekendPriority:
+          type: integer
+          minimum: 1
+        holidayPriority:
+          type: integer
+          minimum: 1
+        workedMultiplier:
+          type: number
+          minimum: 0
+        offeredMultiplier:
+          type: number
+          minimum: 0
+
+    # ── Employees ─────────────────────────────────────────────────────────────
+    Employee:
+      type: object
+      required: [id, rosterId, name, seniority, active]
+      properties:
+        id:
+          type: integer
+        rosterId:
+          type: integer
+        name:
+          type: string
         seniority:
           type: integer
-          description: Lower number = higher seniority priority
-        category:
-          type: string
-          enum: [four_hour, full_time]
+        roleId:
+          type: ["integer", "null"]
+        roleName:
+          type: ["string", "null"]
+        subclassId:
+          type: ["integer", "null"]
+        subclassName:
+          type: ["string", "null"]
         active:
           type: boolean
         totalOfferedHours:
           type: number
-          description: Total hours where employee was offered overtime
         totalWorkedHours:
           type: number
-          description: Total hours employee actually worked
+        fairnessScore:
+          type: number
+          description: Weighted offered hours used for rotation ordering
 
     EmployeeInput:
       type: object
-      required: [name, seniority, category]
+      required: [rosterId, name, seniority]
       properties:
+        rosterId:
+          type: integer
         name:
           type: string
           minLength: 1
         seniority:
           type: integer
           minimum: 1
-        category:
-          type: string
-          enum: [four_hour, full_time]
+        roleId:
+          type: ["integer", "null"]
+        subclassId:
+          type: ["integer", "null"]
         active:
           type: boolean
           default: true
@@ -326,17 +821,21 @@ components:
         seniority:
           type: integer
           minimum: 1
-        category:
-          type: string
-          enum: [four_hour, full_time]
+        roleId:
+          type: ["integer", "null"]
+        subclassId:
+          type: ["integer", "null"]
         active:
           type: boolean
 
+    # ── Events ────────────────────────────────────────────────────────────────
     Event:
       type: object
-      required: [id, date, description, defaultHours, entries]
+      required: [id, rosterId, date, description, defaultHours, dayType, entries]
       properties:
         id:
+          type: integer
+        rosterId:
           type: integer
         date:
           type: string
@@ -347,7 +846,7 @@ components:
           type: number
         dayType:
           type: string
-          enum: [weekday, weekend]
+          enum: [weekday, weekend, holiday]
         entries:
           type: array
           items:
@@ -355,7 +854,7 @@ components:
 
     EventEntry:
       type: object
-      required: [id, employeeId, employeeName, offered, worked]
+      required: [id, employeeId, employeeName, offered, worked, hoursOffered, hoursAwarded]
       properties:
         id:
           type: integer
@@ -371,15 +870,15 @@ components:
           type: ["number", "null"]
         hoursAwarded:
           type: number
-          description: Actual hours counted (override or defaultHours if worked)
         hoursOffered:
           type: number
-          description: Hours counted toward offered total
 
     EventInput:
       type: object
-      required: [date, description, defaultHours, entries]
+      required: [rosterId, date, description, defaultHours, dayType, entries]
       properties:
+        rosterId:
+          type: integer
         date:
           type: string
           format: date
@@ -391,7 +890,7 @@ components:
           minimum: 0
         dayType:
           type: string
-          enum: [weekday, weekend]
+          enum: [weekday, weekend, holiday]
         entries:
           type: array
           minItems: 1
@@ -411,13 +910,16 @@ components:
         hoursOverride:
           type: ["number", "null"]
 
+    # ── Reports ───────────────────────────────────────────────────────────────
     UpNextResult:
       type: object
-      required: [dayType, employees]
+      required: [rosterId, dayType, employees]
       properties:
+        rosterId:
+          type: integer
         dayType:
           type: string
-          enum: [weekday, weekend]
+          enum: [weekday, weekend, holiday]
         employees:
           type: array
           items:
@@ -425,18 +927,23 @@ components:
 
     UpNextEmployee:
       type: object
-      required: [id, name, category, seniority, totalOfferedHours, rank]
+      required: [id, name, seniority, totalOfferedHours, fairnessScore, rank]
       properties:
         id:
           type: integer
         name:
           type: string
-        category:
-          type: string
-          enum: [four_hour, full_time]
+        subclassId:
+          type: ["integer", "null"]
+        subclassName:
+          type: ["string", "null"]
+        roleName:
+          type: ["string", "null"]
         seniority:
           type: integer
         totalOfferedHours:
+          type: number
+        fairnessScore:
           type: number
         rank:
           type: integer
@@ -453,7 +960,6 @@ components:
           type: number
         acceptanceRate:
           type: number
-          description: Percentage of offered events that were worked
         events:
           type: array
           items:
@@ -461,7 +967,7 @@ components:
 
     EmployeeEventRecord:
       type: object
-      required: [eventId, date, description, offered, worked, hoursOffered, hoursAwarded]
+      required: [eventId, date, description, dayType, offered, worked, hoursOffered, hoursAwarded]
       properties:
         eventId:
           type: integer
@@ -470,6 +976,9 @@ components:
           format: date
         description:
           type: string
+        dayType:
+          type: string
+          enum: [weekday, weekend, holiday]
         offered:
           type: boolean
         worked:
@@ -514,3 +1023,20 @@ components:
           type: number
         totalOfferedHours:
           type: number
+
+    DayTypeSuggestion:
+      type: object
+      required: [date, suggestedDayType, reason]
+      properties:
+        date:
+          type: string
+          format: date
+        suggestedDayType:
+          type: string
+          enum: [weekday, weekend, holiday]
+        reason:
+          type: string
+        isHoliday:
+          type: boolean
+        holidayName:
+          type: ["string", "null"]

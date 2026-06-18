@@ -12,4 +12,5 @@ export type EventInputDayType = typeof EventInputDayType[keyof typeof EventInput
 export const EventInputDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
+  holiday: 'holiday',
 } as const;

@@ -10,6 +10,7 @@ import {
   getGetUpNextQueryKey,
   getGetStatsQueryKey,
 } from "@workspace/api-client-react";
+import { useRoster } from "@/hooks/use-roster";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { CalendarIcon, Save, ArrowLeft } from "lucide-react";
@@ -45,16 +46,19 @@ export default function EditEvent() {
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [defaultHours, setDefaultHours] = useState("4");
-  const [dayType, setDayType] = useState<"weekday" | "weekend">("weekday");
+  const [dayType, setDayType] = useState<"weekday" | "weekend" | "holiday">("weekday");
   const [entries, setEntries] = useState<Record<number, EntryState>>({});
 
   const { data: event, isLoading: eventLoading } = useGetEvent(eventId, {
     query: { queryKey: getGetEventQueryKey(eventId) },
   });
 
-  const { data: employees, isLoading: employeesLoading } = useListEmployees({
-    query: { queryKey: getListEmployeesQueryKey() },
-  });
+  const { activeRosterId } = useRoster();
+
+  const { data: employees, isLoading: employeesLoading } = useListEmployees(
+    { rosterId: activeRosterId ?? undefined },
+    { query: { queryKey: getListEmployeesQueryKey({ rosterId: activeRosterId ?? undefined }) } }
+  );
 
   const isLoading = eventLoading || employeesLoading;
 
@@ -94,8 +98,9 @@ export default function EditEvent() {
         toast({ title: "Event updated", description: "Changes saved successfully." });
         queryClient.invalidateQueries({ queryKey: getListEventsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetEventQueryKey(eventId) });
-        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ dayType: "weekday" }) });
-        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ dayType: "weekend" }) });
+        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: "weekday" }) });
+        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: "weekend" }) });
+        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: "holiday" }) });
         queryClient.invalidateQueries({ queryKey: getGetStatsQueryKey() });
         setLocation("/log");
       },
@@ -130,6 +135,7 @@ export default function EditEvent() {
     updateMutation.mutate({
       id: eventId,
       data: {
+        rosterId: event?.rosterId ?? activeRosterId ?? 0,
         date: format(date, "yyyy-MM-dd"),
         description,
         defaultHours: parseFloat(defaultHours) || 0,
@@ -242,6 +248,7 @@ export default function EditEvent() {
                 <SelectContent>
                   <SelectItem value="weekday">Weekday</SelectItem>
                   <SelectItem value="weekend">Weekend</SelectItem>
+                  <SelectItem value="holiday">Holiday</SelectItem>
                 </SelectContent>
               </Select>
             </div>

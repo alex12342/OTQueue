@@ -17,16 +17,287 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary List all employees
+ * @summary List all rosters
  */
-export const ListEmployeesResponseItem = zod.object({
+export const ListRostersResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "seniority": zod.number().describe('Lower number = higher seniority priority'),
-  "category": zod.enum(['four_hour', 'full_time']),
+  "description": zod.string().nullish()
+})
+export const ListRostersResponse = zod.array(ListRostersResponseItem)
+
+
+/**
+ * @summary Create a roster
+ */
+
+
+
+export const CreateRosterBody = zod.object({
+  "name": zod.string().min(1),
+  "description": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get a roster
+ */
+export const GetRosterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetRosterResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a roster
+ */
+export const UpdateRosterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const UpdateRosterBody = zod.object({
+  "name": zod.string().min(1),
+  "description": zod.string().nullish()
+})
+
+export const UpdateRosterResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish()
+})
+
+
+/**
+ * @summary Delete a roster
+ */
+export const DeleteRosterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get settings for a roster
+ */
+export const GetRosterSettingsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetRosterSettingsResponse = zod.object({
+  "rosterId": zod.number(),
+  "useOfferedHours": zod.boolean(),
+  "useSeniority": zod.boolean(),
+  "useSubclassOrdering": zod.boolean(),
+  "useWeightedHours": zod.boolean()
+})
+
+
+/**
+ * @summary Update settings for a roster
+ */
+export const UpdateRosterSettingsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRosterSettingsBody = zod.object({
+  "useOfferedHours": zod.boolean().optional(),
+  "useSeniority": zod.boolean().optional(),
+  "useSubclassOrdering": zod.boolean().optional(),
+  "useWeightedHours": zod.boolean().optional()
+})
+
+export const UpdateRosterSettingsResponse = zod.object({
+  "rosterId": zod.number(),
+  "useOfferedHours": zod.boolean(),
+  "useSeniority": zod.boolean(),
+  "useSubclassOrdering": zod.boolean(),
+  "useWeightedHours": zod.boolean()
+})
+
+
+/**
+ * @summary List roles for a roster
+ */
+export const ListRolesParams = zod.object({
+  "rosterId": zod.coerce.number()
+})
+
+export const ListRolesResponseItem = zod.object({
+  "id": zod.number(),
+  "rosterId": zod.number(),
+  "name": zod.string()
+})
+export const ListRolesResponse = zod.array(ListRolesResponseItem)
+
+
+/**
+ * @summary Create a role
+ */
+export const CreateRoleParams = zod.object({
+  "rosterId": zod.coerce.number()
+})
+
+
+
+
+export const CreateRoleBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+
+/**
+ * @summary Update a role
+ */
+export const UpdateRoleParams = zod.object({
+  "rosterId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const UpdateRoleBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+export const UpdateRoleResponse = zod.object({
+  "id": zod.number(),
+  "rosterId": zod.number(),
+  "name": zod.string()
+})
+
+
+/**
+ * @summary Delete a role
+ */
+export const DeleteRoleParams = zod.object({
+  "rosterId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List subclasses for a roster
+ */
+export const ListSubclassesParams = zod.object({
+  "rosterId": zod.coerce.number()
+})
+
+export const ListSubclassesResponseItem = zod.object({
+  "id": zod.number(),
+  "rosterId": zod.number(),
+  "name": zod.string(),
+  "weekdayPriority": zod.number(),
+  "weekendPriority": zod.number(),
+  "holidayPriority": zod.number(),
+  "workedMultiplier": zod.number(),
+  "offeredMultiplier": zod.number()
+})
+export const ListSubclassesResponse = zod.array(ListSubclassesResponseItem)
+
+
+/**
+ * @summary Create a subclass
+ */
+export const CreateSubclassParams = zod.object({
+  "rosterId": zod.coerce.number()
+})
+
+
+
+
+
+export const createSubclassBodyWorkedMultiplierMin = 0;
+
+export const createSubclassBodyOfferedMultiplierMin = 0;
+
+
+
+export const CreateSubclassBody = zod.object({
+  "name": zod.string().min(1),
+  "weekdayPriority": zod.number().min(1).optional(),
+  "weekendPriority": zod.number().min(1).optional(),
+  "holidayPriority": zod.number().min(1).optional(),
+  "workedMultiplier": zod.number().min(createSubclassBodyWorkedMultiplierMin).optional(),
+  "offeredMultiplier": zod.number().min(createSubclassBodyOfferedMultiplierMin).optional()
+})
+
+
+/**
+ * @summary Update a subclass
+ */
+export const UpdateSubclassParams = zod.object({
+  "rosterId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+export const updateSubclassBodyWorkedMultiplierMin = 0;
+
+export const updateSubclassBodyOfferedMultiplierMin = 0;
+
+
+
+export const UpdateSubclassBody = zod.object({
+  "name": zod.string().min(1),
+  "weekdayPriority": zod.number().min(1).optional(),
+  "weekendPriority": zod.number().min(1).optional(),
+  "holidayPriority": zod.number().min(1).optional(),
+  "workedMultiplier": zod.number().min(updateSubclassBodyWorkedMultiplierMin).optional(),
+  "offeredMultiplier": zod.number().min(updateSubclassBodyOfferedMultiplierMin).optional()
+})
+
+export const UpdateSubclassResponse = zod.object({
+  "id": zod.number(),
+  "rosterId": zod.number(),
+  "name": zod.string(),
+  "weekdayPriority": zod.number(),
+  "weekendPriority": zod.number(),
+  "holidayPriority": zod.number(),
+  "workedMultiplier": zod.number(),
+  "offeredMultiplier": zod.number()
+})
+
+
+/**
+ * @summary Delete a subclass
+ */
+export const DeleteSubclassParams = zod.object({
+  "rosterId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List employees, optionally filtered by roster
+ */
+export const ListEmployeesQueryParams = zod.object({
+  "rosterId": zod.coerce.number().optional()
+})
+
+export const ListEmployeesResponseItem = zod.object({
+  "id": zod.number(),
+  "rosterId": zod.number(),
+  "name": zod.string(),
+  "seniority": zod.number(),
+  "roleId": zod.number().nullish(),
+  "roleName": zod.string().nullish(),
+  "subclassId": zod.number().nullish(),
+  "subclassName": zod.string().nullish(),
   "active": zod.boolean(),
-  "totalOfferedHours": zod.number().optional().describe('Total hours where employee was offered overtime'),
-  "totalWorkedHours": zod.number().optional().describe('Total hours employee actually worked')
+  "totalOfferedHours": zod.number().optional(),
+  "totalWorkedHours": zod.number().optional(),
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
 })
 export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
 
@@ -39,9 +310,11 @@ export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
 export const createEmployeeBodyActiveDefault = true;
 
 export const CreateEmployeeBody = zod.object({
+  "rosterId": zod.number(),
   "name": zod.string().min(1),
   "seniority": zod.number().min(1),
-  "category": zod.enum(['four_hour', 'full_time']),
+  "roleId": zod.number().nullish(),
+  "subclassId": zod.number().nullish(),
   "active": zod.boolean().default(createEmployeeBodyActiveDefault)
 })
 
@@ -55,12 +328,17 @@ export const GetEmployeeParams = zod.object({
 
 export const GetEmployeeResponse = zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "name": zod.string(),
-  "seniority": zod.number().describe('Lower number = higher seniority priority'),
-  "category": zod.enum(['four_hour', 'full_time']),
+  "seniority": zod.number(),
+  "roleId": zod.number().nullish(),
+  "roleName": zod.string().nullish(),
+  "subclassId": zod.number().nullish(),
+  "subclassName": zod.string().nullish(),
   "active": zod.boolean(),
-  "totalOfferedHours": zod.number().optional().describe('Total hours where employee was offered overtime'),
-  "totalWorkedHours": zod.number().optional().describe('Total hours employee actually worked')
+  "totalOfferedHours": zod.number().optional(),
+  "totalWorkedHours": zod.number().optional(),
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
 })
 
 
@@ -78,18 +356,24 @@ export const UpdateEmployeeParams = zod.object({
 export const UpdateEmployeeBody = zod.object({
   "name": zod.string().min(1).optional(),
   "seniority": zod.number().min(1).optional(),
-  "category": zod.enum(['four_hour', 'full_time']).optional(),
+  "roleId": zod.number().nullish(),
+  "subclassId": zod.number().nullish(),
   "active": zod.boolean().optional()
 })
 
 export const UpdateEmployeeResponse = zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "name": zod.string(),
-  "seniority": zod.number().describe('Lower number = higher seniority priority'),
-  "category": zod.enum(['four_hour', 'full_time']),
+  "seniority": zod.number(),
+  "roleId": zod.number().nullish(),
+  "roleName": zod.string().nullish(),
+  "subclassId": zod.number().nullish(),
+  "subclassName": zod.string().nullish(),
   "active": zod.boolean(),
-  "totalOfferedHours": zod.number().optional().describe('Total hours where employee was offered overtime'),
-  "totalWorkedHours": zod.number().optional().describe('Total hours employee actually worked')
+  "totalOfferedHours": zod.number().optional(),
+  "totalWorkedHours": zod.number().optional(),
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
 })
 
 
@@ -102,7 +386,7 @@ export const DeleteEmployeeParams = zod.object({
 
 
 /**
- * @summary Get overtime history and totals for an employee
+ * @summary Get overtime history for an employee
  */
 export const GetEmployeeReportParams = zod.object({
   "id": zod.coerce.number()
@@ -111,20 +395,26 @@ export const GetEmployeeReportParams = zod.object({
 export const GetEmployeeReportResponse = zod.object({
   "employee": zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "name": zod.string(),
-  "seniority": zod.number().describe('Lower number = higher seniority priority'),
-  "category": zod.enum(['four_hour', 'full_time']),
+  "seniority": zod.number(),
+  "roleId": zod.number().nullish(),
+  "roleName": zod.string().nullish(),
+  "subclassId": zod.number().nullish(),
+  "subclassName": zod.string().nullish(),
   "active": zod.boolean(),
-  "totalOfferedHours": zod.number().optional().describe('Total hours where employee was offered overtime'),
-  "totalWorkedHours": zod.number().optional().describe('Total hours employee actually worked')
+  "totalOfferedHours": zod.number().optional(),
+  "totalWorkedHours": zod.number().optional(),
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
 }),
   "totalOfferedHours": zod.number(),
   "totalWorkedHours": zod.number(),
-  "acceptanceRate": zod.number().optional().describe('Percentage of offered events that were worked'),
+  "acceptanceRate": zod.number().optional(),
   "events": zod.array(zod.object({
   "eventId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "offered": zod.boolean(),
   "worked": zod.boolean(),
   "hoursOffered": zod.number(),
@@ -135,14 +425,19 @@ export const GetEmployeeReportResponse = zod.object({
 
 
 /**
- * @summary List all events with their entries
+ * @summary List events, optionally filtered by roster
  */
+export const ListEventsQueryParams = zod.object({
+  "rosterId": zod.coerce.number().optional()
+})
+
 export const ListEventsResponseItem = zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string(),
   "defaultHours": zod.number(),
-  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -150,8 +445,8 @@ export const ListEventsResponseItem = zod.object({
   "offered": zod.boolean(),
   "worked": zod.boolean(),
   "hoursOverride": zod.number().nullish(),
-  "hoursAwarded": zod.number().optional().describe('Actual hours counted (override or defaultHours if worked)'),
-  "hoursOffered": zod.number().optional().describe('Hours counted toward offered total')
+  "hoursAwarded": zod.number(),
+  "hoursOffered": zod.number()
 }))
 })
 export const ListEventsResponse = zod.array(ListEventsResponseItem)
@@ -167,10 +462,11 @@ export const createEventBodyDefaultHoursMin = 0;
 
 
 export const CreateEventBody = zod.object({
+  "rosterId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string().min(1),
   "defaultHours": zod.number().min(createEventBodyDefaultHoursMin),
-  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),
   "offered": zod.boolean(),
@@ -181,7 +477,7 @@ export const CreateEventBody = zod.object({
 
 
 /**
- * @summary Get a single event with its entries
+ * @summary Get a single event
  */
 export const GetEventParams = zod.object({
   "id": zod.coerce.number()
@@ -189,10 +485,11 @@ export const GetEventParams = zod.object({
 
 export const GetEventResponse = zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string(),
   "defaultHours": zod.number(),
-  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -200,14 +497,14 @@ export const GetEventResponse = zod.object({
   "offered": zod.boolean(),
   "worked": zod.boolean(),
   "hoursOverride": zod.number().nullish(),
-  "hoursAwarded": zod.number().optional().describe('Actual hours counted (override or defaultHours if worked)'),
-  "hoursOffered": zod.number().optional().describe('Hours counted toward offered total')
+  "hoursAwarded": zod.number(),
+  "hoursOffered": zod.number()
 }))
 })
 
 
 /**
- * @summary Update an existing event and its entries
+ * @summary Update an event
  */
 export const UpdateEventParams = zod.object({
   "id": zod.coerce.number()
@@ -220,10 +517,11 @@ export const updateEventBodyDefaultHoursMin = 0;
 
 
 export const UpdateEventBody = zod.object({
+  "rosterId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string().min(1),
   "defaultHours": zod.number().min(updateEventBodyDefaultHoursMin),
-  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),
   "offered": zod.boolean(),
@@ -234,10 +532,11 @@ export const UpdateEventBody = zod.object({
 
 export const UpdateEventResponse = zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string(),
   "defaultHours": zod.number(),
-  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -245,8 +544,8 @@ export const UpdateEventResponse = zod.object({
   "offered": zod.boolean(),
   "worked": zod.boolean(),
   "hoursOverride": zod.number().nullish(),
-  "hoursAwarded": zod.number().optional().describe('Actual hours counted (override or defaultHours if worked)'),
-  "hoursOffered": zod.number().optional().describe('Hours counted toward offered total')
+  "hoursAwarded": zod.number(),
+  "hoursOffered": zod.number()
 }))
 })
 
@@ -260,30 +559,39 @@ export const DeleteEventParams = zod.object({
 
 
 /**
- * @summary Get ordered overtime rotation list
+ * @summary Get ordered overtime rotation for a roster
  */
 export const getUpNextQueryDayTypeDefault = `weekday`;
 
 export const GetUpNextQueryParams = zod.object({
-  "dayType": zod.enum(['weekday', 'weekend']).default(getUpNextQueryDayTypeDefault)
+  "rosterId": zod.coerce.number(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']).default(getUpNextQueryDayTypeDefault)
 })
 
 export const GetUpNextResponse = zod.object({
-  "dayType": zod.enum(['weekday', 'weekend']),
+  "rosterId": zod.number(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "employees": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['four_hour', 'full_time']),
+  "subclassId": zod.number().nullish(),
+  "subclassName": zod.string().nullish(),
+  "roleName": zod.string().nullish(),
   "seniority": zod.number(),
   "totalOfferedHours": zod.number(),
+  "fairnessScore": zod.number(),
   "rank": zod.number()
 }))
 })
 
 
 /**
- * @summary Get summary statistics across all employees
+ * @summary Get summary statistics
  */
+export const GetStatsQueryParams = zod.object({
+  "rosterId": zod.coerce.number().optional()
+})
+
 export const GetStatsResponse = zod.object({
   "totalEvents": zod.number(),
   "totalOfferedHours": zod.number(),
@@ -297,10 +605,11 @@ export const GetStatsResponse = zod.object({
 })).optional(),
   "recentEvents": zod.array(zod.object({
   "id": zod.number(),
+  "rosterId": zod.number(),
   "date": zod.coerce.date(),
   "description": zod.string(),
   "defaultHours": zod.number(),
-  "dayType": zod.enum(['weekday', 'weekend']).optional(),
+  "dayType": zod.enum(['weekday', 'weekend', 'holiday']),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -308,10 +617,26 @@ export const GetStatsResponse = zod.object({
   "offered": zod.boolean(),
   "worked": zod.boolean(),
   "hoursOverride": zod.number().nullish(),
-  "hoursAwarded": zod.number().optional().describe('Actual hours counted (override or defaultHours if worked)'),
-  "hoursOffered": zod.number().optional().describe('Hours counted toward offered total')
+  "hoursAwarded": zod.number(),
+  "hoursOffered": zod.number()
 }))
 })).optional()
+})
+
+
+/**
+ * @summary Suggest a day type for a given date
+ */
+export const SuggestDayTypeQueryParams = zod.object({
+  "date": zod.date()
+})
+
+export const SuggestDayTypeResponse = zod.object({
+  "date": zod.coerce.date(),
+  "suggestedDayType": zod.enum(['weekday', 'weekend', 'holiday']),
+  "reason": zod.string(),
+  "isHoliday": zod.boolean().optional(),
+  "holidayName": zod.string().nullish()
 })
 
 

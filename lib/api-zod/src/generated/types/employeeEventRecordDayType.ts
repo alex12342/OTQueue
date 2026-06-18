@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetUpNextDayType = typeof GetUpNextDayType[keyof typeof GetUpNextDayType];
+export type EmployeeEventRecordDayType = typeof EmployeeEventRecordDayType[keyof typeof EmployeeEventRecordDayType];
 
 
-export const GetUpNextDayType = {
+export const EmployeeEventRecordDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
   holiday: 'holiday',

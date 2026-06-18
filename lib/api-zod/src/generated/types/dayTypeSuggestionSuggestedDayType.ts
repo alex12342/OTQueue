@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetUpNextDayType = typeof GetUpNextDayType[keyof typeof GetUpNextDayType];
+export type DayTypeSuggestionSuggestedDayType = typeof DayTypeSuggestionSuggestedDayType[keyof typeof DayTypeSuggestionSuggestedDayType];
 
 
-export const GetUpNextDayType = {
+export const DayTypeSuggestionSuggestedDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
   holiday: 'holiday',

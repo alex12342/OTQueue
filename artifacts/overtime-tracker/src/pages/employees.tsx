@@ -1,14 +1,18 @@
 import React, { useState } from "react";
-import { 
-  useListEmployees, 
-  getListEmployeesQueryKey, 
-  useCreateEmployee, 
-  useUpdateEmployee, 
-  useDeleteEmployee 
+import {
+  useListEmployees,
+  getListEmployeesQueryKey,
+  useCreateEmployee,
+  useUpdateEmployee,
+  useDeleteEmployee,
+  useListRoles,
+  getListRolesQueryKey,
+  useListSubclasses,
+  getListSubclassesQueryKey,
 } from "@workspace/api-client-react";
-import { Employee, EmployeeCategory } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Employee } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -21,59 +25,75 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
+import { useRoster } from "@/hooks/use-roster";
 
 export default function Employees() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { activeRosterId } = useRoster();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
 
-  const { data: employees, isLoading } = useListEmployees({
-    query: { queryKey: getListEmployeesQueryKey() }
-  });
+  const { data: employees, isLoading } = useListEmployees(
+    { rosterId: activeRosterId ?? undefined },
+    {
+      query: {
+        queryKey: getListEmployeesQueryKey({ rosterId: activeRosterId ?? undefined }),
+        enabled: activeRosterId != null,
+      },
+    }
+  );
+
+  const { data: roles = [] } = useListRoles(
+    activeRosterId ?? 0,
+    { query: { queryKey: getListRolesQueryKey(activeRosterId ?? 0), enabled: activeRosterId != null } }
+  );
+
+  const { data: subclasses = [] } = useListSubclasses(
+    activeRosterId ?? 0,
+    { query: { queryKey: getListSubclassesQueryKey(activeRosterId ?? 0), enabled: activeRosterId != null } }
+  );
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey({ rosterId: activeRosterId ?? undefined }) });
+  };
 
   const createMutation = useCreateEmployee({
     mutation: {
-      onSuccess: () => {
-        toast({ title: "Employee created" });
-        setIsCreateOpen(false);
-        queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey() });
-      },
-      onError: () => toast({ title: "Error", description: "Failed to create employee", variant: "destructive" })
-    }
+      onSuccess: () => { toast({ title: "Employee created" }); setIsCreateOpen(false); invalidate(); },
+      onError: () => toast({ title: "Error", description: "Failed to create employee", variant: "destructive" }),
+    },
   });
 
   const updateMutation = useUpdateEmployee({
     mutation: {
-      onSuccess: () => {
-        toast({ title: "Employee updated" });
-        setEditingEmp(null);
-        queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey() });
-      },
-      onError: () => toast({ title: "Error", description: "Failed to update employee", variant: "destructive" })
-    }
+      onSuccess: () => { toast({ title: "Employee updated" }); setEditingEmp(null); invalidate(); },
+      onError: () => toast({ title: "Error", description: "Failed to update employee", variant: "destructive" }),
+    },
   });
 
   const deleteMutation = useDeleteEmployee({
     mutation: {
-      onSuccess: () => {
-        toast({ title: "Employee deleted" });
-        queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey() });
-      },
-      onError: () => toast({ title: "Error", description: "Failed to delete employee", variant: "destructive" })
-    }
+      onSuccess: () => { toast({ title: "Employee deleted" }); invalidate(); },
+      onError: () => toast({ title: "Error", description: "Failed to delete employee", variant: "destructive" }),
+    },
   });
 
   const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!activeRosterId) return;
     const fd = new FormData(e.currentTarget);
+    const roleId = fd.get("roleId") as string;
+    const subclassId = fd.get("subclassId") as string;
     createMutation.mutate({
       data: {
+        rosterId: activeRosterId,
         name: fd.get("name") as string,
         seniority: parseInt(fd.get("seniority") as string, 10),
-        category: fd.get("category") as any,
-        active: fd.get("active") === "on",
-      }
+        roleId: roleId && roleId !== "none" ? parseInt(roleId, 10) : null,
+        subclassId: subclassId && subclassId !== "none" ? parseInt(subclassId, 10) : null,
+        active: (e.currentTarget.elements.namedItem("active") as HTMLInputElement)?.checked ?? true,
+      },
     });
   };
 
@@ -81,16 +101,71 @@ export default function Employees() {
     e.preventDefault();
     if (!editingEmp) return;
     const fd = new FormData(e.currentTarget);
+    const roleId = fd.get("roleId") as string;
+    const subclassId = fd.get("subclassId") as string;
     updateMutation.mutate({
       id: editingEmp.id,
       data: {
         name: fd.get("name") as string,
         seniority: parseInt(fd.get("seniority") as string, 10),
-        category: fd.get("category") as any,
-        active: fd.get("active") === "on",
-      }
+        roleId: roleId && roleId !== "none" ? parseInt(roleId, 10) : null,
+        subclassId: subclassId && subclassId !== "none" ? parseInt(subclassId, 10) : null,
+        active: (e.currentTarget.elements.namedItem("active") as HTMLInputElement)?.checked ?? editingEmp.active,
+      },
     });
   };
+
+  const EmployeeForm = ({
+    defaultValues,
+    onSubmit,
+    isPending,
+    submitLabel,
+  }: {
+    defaultValues?: Partial<Employee>;
+    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+    isPending: boolean;
+    submitLabel: string;
+  }) => (
+    <form onSubmit={onSubmit} className="space-y-4 pt-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Full Name</Label>
+        <Input id="name" name="name" defaultValue={defaultValues?.name} required />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="seniority">Seniority #</Label>
+          <Input id="seniority" name="seniority" type="number" min="1" defaultValue={defaultValues?.seniority} required />
+        </div>
+        <div className="space-y-2">
+          <Label>Role</Label>
+          <Select name="roleId" defaultValue={String(defaultValues?.roleId ?? "none")}>
+            <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {roles.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Subclass</Label>
+        <Select name="subclassId" defaultValue={String(defaultValues?.subclassId ?? "none")}>
+          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {subclasses.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center space-x-2 pt-2">
+        <Switch id="active" name="active" defaultChecked={defaultValues?.active ?? true} />
+        <Label htmlFor="active">Active Status</Label>
+      </div>
+      <div className="flex justify-end pt-4">
+        <Button type="submit" disabled={isPending}>{submitLabel}</Button>
+      </div>
+    </form>
+  );
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -99,85 +174,34 @@ export default function Employees() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Employees</h1>
           <p className="text-muted-foreground mt-1">Manage roster, seniority, and active status.</p>
         </div>
-        
+
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2" disabled={!activeRosterId}>
               <PlusCircle className="w-4 h-4" /> Add Employee
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Employee</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" name="name" required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="seniority">Seniority #</Label>
-                  <Input id="seniority" name="seniority" type="number" min="1" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue="four_hour">
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="four_hour">4-Hour</SelectItem>
-                      <SelectItem value="full_time">Full Time</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2 pt-2">
-                <Switch id="active" name="active" defaultChecked />
-                <Label htmlFor="active">Active Status</Label>
-              </div>
-              <div className="flex justify-end pt-4">
-                <Button type="submit" disabled={createMutation.isPending}>Save Employee</Button>
-              </div>
-            </form>
+            <DialogHeader><DialogTitle>Add New Employee</DialogTitle></DialogHeader>
+            <EmployeeForm
+              onSubmit={handleCreate}
+              isPending={createMutation.isPending}
+              submitLabel="Save Employee"
+            />
           </DialogContent>
         </Dialog>
       </div>
 
       <Dialog open={!!editingEmp} onOpenChange={(open) => !open && setEditingEmp(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Employee</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Edit Employee</DialogTitle></DialogHeader>
           {editingEmp && (
-            <form onSubmit={handleEdit} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Full Name</Label>
-                <Input id="edit-name" name="name" defaultValue={editingEmp.name} required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-seniority">Seniority #</Label>
-                  <Input id="edit-seniority" name="seniority" type="number" min="1" defaultValue={editingEmp.seniority} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-category">Category</Label>
-                  <Select name="category" defaultValue={editingEmp.category}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="four_hour">4-Hour</SelectItem>
-                      <SelectItem value="full_time">Full Time</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2 pt-2">
-                <Switch id="edit-active" name="active" defaultChecked={editingEmp.active} />
-                <Label htmlFor="edit-active">Active Status</Label>
-              </div>
-              <div className="flex justify-end pt-4">
-                <Button type="submit" disabled={updateMutation.isPending}>Update Employee</Button>
-              </div>
-            </form>
+            <EmployeeForm
+              defaultValues={editingEmp}
+              onSubmit={handleEdit}
+              isPending={updateMutation.isPending}
+              submitLabel="Update Employee"
+            />
           )}
         </DialogContent>
       </Dialog>
@@ -190,7 +214,8 @@ export default function Employees() {
                 <tr>
                   <th className="px-6 py-4 font-medium">Name</th>
                   <th className="px-6 py-4 font-medium text-center">Seniority</th>
-                  <th className="px-6 py-4 font-medium text-center">Category</th>
+                  <th className="px-6 py-4 font-medium text-center">Role</th>
+                  <th className="px-6 py-4 font-medium text-center">Subclass</th>
                   <th className="px-6 py-4 font-medium text-center">Status</th>
                   <th className="px-6 py-4 font-medium text-right">Offered Hours</th>
                   <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -200,18 +225,15 @@ export default function Employees() {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td className="px-6 py-4"><Skeleton className="h-5 w-32" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-5 w-12 mx-auto" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-5 w-16 mx-auto" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-5 w-12 ml-auto" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-8 w-8 ml-auto" /></td>
+                      {Array.from({ length: 7 }).map((__, j) => (
+                        <td key={j} className="px-6 py-4"><Skeleton className="h-5 w-20" /></td>
+                      ))}
                     </tr>
                   ))
                 ) : !employees?.length ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                      No employees found. Add one to get started.
+                    <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                      {activeRosterId ? "No employees found. Add one to get started." : "Select a roster to view employees."}
                     </td>
                   </tr>
                 ) : (
@@ -226,13 +248,24 @@ export default function Employees() {
                         #{emp.seniority}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <Badge variant="outline" className="font-normal bg-background">
-                          {emp.category === "full_time" ? "Full Time" : "4-Hour"}
-                        </Badge>
+                        {emp.roleName ? (
+                          <Badge variant="outline" className="font-normal bg-background">{emp.roleName}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {emp.subclassName ? (
+                          <Badge variant="secondary" className="font-normal">{emp.subclassName}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-center">
                         {emp.active ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 hover:text-emerald-600 shadow-none border-0 font-medium">Active</Badge>
+                          <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 hover:text-emerald-600 shadow-none border-0 font-medium">
+                            Active
+                          </Badge>
                         ) : (
                           <Badge variant="secondary" className="font-medium">Inactive</Badge>
                         )}
@@ -251,10 +284,10 @@ export default function Employees() {
                             <DropdownMenuItem onClick={() => setEditingEmp(emp)}>
                               <Pencil className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onClick={() => {
-                                if (confirm("Delete this employee? This will break their event history.")) {
+                                if (confirm("Delete this employee? This cannot be undone.")) {
                                   deleteMutation.mutate({ id: emp.id });
                                 }
                               }}

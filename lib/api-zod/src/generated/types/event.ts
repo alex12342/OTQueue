@@ -10,9 +10,10 @@ import type { EventEntry } from './eventEntry';
 
 export interface Event {
   id: number;
+  rosterId: number;
   date: Date;
   description: string;
   defaultHours: number;
-  dayType?: EventDayType;
+  dayType: EventDayType;
   entries: EventEntry[];
 }

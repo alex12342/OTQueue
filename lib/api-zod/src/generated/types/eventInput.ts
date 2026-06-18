@@ -9,12 +9,13 @@ import type { EventEntryInput } from './eventEntryInput';
 import type { EventInputDayType } from './eventInputDayType';
 
 export interface EventInput {
+  rosterId: number;
   date: Date;
   /** @minLength 1 */
   description: string;
   /** @minimum 0 */
   defaultHours: number;
-  dayType?: EventInputDayType;
+  dayType: EventInputDayType;
   /** @minItems 1 */
   entries: EventEntryInput[];
 }

@@ -9,58 +9,114 @@ export interface HealthStatus {
   status: string;
 }
 
-export type EmployeeCategory = typeof EmployeeCategory[keyof typeof EmployeeCategory];
+export interface Roster {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+}
 
+export interface RosterInput {
+  /** @minLength 1 */
+  name: string;
+  /** @nullable */
+  description?: string | null;
+}
 
-export const EmployeeCategory = {
-  four_hour: 'four_hour',
-  full_time: 'full_time',
-} as const;
+export interface RosterSettings {
+  rosterId: number;
+  useOfferedHours: boolean;
+  useSeniority: boolean;
+  useSubclassOrdering: boolean;
+  useWeightedHours: boolean;
+}
+
+export interface RosterSettingsInput {
+  useOfferedHours?: boolean;
+  useSeniority?: boolean;
+  useSubclassOrdering?: boolean;
+  useWeightedHours?: boolean;
+}
+
+export interface Role {
+  id: number;
+  rosterId: number;
+  name: string;
+}
+
+export interface RoleInput {
+  /** @minLength 1 */
+  name: string;
+}
+
+export interface Subclass {
+  id: number;
+  rosterId: number;
+  name: string;
+  weekdayPriority: number;
+  weekendPriority: number;
+  holidayPriority: number;
+  workedMultiplier: number;
+  offeredMultiplier: number;
+}
+
+export interface SubclassInput {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  weekdayPriority?: number;
+  /** @minimum 1 */
+  weekendPriority?: number;
+  /** @minimum 1 */
+  holidayPriority?: number;
+  /** @minimum 0 */
+  workedMultiplier?: number;
+  /** @minimum 0 */
+  offeredMultiplier?: number;
+}
 
 export interface Employee {
   id: number;
+  rosterId: number;
   name: string;
-  /** Lower number = higher seniority priority */
   seniority: number;
-  category: EmployeeCategory;
+  /** @nullable */
+  roleId?: number | null;
+  /** @nullable */
+  roleName?: string | null;
+  /** @nullable */
+  subclassId?: number | null;
+  /** @nullable */
+  subclassName?: string | null;
   active: boolean;
-  /** Total hours where employee was offered overtime */
   totalOfferedHours?: number;
-  /** Total hours employee actually worked */
   totalWorkedHours?: number;
+  /** Weighted offered hours used for rotation ordering */
+  fairnessScore?: number;
 }
 
-export type EmployeeInputCategory = typeof EmployeeInputCategory[keyof typeof EmployeeInputCategory];
-
-
-export const EmployeeInputCategory = {
-  four_hour: 'four_hour',
-  full_time: 'full_time',
-} as const;
-
 export interface EmployeeInput {
+  rosterId: number;
   /** @minLength 1 */
   name: string;
   /** @minimum 1 */
   seniority: number;
-  category: EmployeeInputCategory;
+  /** @nullable */
+  roleId?: number | null;
+  /** @nullable */
+  subclassId?: number | null;
   active?: boolean;
 }
-
-export type EmployeeUpdateCategory = typeof EmployeeUpdateCategory[keyof typeof EmployeeUpdateCategory];
-
-
-export const EmployeeUpdateCategory = {
-  four_hour: 'four_hour',
-  full_time: 'full_time',
-} as const;
 
 export interface EmployeeUpdate {
   /** @minLength 1 */
   name?: string;
   /** @minimum 1 */
   seniority?: number;
-  category?: EmployeeUpdateCategory;
+  /** @nullable */
+  roleId?: number | null;
+  /** @nullable */
+  subclassId?: number | null;
   active?: boolean;
 }
 
@@ -70,6 +126,7 @@ export type EventDayType = typeof EventDayType[keyof typeof EventDayType];
 export const EventDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
+  holiday: 'holiday',
 } as const;
 
 export interface EventEntry {
@@ -80,18 +137,17 @@ export interface EventEntry {
   worked: boolean;
   /** @nullable */
   hoursOverride?: number | null;
-  /** Actual hours counted (override or defaultHours if worked) */
-  hoursAwarded?: number;
-  /** Hours counted toward offered total */
-  hoursOffered?: number;
+  hoursAwarded: number;
+  hoursOffered: number;
 }
 
 export interface Event {
   id: number;
+  rosterId: number;
   date: string;
   description: string;
   defaultHours: number;
-  dayType?: EventDayType;
+  dayType: EventDayType;
   entries: EventEntry[];
 }
 
@@ -101,6 +157,7 @@ export type EventInputDayType = typeof EventInputDayType[keyof typeof EventInput
 export const EventInputDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
+  holiday: 'holiday',
 } as const;
 
 export interface EventEntryInput {
@@ -112,12 +169,13 @@ export interface EventEntryInput {
 }
 
 export interface EventInput {
+  rosterId: number;
   date: string;
   /** @minLength 1 */
   description: string;
   /** @minimum 0 */
   defaultHours: number;
-  dayType?: EventInputDayType;
+  dayType: EventInputDayType;
   /** @minItems 1 */
   entries: EventEntryInput[];
 }
@@ -128,34 +186,44 @@ export type UpNextResultDayType = typeof UpNextResultDayType[keyof typeof UpNext
 export const UpNextResultDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
-} as const;
-
-export type UpNextEmployeeCategory = typeof UpNextEmployeeCategory[keyof typeof UpNextEmployeeCategory];
-
-
-export const UpNextEmployeeCategory = {
-  four_hour: 'four_hour',
-  full_time: 'full_time',
+  holiday: 'holiday',
 } as const;
 
 export interface UpNextEmployee {
   id: number;
   name: string;
-  category: UpNextEmployeeCategory;
+  /** @nullable */
+  subclassId?: number | null;
+  /** @nullable */
+  subclassName?: string | null;
+  /** @nullable */
+  roleName?: string | null;
   seniority: number;
   totalOfferedHours: number;
+  fairnessScore: number;
   rank: number;
 }
 
 export interface UpNextResult {
+  rosterId: number;
   dayType: UpNextResultDayType;
   employees: UpNextEmployee[];
 }
+
+export type EmployeeEventRecordDayType = typeof EmployeeEventRecordDayType[keyof typeof EmployeeEventRecordDayType];
+
+
+export const EmployeeEventRecordDayType = {
+  weekday: 'weekday',
+  weekend: 'weekend',
+  holiday: 'holiday',
+} as const;
 
 export interface EmployeeEventRecord {
   eventId: number;
   date: string;
   description: string;
+  dayType: EmployeeEventRecordDayType;
   offered: boolean;
   worked: boolean;
   hoursOffered: number;
@@ -168,7 +236,6 @@ export interface EmployeeReport {
   employee: Employee;
   totalOfferedHours: number;
   totalWorkedHours: number;
-  /** Percentage of offered events that were worked */
   acceptanceRate?: number;
   events: EmployeeEventRecord[];
 }
@@ -189,7 +256,34 @@ export interface Stats {
   recentEvents?: Event[];
 }
 
+export type DayTypeSuggestionSuggestedDayType = typeof DayTypeSuggestionSuggestedDayType[keyof typeof DayTypeSuggestionSuggestedDayType];
+
+
+export const DayTypeSuggestionSuggestedDayType = {
+  weekday: 'weekday',
+  weekend: 'weekend',
+  holiday: 'holiday',
+} as const;
+
+export interface DayTypeSuggestion {
+  date: string;
+  suggestedDayType: DayTypeSuggestionSuggestedDayType;
+  reason: string;
+  isHoliday?: boolean;
+  /** @nullable */
+  holidayName?: string | null;
+}
+
+export type ListEmployeesParams = {
+rosterId?: number;
+};
+
+export type ListEventsParams = {
+rosterId?: number;
+};
+
 export type GetUpNextParams = {
+rosterId: number;
 dayType?: GetUpNextDayType;
 };
 
@@ -199,5 +293,14 @@ export type GetUpNextDayType = typeof GetUpNextDayType[keyof typeof GetUpNextDay
 export const GetUpNextDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
+  holiday: 'holiday',
 } as const;
+
+export type GetStatsParams = {
+rosterId?: number;
+};
+
+export type SuggestDayTypeParams = {
+date: string;
+};
 

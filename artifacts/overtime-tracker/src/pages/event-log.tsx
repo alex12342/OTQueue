@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useRoster } from "@/hooks/use-roster";
 
 function downloadCsv(filename: string, rows: string[][]) {
   const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
@@ -45,9 +46,17 @@ export default function EventLog() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
 
-  const { data: events, isLoading } = useListEvents({
-    query: { queryKey: getListEventsQueryKey() },
-  });
+  const { activeRosterId } = useRoster();
+
+  const { data: events, isLoading } = useListEvents(
+    { rosterId: activeRosterId ?? undefined },
+    {
+      query: {
+        queryKey: getListEventsQueryKey({ rosterId: activeRosterId ?? undefined }),
+        enabled: activeRosterId != null,
+      },
+    }
+  );
 
   const deleteMutation = useDeleteEvent({
     mutation: {

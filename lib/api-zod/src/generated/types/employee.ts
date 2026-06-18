@@ -5,17 +5,23 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { EmployeeCategory } from './employeeCategory';
 
 export interface Employee {
   id: number;
+  rosterId: number;
   name: string;
-  /** Lower number = higher seniority priority */
   seniority: number;
-  category: EmployeeCategory;
+  /** @nullable */
+  roleId?: number | null;
+  /** @nullable */
+  roleName?: string | null;
+  /** @nullable */
+  subclassId?: number | null;
+  /** @nullable */
+  subclassName?: string | null;
   active: boolean;
-  /** Total hours where employee was offered overtime */
   totalOfferedHours?: number;
-  /** Total hours employee actually worked */
   totalWorkedHours?: number;
+  /** Weighted offered hours used for rotation ordering */
+  fairnessScore?: number;
 }

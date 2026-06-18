@@ -12,7 +12,6 @@ export interface EmployeeReport {
   employee: Employee;
   totalOfferedHours: number;
   totalWorkedHours: number;
-  /** Percentage of offered events that were worked */
   acceptanceRate?: number;
   events: EmployeeEventRecord[];
 }

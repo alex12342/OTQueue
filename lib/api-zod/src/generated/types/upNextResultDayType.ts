@@ -12,4 +12,5 @@ export type UpNextResultDayType = typeof UpNextResultDayType[keyof typeof UpNext
 export const UpNextResultDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
+  holiday: 'holiday',
 } as const;

@@ -1,32 +1,66 @@
 import React, { useState } from "react";
-import { useGetUpNext, getGetUpNextQueryKey, useGetStats, getGetStatsQueryKey } from "@workspace/api-client-react";
+import {
+  useGetUpNext,
+  getGetUpNextQueryKey,
+  useGetStats,
+  getGetStatsQueryKey,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, Clock, Users, ArrowRight } from "lucide-react";
+import { BarChart3, Clock, Users } from "lucide-react";
 import { Link } from "wouter";
+import { useRoster } from "@/hooks/use-roster";
+import { cn } from "@/lib/utils";
+
+type DayType = "weekday" | "weekend" | "holiday";
+
+const DAY_TYPE_LABELS: Record<DayType, string> = {
+  weekday: "Weekday",
+  weekend: "Weekend",
+  holiday: "Holiday",
+};
 
 export default function Home() {
-  const [dayType, setDayType] = useState<"weekday" | "weekend">("weekday");
+  const [dayType, setDayType] = useState<DayType>("weekday");
+  const { activeRosterId, activeRoster } = useRoster();
 
   const { data: upNextData, isLoading: isLoadingUpNext } = useGetUpNext(
-    { dayType },
-    { query: { queryKey: getGetUpNextQueryKey({ dayType }) } }
+    { rosterId: activeRosterId ?? 0, dayType },
+    {
+      query: {
+        queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType }),
+        enabled: activeRosterId != null,
+      },
+    }
   );
 
-  const { data: stats, isLoading: isLoadingStats } = useGetStats({
-    query: { queryKey: getGetStatsQueryKey() },
-  });
+  const { data: stats, isLoading: isLoadingStats } = useGetStats(
+    { rosterId: activeRosterId ?? undefined },
+    {
+      query: {
+        queryKey: getGetStatsQueryKey({ rosterId: activeRosterId ?? undefined }),
+        enabled: activeRosterId != null,
+      },
+    }
+  );
 
   return (
     <div className="space-y-8 max-w-5xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Overview</h1>
-          <p className="text-muted-foreground mt-1">Current overtime rotation and statistics.</p>
+          <p className="text-muted-foreground mt-1">
+            {activeRoster ? (
+              <>Rotation for <span className="font-medium text-foreground">{activeRoster.name}</span></>
+            ) : (
+              "Current overtime rotation and statistics."
+            )}
+          </p>
         </div>
-        <Link href="/events/new" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+        <Link
+          href="/events/new"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+        >
           Log Overtime Event
         </Link>
       </div>
@@ -60,7 +94,7 @@ export default function Home() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Roster</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Employees</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -79,37 +113,34 @@ export default function Home() {
             <div>
               <CardTitle className="text-xl">Up Next Rotation</CardTitle>
               <CardDescription className="mt-1">
-                Ordered by lowest offered hours, then seniority.
+                Ordered by subclass priority → fairness hours → seniority.
               </CardDescription>
             </div>
             <div className="flex p-1 bg-secondary rounded-md shadow-inner">
-              <button
-                data-testid="btn-weekday"
-                className={`px-4 py-1.5 text-sm font-medium rounded ${
-                  dayType === "weekday" 
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border" 
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                onClick={() => setDayType("weekday")}
-              >
-                Weekday (4H Priority)
-              </button>
-              <button
-                data-testid="btn-weekend"
-                className={`px-4 py-1.5 text-sm font-medium rounded ${
-                  dayType === "weekend" 
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border" 
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                onClick={() => setDayType("weekend")}
-              >
-                Weekend (FT Priority)
-              </button>
+              {(["weekday", "weekend", "holiday"] as DayType[]).map((dt) => (
+                <button
+                  key={dt}
+                  data-testid={`btn-${dt}`}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded transition-colors",
+                    dayType === dt
+                      ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setDayType(dt)}
+                >
+                  {DAY_TYPE_LABELS[dt]}
+                </button>
+              ))}
             </div>
           </div>
         </CardHeader>
         <div className="p-0">
-          {isLoadingUpNext ? (
+          {!activeRosterId ? (
+            <div className="p-12 text-center text-muted-foreground">
+              <p>No roster selected. Choose one from the sidebar.</p>
+            </div>
+          ) : isLoadingUpNext ? (
             <div className="space-y-4 p-6">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
@@ -117,16 +148,17 @@ export default function Home() {
             </div>
           ) : !upNextData?.employees?.length ? (
             <div className="p-12 text-center text-muted-foreground">
-              <p>No active employees found in the roster.</p>
+              <p>No active employees found in this roster.</p>
             </div>
           ) : (
             <div className="divide-y">
               {upNextData.employees.map((emp, index) => (
-                <div 
-                  key={emp.id} 
-                  className={`flex items-center justify-between p-4 sm:px-6 hover:bg-muted/30 transition-colors ${
-                    index === 0 ? "bg-primary/5 border-l-4 border-l-primary" : "border-l-4 border-l-transparent"
-                  }`}
+                <div
+                  key={emp.id}
+                  className={cn(
+                    "flex items-center justify-between p-4 sm:px-6 hover:bg-muted/30 transition-colors border-l-4",
+                    index === 0 ? "bg-primary/5 border-l-primary" : "border-l-transparent"
+                  )}
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground font-bold text-sm">
@@ -136,8 +168,18 @@ export default function Home() {
                       <div className="font-semibold text-base">{emp.name}</div>
                       <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                         <span>Seniority: #{emp.seniority}</span>
-                        <span>&bull;</span>
-                        <span>{emp.category === "full_time" ? "Full Time" : "4-Hour"}</span>
+                        {emp.subclassName && (
+                          <>
+                            <span>&bull;</span>
+                            <span>{emp.subclassName}</span>
+                          </>
+                        )}
+                        {emp.roleName && (
+                          <>
+                            <span>&bull;</span>
+                            <span className="italic">{emp.roleName}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

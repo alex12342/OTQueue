@@ -9,6 +9,7 @@ import type { UpNextEmployee } from './upNextEmployee';
 import type { UpNextResultDayType } from './upNextResultDayType';
 
 export interface UpNextResult {
+  rosterId: number;
   dayType: UpNextResultDayType;
   employees: UpNextEmployee[];
 }

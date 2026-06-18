@@ -5,13 +5,18 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { UpNextEmployeeCategory } from './upNextEmployeeCategory';
 
 export interface UpNextEmployee {
   id: number;
   name: string;
-  category: UpNextEmployeeCategory;
+  /** @nullable */
+  subclassId?: number | null;
+  /** @nullable */
+  subclassName?: string | null;
+  /** @nullable */
+  roleName?: string | null;
   seniority: number;
   totalOfferedHours: number;
+  fairnessScore: number;
   rank: number;
 }

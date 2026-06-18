@@ -5,13 +5,15 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { EmployeeUpdateCategory } from './employeeUpdateCategory';
 
 export interface EmployeeUpdate {
   /** @minLength 1 */
   name?: string;
   /** @minimum 1 */
   seniority?: number;
-  category?: EmployeeUpdateCategory;
+  /** @nullable */
+  roleId?: number | null;
+  /** @nullable */
+  subclassId?: number | null;
   active?: boolean;
 }

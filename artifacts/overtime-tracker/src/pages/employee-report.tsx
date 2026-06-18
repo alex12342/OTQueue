@@ -53,7 +53,6 @@ export default function EmployeeReport() {
   const empId = parseInt(id, 10);
 
   const [editOpen, setEditOpen] = useState(false);
-  const [editCategory, setEditCategory] = useState<"four_hour" | "full_time">("full_time");
   const [editActive, setEditActive] = useState(true);
 
   const { data: report, isLoading, error } = useGetEmployeeReport(empId, {
@@ -108,7 +107,6 @@ export default function EmployeeReport() {
 
   const openEdit = () => {
     if (!report?.employee) return;
-    setEditCategory(report.employee.category as "four_hour" | "full_time");
     setEditActive(report.employee.active);
     setEditOpen(true);
   };
@@ -121,7 +119,6 @@ export default function EmployeeReport() {
       data: {
         name: fd.get("name") as string,
         seniority: parseInt(fd.get("seniority") as string, 10),
-        category: editCategory,
         active: editActive,
       },
     });
@@ -161,7 +158,8 @@ export default function EmployeeReport() {
                   <span>&bull;</span>
                   <span>Seniority #{report?.employee.seniority}</span>
                   <span>&bull;</span>
-                  <span>{report?.employee.category === "full_time" ? "Full Time" : "4-Hour"}</span>
+                  {report?.employee.subclassName && <span>{report.employee.subclassName}</span>}
+                  {report?.employee.roleName && <span className="italic">{report.employee.roleName}</span>}
                 </>
               )}
             </div>
@@ -249,16 +247,6 @@ export default function EmployeeReport() {
                     required
                     data-testid="input-edit-seniority"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select value={editCategory} onValueChange={(v) => setEditCategory(v as "four_hour" | "full_time")}>
-                    <SelectTrigger data-testid="select-edit-category"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="four_hour">4-Hour</SelectItem>
-                      <SelectItem value="full_time">Full Time</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               <div className="flex items-center gap-2 pt-1">

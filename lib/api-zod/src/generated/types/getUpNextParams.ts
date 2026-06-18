@@ -8,5 +8,6 @@
 import type { GetUpNextDayType } from './getUpNextDayType';
 
 export type GetUpNextParams = {
+rosterId: number;
 dayType?: GetUpNextDayType;
 };

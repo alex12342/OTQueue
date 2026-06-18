@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
-import { db, employeesTable, eventEntriesTable, eventsTable } from "@workspace/db";
+import { db, employeesTable, eventEntriesTable, eventsTable, rolesTable, subclassesTable, rosterSettingsTable } from "@workspace/db";
 import {
   CreateEmployeeBody,
   GetEmployeeParams,
@@ -8,13 +8,58 @@ import {
   UpdateEmployeeBody,
   DeleteEmployeeParams,
   GetEmployeeReportParams,
+  ListEmployeesQueryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
+async function computeFairnessScore(
+  employeeId: number,
+  subclassId: number | null,
+  rosterId: number
+): Promise<number> {
+  const [settings] = await db
+    .select()
+    .from(rosterSettingsTable)
+    .where(eq(rosterSettingsTable.rosterId, rosterId));
+
+  const useWeighted = settings?.useWeightedHours ?? false;
+
+  if (!useWeighted || !subclassId) {
+    const [hrs] = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
+      })
+      .from(eventEntriesTable)
+      .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
+      .where(eq(eventEntriesTable.employeeId, employeeId));
+    return Number(hrs?.total ?? 0);
+  }
+
+  const [subclass] = await db.select().from(subclassesTable).where(eq(subclassesTable.id, subclassId));
+  const offeredMult = Number(subclass?.offeredMultiplier ?? 1);
+
+  const [hrs] = await db
+    .select({
+      total: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
+    })
+    .from(eventEntriesTable)
+    .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
+    .where(eq(eventEntriesTable.employeeId, employeeId));
+
+  return Number(hrs?.total ?? 0) * offeredMult;
+}
+
 async function getEmployeeWithHours(id: number) {
   const [employee] = await db.select().from(employeesTable).where(eq(employeesTable.id, id));
   if (!employee) return null;
+
+  const [role] = employee.roleId
+    ? await db.select().from(rolesTable).where(eq(rolesTable.id, employee.roleId))
+    : [null];
+  const [subclass] = employee.subclassId
+    ? await db.select().from(subclassesTable).where(eq(subclassesTable.id, employee.subclassId))
+    : [null];
 
   const [hrs] = await db
     .select({
@@ -25,36 +70,40 @@ async function getEmployeeWithHours(id: number) {
     .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
     .where(eq(eventEntriesTable.employeeId, id));
 
+  const fairnessScore = await computeFairnessScore(id, employee.subclassId, employee.rosterId);
+
   return {
-    ...employee,
+    id: employee.id,
+    rosterId: employee.rosterId,
+    name: employee.name,
+    seniority: employee.seniority,
+    roleId: employee.roleId,
+    roleName: role?.name ?? null,
+    subclassId: employee.subclassId,
+    subclassName: subclass?.name ?? null,
+    active: employee.active,
     totalOfferedHours: Number(hrs?.totalOfferedHours ?? 0),
     totalWorkedHours: Number(hrs?.totalWorkedHours ?? 0),
+    fairnessScore,
   };
 }
 
-router.get("/employees", async (_req, res): Promise<void> => {
-  const employees = await db.select().from(employeesTable).orderBy(employeesTable.seniority);
+router.get("/employees", async (req, res): Promise<void> => {
+  const parsed = ListEmployeesQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
 
-  const withHours = await Promise.all(
-    employees.map(async (emp) => {
-      const [hrs] = await db
-        .select({
-          totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
-          totalWorkedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.worked} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
-        })
-        .from(eventEntriesTable)
-        .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-        .where(eq(eventEntriesTable.employeeId, emp.id));
+  let query = db.select().from(employeesTable).$dynamic();
+  if (parsed.data.rosterId !== undefined) {
+    query = query.where(eq(employeesTable.rosterId, parsed.data.rosterId));
+  }
 
-      return {
-        ...emp,
-        totalOfferedHours: Number(hrs?.totalOfferedHours ?? 0),
-        totalWorkedHours: Number(hrs?.totalWorkedHours ?? 0),
-      };
-    })
-  );
+  const employees = await query.orderBy(employeesTable.seniority);
 
-  res.json(withHours);
+  const withHours = await Promise.all(employees.map((emp) => getEmployeeWithHours(emp.id)));
+  res.json(withHours.filter(Boolean));
 });
 
 router.post("/employees", async (req, res): Promise<void> => {
@@ -67,14 +116,17 @@ router.post("/employees", async (req, res): Promise<void> => {
   const [employee] = await db
     .insert(employeesTable)
     .values({
+      rosterId: parsed.data.rosterId,
       name: parsed.data.name,
       seniority: parsed.data.seniority,
-      category: parsed.data.category,
+      roleId: parsed.data.roleId ?? null,
+      subclassId: parsed.data.subclassId ?? null,
       active: parsed.data.active ?? true,
     })
     .returning();
 
-  res.status(201).json({ ...employee, totalOfferedHours: 0, totalWorkedHours: 0 });
+  const withHours = await getEmployeeWithHours(employee.id);
+  res.status(201).json(withHours);
 });
 
 router.get("/employees/:id", async (req, res): Promise<void> => {
@@ -109,7 +161,8 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
   const updateData: Partial<typeof employeesTable.$inferInsert> = {};
   if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
   if (parsed.data.seniority !== undefined) updateData.seniority = parsed.data.seniority;
-  if (parsed.data.category !== undefined) updateData.category = parsed.data.category;
+  if (parsed.data.roleId !== undefined) updateData.roleId = parsed.data.roleId;
+  if (parsed.data.subclassId !== undefined) updateData.subclassId = parsed.data.subclassId;
   if (parsed.data.active !== undefined) updateData.active = parsed.data.active;
 
   const [updated] = await db
@@ -166,6 +219,7 @@ router.get("/employees/:id/report", async (req, res): Promise<void> => {
       date: eventsTable.date,
       description: eventsTable.description,
       defaultHours: eventsTable.defaultHours,
+      dayType: eventsTable.dayType,
       offered: eventEntriesTable.offered,
       worked: eventEntriesTable.worked,
       hoursOverride: eventEntriesTable.hoursOverride,
@@ -182,6 +236,7 @@ router.get("/employees/:id/report", async (req, res): Promise<void> => {
       eventId: e.eventId,
       date: e.date,
       description: e.description,
+      dayType: e.dayType,
       offered: e.offered,
       worked: e.worked,
       hoursOverride: override,

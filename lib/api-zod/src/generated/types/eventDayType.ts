@@ -12,4 +12,5 @@ export type EventDayType = typeof EventDayType[keyof typeof EventDayType];
 export const EventDayType = {
   weekday: 'weekday',
   weekend: 'weekend',
+  holiday: 'holiday',
 } as const;

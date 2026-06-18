@@ -6,15 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface EmployeeInput {
-  rosterId: number;
+export interface RosterInput {
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
-  seniority: number;
   /** @nullable */
-  roleId?: number | null;
-  /** @nullable */
-  subclassId?: number | null;
-  active?: boolean;
+  description?: string | null;
 }
