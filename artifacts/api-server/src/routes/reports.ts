@@ -168,14 +168,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
       const fairnessScore = Number(hrs?.fairnessScore ?? 0);
       const subclass = emp.subclassId ? subclassMap.get(emp.subclassId) : null;
 
-      const priorityField =
-        dayType === "weekday"
-          ? "weekdayPriority"
-          : dayType === "weekend"
-          ? "weekendPriority"
-          : "holidayPriority";
-
-      const subclassPriority = subclass?.[priorityField] ?? 999;
+      const subclassPriority = subclass?.sortOrder ?? 999;
 
       return {
         id: emp.id,

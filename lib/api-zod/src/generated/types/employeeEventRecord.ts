@@ -5,17 +5,17 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { EmployeeEventRecordDayType } from './employeeEventRecordDayType';
 
 export interface EmployeeEventRecord {
   eventId: number;
   date: Date;
   description: string;
-  dayType: EmployeeEventRecordDayType;
+  dayType: string;
   offered: boolean;
   worked: boolean;
   hoursOffered: number;
   hoursAwarded: number;
   /** @nullable */
   hoursOverride?: number | null;
+  multiplier: number;
 }

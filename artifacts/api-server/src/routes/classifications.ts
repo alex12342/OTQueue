@@ -117,16 +117,14 @@ router.get("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => {
     .select()
     .from(subclassesTable)
     .where(eq(subclassesTable.rosterId, params.data.rosterId))
-    .orderBy(subclassesTable.weekdayPriority);
+    .orderBy(subclassesTable.sortOrder);
 
   res.json(
     subclasses.map((s) => ({
       id: s.id,
       rosterId: s.rosterId,
       name: s.name,
-      weekdayPriority: s.weekdayPriority,
-      weekendPriority: s.weekendPriority,
-      holidayPriority: s.holidayPriority,
+      sortOrder: s.sortOrder,
     }))
   );
 });
@@ -149,9 +147,7 @@ router.post("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => 
     .values({
       rosterId: params.data.rosterId,
       name: parsed.data.name,
-      weekdayPriority: parsed.data.weekdayPriority ?? 1,
-      weekendPriority: parsed.data.weekendPriority ?? 1,
-      holidayPriority: parsed.data.holidayPriority ?? 1,
+      sortOrder: parsed.data.sortOrder ?? 0,
     })
     .returning();
 
@@ -159,9 +155,7 @@ router.post("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => 
     id: subclass.id,
     rosterId: subclass.rosterId,
     name: subclass.name,
-    weekdayPriority: subclass.weekdayPriority,
-    weekendPriority: subclass.weekendPriority,
-    holidayPriority: subclass.holidayPriority,
+    sortOrder: subclass.sortOrder,
   });
 });
 
@@ -180,9 +174,7 @@ router.patch("/rosters/:rosterId/subclasses/:id", async (req, res): Promise<void
 
   const updateData: Partial<typeof subclassesTable.$inferInsert> = {};
   if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
-  if (parsed.data.weekdayPriority !== undefined) updateData.weekdayPriority = parsed.data.weekdayPriority;
-  if (parsed.data.weekendPriority !== undefined) updateData.weekendPriority = parsed.data.weekendPriority;
-  if (parsed.data.holidayPriority !== undefined) updateData.holidayPriority = parsed.data.holidayPriority;
+  if (parsed.data.sortOrder !== undefined) updateData.sortOrder = parsed.data.sortOrder;
 
   const [updated] = await db
     .update(subclassesTable)
@@ -199,9 +191,7 @@ router.patch("/rosters/:rosterId/subclasses/:id", async (req, res): Promise<void
     id: updated.id,
     rosterId: updated.rosterId,
     name: updated.name,
-    weekdayPriority: updated.weekdayPriority,
-    weekendPriority: updated.weekendPriority,
-    holidayPriority: updated.holidayPriority,
+    sortOrder: updated.sortOrder,
   });
 });
 

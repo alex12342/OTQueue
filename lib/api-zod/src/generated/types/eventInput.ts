@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EventEntryInput } from './eventEntryInput';
-import type { EventInputDayType } from './eventInputDayType';
 
 export interface EventInput {
   rosterId: number;
@@ -15,7 +14,7 @@ export interface EventInput {
   description: string;
   /** @minimum 0 */
   defaultHours: number;
-  dayType: EventInputDayType;
+  dayType: string;
   /** @minimum 0 */
   multiplier?: number;
   /** @minItems 1 */

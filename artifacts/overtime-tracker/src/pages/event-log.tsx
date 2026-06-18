@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil, Search, Download, X } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil, Search, Download, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
@@ -89,25 +89,28 @@ export default function EventLog() {
 
   const handleExport = () => {
     if (!filteredEvents.length) return;
-    const header = ["Event ID", "Date", "Description", "Day Type", "Default Hours", "Employee", "Status", "Hours Override", "Hours Offered", "Hours Awarded"];
+    const header = ["Event ID", "Date", "Description", "Day Type", "Default Hours", "Multiplier", "Employee", "Status", "Hours Override", "Hours Offered", "Normalized Hours"];
     const rows: string[][] = [header];
     for (const ev of filteredEvents) {
+      const multiplier = ev.multiplier ?? 1;
       if (!ev.entries?.length) {
-        rows.push([String(ev.id), ev.date, ev.description, ev.dayType ?? "", String(ev.defaultHours), "", "", "", "", ""]);
+        rows.push([String(ev.id), ev.date, ev.description, ev.dayType ?? "", String(ev.defaultHours), String(multiplier), "", "", "", "", ""]);
       } else {
         for (const entry of ev.entries) {
           const status = entry.worked ? "Worked" : entry.offered ? "Offered" : "";
+          const normalizedHours = entry.offered ? (entry.hoursOffered * multiplier).toFixed(2) : "";
           rows.push([
             String(ev.id),
             ev.date,
             ev.description,
             ev.dayType ?? "",
             String(ev.defaultHours),
+            String(multiplier),
             entry.employeeName,
             status,
             entry.hoursOverride != null ? String(entry.hoursOverride) : "",
             String(entry.hoursOffered),
-            String(entry.hoursAwarded),
+            normalizedHours,
           ]);
         }
       }
@@ -186,119 +189,142 @@ export default function EventLog() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredEvents.map((event) => (
-            <Card key={event.id} className="overflow-hidden">
-              <CardHeader className="bg-muted/30 border-b pb-4 flex flex-row items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <CardTitle className="text-lg">{event.description}</CardTitle>
-                    <Badge variant={event.dayType === "weekend" ? "secondary" : "outline"} className="capitalize">
-                      {event.dayType}
-                    </Badge>
+          {filteredEvents.map((event) => {
+            const multiplier = event.multiplier ?? 1;
+            const hasMultiplier = multiplier !== 1;
+            return (
+              <Card key={event.id} className="overflow-hidden">
+                <CardHeader className="bg-muted/30 border-b pb-4 flex flex-row items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <CardTitle className="text-lg">{event.description}</CardTitle>
+                      <Badge variant={event.dayType === "weekend" ? "secondary" : "outline"} className="capitalize">
+                        {event.dayType}
+                      </Badge>
+                      {hasMultiplier && (
+                        <Badge variant="secondary" className="gap-1 font-mono text-xs">
+                          <Zap className="h-3 w-3" />
+                          ×{multiplier}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription className="flex items-center gap-4 text-sm font-medium">
+                      <span className="flex items-center gap-1">
+                        <CalendarIcon className="w-3.5 h-3.5" /> {format(new Date(event.date), "MMM d, yyyy")}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> {event.defaultHours}h Default
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" /> {event.entries?.length || 0} Involved
+                      </span>
+                    </CardDescription>
                   </div>
-                  <CardDescription className="flex items-center gap-4 text-sm font-medium">
-                    <span className="flex items-center gap-1">
-                      <CalendarIcon className="w-3.5 h-3.5" /> {format(new Date(event.date), "MMM d, yyyy")}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> {event.defaultHours}h Default
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {event.entries?.length || 0} Involved
-                    </span>
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Link href={`/events/${event.id}/edit`}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-foreground"
-                      data-testid={`button-edit-event-${event.id}`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <div className="flex items-center gap-1">
+                    <Link href={`/events/${event.id}/edit`}>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground hover:text-destructive"
-                        data-testid={`button-delete-event-${event.id}`}
+                        className="text-muted-foreground hover:text-foreground"
+                        data-testid={`button-edit-event-${event.id}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this event?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete the event and reverse its hours from the employees' totals. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteMutation.mutate({ id: event.id })}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    </Link>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          data-testid={`button-delete-event-${event.id}`}
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-muted-foreground uppercase bg-secondary/30">
-                      <tr>
-                        <th className="px-6 py-3 font-medium">Employee</th>
-                        <th className="px-6 py-3 font-medium text-center">Status</th>
-                        <th className="px-6 py-3 font-medium text-right">Hours Awarded</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {event.entries?.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-muted/10">
-                          <td className="px-6 py-3 font-medium text-foreground">{entry.employeeName}</td>
-                          <td className="px-6 py-3 text-center">
-                            {entry.worked ? (
-                              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-none border-0">
-                                Worked
-                              </Badge>
-                            ) : entry.offered ? (
-                              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
-                                Offered
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-3 text-right tabular-nums">
-                            {entry.hoursAwarded ? (
-                              <span className="font-medium">{entry.hoursAwarded}h</span>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                      {!event.entries?.length && (
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the event and reverse its hours from the employees' totals. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate({ id: event.id })}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-muted-foreground uppercase bg-secondary/30">
                         <tr>
-                          <td colSpan={3} className="px-6 py-4 text-center text-muted-foreground">
-                            No entries recorded
-                          </td>
+                          <th className="px-6 py-3 font-medium">Employee</th>
+                          <th className="px-6 py-3 font-medium text-center">Status</th>
+                          <th className="px-6 py-3 font-medium text-right">Hours</th>
+                          {hasMultiplier && (
+                            <th className="px-6 py-3 font-medium text-right">Normalized</th>
+                          )}
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {event.entries?.map((entry) => {
+                          const normalizedHours = entry.hoursOffered > 0
+                            ? parseFloat((entry.hoursOffered * multiplier).toFixed(2))
+                            : null;
+                          return (
+                            <tr key={entry.id} className="hover:bg-muted/10">
+                              <td className="px-6 py-3 font-medium text-foreground">{entry.employeeName}</td>
+                              <td className="px-6 py-3 text-center">
+                                {entry.worked ? (
+                                  <Badge className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-none border-0">
+                                    Worked
+                                  </Badge>
+                                ) : entry.offered ? (
+                                  <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                                    Offered
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-3 text-right tabular-nums">
+                                {entry.hoursOffered ? (
+                                  <span className="font-medium">{entry.hoursOffered}h</span>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </td>
+                              {hasMultiplier && (
+                                <td className="px-6 py-3 text-right tabular-nums font-mono text-xs text-muted-foreground">
+                                  {normalizedHours != null ? `${normalizedHours}h` : "-"}
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                        {!event.entries?.length && (
+                          <tr>
+                            <td colSpan={hasMultiplier ? 4 : 3} className="px-6 py-4 text-center text-muted-foreground">
+                              No entries recorded
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

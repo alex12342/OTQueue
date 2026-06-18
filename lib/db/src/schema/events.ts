@@ -9,7 +9,7 @@ export const eventsTable = pgTable("events", {
   date: date("date", { mode: "string" }).notNull(),
   description: text("description").notNull(),
   defaultHours: numeric("default_hours", { precision: 5, scale: 2 }).notNull(),
-  dayType: text("day_type").notNull().default("weekday").$type<"weekday" | "weekend" | "holiday">(),
+  dayType: text("day_type").notNull().default("weekday"),
   multiplier: numeric("multiplier", { precision: 5, scale: 2 }).notNull().default("1.00"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

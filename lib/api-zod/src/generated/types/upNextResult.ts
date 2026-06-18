@@ -6,10 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UpNextEmployee } from './upNextEmployee';
-import type { UpNextResultDayType } from './upNextResultDayType';
 
 export interface UpNextResult {
   rosterId: number;
-  dayType: UpNextResultDayType;
+  dayType: string;
   employees: UpNextEmployee[];
 }

@@ -204,6 +204,7 @@ router.get("/employees/:id/report", async (req, res): Promise<void> => {
       description: eventsTable.description,
       defaultHours: eventsTable.defaultHours,
       dayType: eventsTable.dayType,
+      multiplier: eventsTable.multiplier,
       offered: eventEntriesTable.offered,
       worked: eventEntriesTable.worked,
       hoursOverride: eventEntriesTable.hoursOverride,
@@ -216,11 +217,13 @@ router.get("/employees/:id/report", async (req, res): Promise<void> => {
   const eventRecords = entries.map((e) => {
     const defaultHours = Number(e.defaultHours);
     const override = e.hoursOverride ? Number(e.hoursOverride) : null;
+    const multiplier = Number(e.multiplier ?? 1);
     return {
       eventId: e.eventId,
       date: e.date,
       description: e.description,
       dayType: e.dayType,
+      multiplier,
       offered: e.offered,
       worked: e.worked,
       hoursOverride: override,

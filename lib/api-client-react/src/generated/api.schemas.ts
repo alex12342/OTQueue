@@ -74,20 +74,14 @@ export interface Subclass {
   id: number;
   rosterId: number;
   name: string;
-  weekdayPriority: number;
-  weekendPriority: number;
-  holidayPriority: number;
+  /** Lower value = higher priority in Up Next ordering */
+  sortOrder: number;
 }
 
 export interface SubclassInput {
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
-  weekdayPriority?: number;
-  /** @minimum 1 */
-  weekendPriority?: number;
-  /** @minimum 1 */
-  holidayPriority?: number;
+  sortOrder?: number;
 }
 
 export interface Employee {
@@ -135,15 +129,6 @@ export interface EmployeeUpdate {
   active?: boolean;
 }
 
-export type EventDayType = typeof EventDayType[keyof typeof EventDayType];
-
-
-export const EventDayType = {
-  weekday: 'weekday',
-  weekend: 'weekend',
-  holiday: 'holiday',
-} as const;
-
 export interface EventEntry {
   id: number;
   employeeId: number;
@@ -162,19 +147,10 @@ export interface Event {
   date: string;
   description: string;
   defaultHours: number;
-  dayType: EventDayType;
+  dayType: string;
   multiplier: number;
   entries: EventEntry[];
 }
-
-export type EventInputDayType = typeof EventInputDayType[keyof typeof EventInputDayType];
-
-
-export const EventInputDayType = {
-  weekday: 'weekday',
-  weekend: 'weekend',
-  holiday: 'holiday',
-} as const;
 
 export interface EventEntryInput {
   employeeId: number;
@@ -191,21 +167,12 @@ export interface EventInput {
   description: string;
   /** @minimum 0 */
   defaultHours: number;
-  dayType: EventInputDayType;
+  dayType: string;
   /** @minimum 0 */
   multiplier?: number;
   /** @minItems 1 */
   entries: EventEntryInput[];
 }
-
-export type UpNextResultDayType = typeof UpNextResultDayType[keyof typeof UpNextResultDayType];
-
-
-export const UpNextResultDayType = {
-  weekday: 'weekday',
-  weekend: 'weekend',
-  holiday: 'holiday',
-} as const;
 
 export interface UpNextEmployee {
   id: number;
@@ -224,30 +191,22 @@ export interface UpNextEmployee {
 
 export interface UpNextResult {
   rosterId: number;
-  dayType: UpNextResultDayType;
+  dayType: string;
   employees: UpNextEmployee[];
 }
-
-export type EmployeeEventRecordDayType = typeof EmployeeEventRecordDayType[keyof typeof EmployeeEventRecordDayType];
-
-
-export const EmployeeEventRecordDayType = {
-  weekday: 'weekday',
-  weekend: 'weekend',
-  holiday: 'holiday',
-} as const;
 
 export interface EmployeeEventRecord {
   eventId: number;
   date: string;
   description: string;
-  dayType: EmployeeEventRecordDayType;
+  dayType: string;
   offered: boolean;
   worked: boolean;
   hoursOffered: number;
   hoursAwarded: number;
   /** @nullable */
   hoursOverride?: number | null;
+  multiplier: number;
 }
 
 export interface EmployeeReport {
@@ -302,17 +261,8 @@ rosterId?: number;
 
 export type GetUpNextParams = {
 rosterId: number;
-dayType?: GetUpNextDayType;
+dayType?: string;
 };
-
-export type GetUpNextDayType = typeof GetUpNextDayType[keyof typeof GetUpNextDayType];
-
-
-export const GetUpNextDayType = {
-  weekday: 'weekday',
-  weekend: 'weekend',
-  holiday: 'holiday',
-} as const;
 
 export type GetStatsParams = {
 rosterId?: number;

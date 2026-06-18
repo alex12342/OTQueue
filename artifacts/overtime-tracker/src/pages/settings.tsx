@@ -22,7 +22,7 @@ import {
   getListDayTypeConfigQueryKey,
   useUpsertDayTypeConfig,
 } from "@workspace/api-client-react";
-import type { Roster, Role, Subclass, DayTypeConfig } from "@workspace/api-client-react";
+import type { Roster, Role, Subclass } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
-import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -50,13 +50,15 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="criteria">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="criteria">Criteria</TabsTrigger>
-          <TabsTrigger value="day-types">Day Types</TabsTrigger>
-          <TabsTrigger value="subclasses">Subclasses</TabsTrigger>
-          <TabsTrigger value="roles">Roles</TabsTrigger>
-          <TabsTrigger value="rosters">Rosters</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="flex w-full min-w-max">
+            <TabsTrigger value="criteria" className="flex-1">Criteria</TabsTrigger>
+            <TabsTrigger value="day-types" className="flex-1">Day Types</TabsTrigger>
+            <TabsTrigger value="subclasses" className="flex-1">Subclasses</TabsTrigger>
+            <TabsTrigger value="roles" className="flex-1">Roles</TabsTrigger>
+            <TabsTrigger value="rosters" className="flex-1">Rosters</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="criteria">
           {activeRosterId ? (
@@ -132,7 +134,7 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
       <CardHeader>
         <CardTitle>Sorting Criteria</CardTitle>
         <CardDescription>
-          Control which factors are used when building the Up Next rotation. Criteria are applied in order: subclass priority → offered hours → seniority.
+          Control which factors are used when building the Up Next rotation. Criteria are applied in order: subclass order → fairness hours → seniority.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -140,7 +142,7 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
           <div>
             <p className="font-medium">Subclass Ordering</p>
             <p className="text-sm text-muted-foreground">
-              Sort by subclass priority first (configured per-subclass in the Subclasses tab).
+              Sort by subclass sort order first (configured per-subclass in the Subclasses tab).
             </p>
           </div>
           <Switch
@@ -326,34 +328,18 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
     },
   });
 
-  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    createMutation.mutate({
-      rosterId,
-      data: {
-        name: fd.get("name") as string,
-        weekdayPriority: parseInt(fd.get("weekdayPriority") as string, 10) || 1,
-        weekendPriority: parseInt(fd.get("weekendPriority") as string, 10) || 1,
-        holidayPriority: parseInt(fd.get("holidayPriority") as string, 10) || 1,
-      },
-    });
+  const handleMoveUp = (subclass: Subclass, idx: number) => {
+    if (idx === 0) return;
+    const prev = subclasses[idx - 1];
+    updateMutation.mutate({ rosterId, id: subclass.id, data: { name: subclass.name, sortOrder: prev.sortOrder } });
+    updateMutation.mutate({ rosterId, id: prev.id, data: { name: prev.name, sortOrder: subclass.sortOrder } });
   };
 
-  const handleEdit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingSubclass) return;
-    const fd = new FormData(e.currentTarget);
-    updateMutation.mutate({
-      rosterId,
-      id: editingSubclass.id,
-      data: {
-        name: fd.get("name") as string,
-        weekdayPriority: parseInt(fd.get("weekdayPriority") as string, 10) || 1,
-        weekendPriority: parseInt(fd.get("weekendPriority") as string, 10) || 1,
-        holidayPriority: parseInt(fd.get("holidayPriority") as string, 10) || 1,
-      },
-    });
+  const handleMoveDown = (subclass: Subclass, idx: number) => {
+    if (idx === subclasses.length - 1) return;
+    const next = subclasses[idx + 1];
+    updateMutation.mutate({ rosterId, id: subclass.id, data: { name: subclass.name, sortOrder: next.sortOrder } });
+    updateMutation.mutate({ rosterId, id: next.id, data: { name: next.name, sortOrder: subclass.sortOrder } });
   };
 
   const SubclassForm = ({ defaultValues, onSubmit, isPending, submitLabel }: {
@@ -367,23 +353,10 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
         <Label>Name</Label>
         <Input name="name" defaultValue={defaultValues?.name} placeholder="e.g. Full-Time" required />
       </div>
-      <div className="border rounded-md p-4 space-y-3 bg-muted/20">
-        <p className="text-sm font-medium">Priority (lower = higher priority)</p>
-        <p className="text-xs text-muted-foreground">Sets order in the Up Next rotation when Subclass Ordering is enabled.</p>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs">Weekday</Label>
-            <Input name="weekdayPriority" type="number" min="1" defaultValue={defaultValues?.weekdayPriority ?? 1} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Weekend</Label>
-            <Input name="weekendPriority" type="number" min="1" defaultValue={defaultValues?.weekendPriority ?? 1} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Holiday</Label>
-            <Input name="holidayPriority" type="number" min="1" defaultValue={defaultValues?.holidayPriority ?? 1} />
-          </div>
-        </div>
+      <div className="space-y-2">
+        <Label>Sort Order</Label>
+        <p className="text-xs text-muted-foreground">Lower number = higher priority in Up Next (when Subclass Ordering is enabled).</p>
+        <Input name="sortOrder" type="number" defaultValue={defaultValues?.sortOrder ?? 0} />
       </div>
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isPending}>{submitLabel}</Button>
@@ -391,12 +364,38 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
     </form>
   );
 
+  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    createMutation.mutate({
+      rosterId,
+      data: {
+        name: fd.get("name") as string,
+        sortOrder: parseInt(fd.get("sortOrder") as string, 10) || 0,
+      },
+    });
+  };
+
+  const handleEdit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingSubclass) return;
+    const fd = new FormData(e.currentTarget);
+    updateMutation.mutate({
+      rosterId,
+      id: editingSubclass.id,
+      data: {
+        name: fd.get("name") as string,
+        sortOrder: parseInt(fd.get("sortOrder") as string, 10) || 0,
+      },
+    });
+  };
+
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Subclasses</CardTitle>
-          <CardDescription>Define employment types (e.g. Full-Time, 4-Hour) with their priority per day type.</CardDescription>
+          <CardDescription>Define employment types (e.g. Full-Time, 4-Hour). Use sort order or the arrows to set their priority in the Up Next rotation.</CardDescription>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -415,13 +414,33 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
           <p className="text-muted-foreground p-6 text-sm">No subclasses yet. Add one to classify employees.</p>
         ) : (
           <div className="divide-y">
-            {subclasses.map((s) => (
+            {subclasses.map((s, idx) => (
               <div key={s.id} className="flex items-center justify-between px-6 py-4">
-                <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Priority — Weekday: {s.weekdayPriority}, Weekend: {s.weekendPriority}, Holiday: {s.holidayPriority}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      disabled={idx === 0 || updateMutation.isPending}
+                      onClick={() => handleMoveUp(s, idx)}
+                    >
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      disabled={idx === subclasses.length - 1 || updateMutation.isPending}
+                      onClick={() => handleMoveDown(s, idx)}
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div>
+                    <p className="font-medium">{s.name}</p>
+                    <p className="text-xs text-muted-foreground">Sort order: {s.sortOrder}</p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Dialog open={editingSubclass?.id === s.id} onOpenChange={(open) => !open && setEditingSubclass(null)}>

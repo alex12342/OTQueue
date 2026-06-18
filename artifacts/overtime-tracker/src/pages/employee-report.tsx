@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -28,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Clock, History, BarChart, CheckCircle2, Pencil, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Clock, History, BarChart, CheckCircle2, Pencil, Trash2, Download, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format as formatDate } from "date-fns";
@@ -87,17 +86,21 @@ export default function EmployeeReport() {
 
   const handleExport = () => {
     if (!report) return;
-    const header = ["Date", "Event Description", "Status", "Hours Override", "Hours Offered", "Hours Awarded"];
+    const header = ["Date", "Event Description", "Day Type", "Multiplier", "Status", "Hours Override", "Hours Offered", "Normalized Hours"];
     const rows: string[][] = [header];
     for (const evt of report.events ?? []) {
+      const multiplier = evt.multiplier ?? 1;
+      const normalizedHours = evt.hoursOffered > 0 ? (evt.hoursOffered * multiplier).toFixed(2) : "";
       const status = evt.worked ? "Worked" : evt.offered ? "Declined" : "";
       rows.push([
         evt.date,
         evt.description,
+        evt.dayType ?? "",
+        String(multiplier),
         status,
         evt.hoursOverride != null ? String(evt.hoursOverride) : "",
         String(evt.hoursOffered),
-        String(evt.hoursAwarded),
+        normalizedHours,
       ]);
     }
     const name = report.employee.name.replace(/\s+/g, "-").toLowerCase();
@@ -135,6 +138,13 @@ export default function EmployeeReport() {
       </div>
     );
   }
+
+  const totalNormalizedHours = report?.events
+    ? report.events.reduce((sum, evt) => {
+        const multiplier = evt.multiplier ?? 1;
+        return sum + (evt.hoursOffered > 0 ? evt.hoursOffered * multiplier : 0);
+      }, 0)
+    : 0;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -268,7 +278,7 @@ export default function EmployeeReport() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Offered</CardTitle>
@@ -288,6 +298,17 @@ export default function EmployeeReport() {
           <CardContent>
             {isLoading ? <Skeleton className="h-8 w-20" /> : (
               <div className="text-3xl font-bold text-primary">{report?.totalWorkedHours}h</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Normalized Total</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-20" /> : (
+              <div className="text-3xl font-bold text-foreground">{parseFloat(totalNormalizedHours.toFixed(2))}h</div>
             )}
           </CardContent>
         </Card>
@@ -322,8 +343,8 @@ export default function EmployeeReport() {
                   <th className="px-6 py-4 font-medium">Date</th>
                   <th className="px-6 py-4 font-medium">Event Description</th>
                   <th className="px-6 py-4 font-medium text-center">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Awarded</th>
-                  <th className="px-6 py-4 font-medium text-right">Applied to Total</th>
+                  <th className="px-6 py-4 font-medium text-right">Hours Offered</th>
+                  <th className="px-6 py-4 font-medium text-right">Normalized</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -344,33 +365,55 @@ export default function EmployeeReport() {
                     </td>
                   </tr>
                 ) : (
-                  report.events.map((evt) => (
-                    <tr key={evt.eventId} className="hover:bg-muted/10">
-                      <td className="px-6 py-4 font-medium text-muted-foreground tabular-nums">
-                        {format(new Date(evt.date), "MMM d, yyyy")}
-                      </td>
-                      <td className="px-6 py-4 font-medium text-foreground">{evt.description}</td>
-                      <td className="px-6 py-4 text-center">
-                        {evt.worked ? (
-                          <Badge className="bg-primary/10 text-primary border-0 shadow-none">Worked</Badge>
-                        ) : evt.offered ? (
-                          <Badge variant="outline" className="text-muted-foreground">Declined</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right tabular-nums">
-                        {evt.hoursAwarded ? (
-                          <span className="font-semibold">{evt.hoursAwarded}h</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right tabular-nums font-mono text-muted-foreground">
-                        +{evt.hoursOffered}h
-                      </td>
-                    </tr>
-                  ))
+                  report.events.map((evt) => {
+                    const multiplier = evt.multiplier ?? 1;
+                    const normalizedHours = evt.hoursOffered > 0
+                      ? parseFloat((evt.hoursOffered * multiplier).toFixed(2))
+                      : null;
+                    const hasMultiplier = multiplier !== 1;
+                    return (
+                      <tr key={evt.eventId} className="hover:bg-muted/10">
+                        <td className="px-6 py-4 font-medium text-muted-foreground tabular-nums">
+                          {format(new Date(evt.date), "MMM d, yyyy")}
+                        </td>
+                        <td className="px-6 py-4 font-medium text-foreground">
+                          <div className="flex items-center gap-2">
+                            {evt.description}
+                            {hasMultiplier && (
+                              <Badge variant="secondary" className="gap-1 font-mono text-xs shrink-0">
+                                <Zap className="h-2.5 w-2.5" />×{multiplier}
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {evt.worked ? (
+                            <Badge className="bg-primary/10 text-primary border-0 shadow-none">Worked</Badge>
+                          ) : evt.offered ? (
+                            <Badge variant="outline" className="text-muted-foreground">Declined</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right tabular-nums">
+                          {evt.hoursOffered ? (
+                            <span className="font-semibold">{evt.hoursOffered}h</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right tabular-nums font-mono text-xs">
+                          {normalizedHours != null ? (
+                            <span className={hasMultiplier ? "text-foreground font-medium" : "text-muted-foreground"}>
+                              {normalizedHours}h
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

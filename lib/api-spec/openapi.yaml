@@ -642,7 +642,6 @@ paths:
           required: false
           schema:
             type: string
-            enum: [weekday, weekend, holiday]
             default: weekday
       responses:
         "200":
@@ -789,7 +788,7 @@ components:
 
     Subclass:
       type: object
-      required: [id, rosterId, name, weekdayPriority, weekendPriority, holidayPriority]
+      required: [id, rosterId, name, sortOrder]
       properties:
         id:
           type: integer
@@ -797,12 +796,9 @@ components:
           type: integer
         name:
           type: string
-        weekdayPriority:
+        sortOrder:
           type: integer
-        weekendPriority:
-          type: integer
-        holidayPriority:
-          type: integer
+          description: Lower value = higher priority in Up Next ordering
 
     SubclassInput:
       type: object
@@ -811,15 +807,8 @@ components:
         name:
           type: string
           minLength: 1
-        weekdayPriority:
+        sortOrder:
           type: integer
-          minimum: 1
-        weekendPriority:
-          type: integer
-          minimum: 1
-        holidayPriority:
-          type: integer
-          minimum: 1
 
     # ── Employees ─────────────────────────────────────────────────────────────
     Employee:
@@ -906,7 +895,6 @@ components:
           type: number
         dayType:
           type: string
-          enum: [weekday, weekend, holiday]
         multiplier:
           type: number
           default: 1
@@ -953,7 +941,6 @@ components:
           minimum: 0
         dayType:
           type: string
-          enum: [weekday, weekend, holiday]
         multiplier:
           type: number
           minimum: 0
@@ -986,7 +973,6 @@ components:
           type: integer
         dayType:
           type: string
-          enum: [weekday, weekend, holiday]
         employees:
           type: array
           items:
@@ -1034,7 +1020,7 @@ components:
 
     EmployeeEventRecord:
       type: object
-      required: [eventId, date, description, dayType, offered, worked, hoursOffered, hoursAwarded]
+      required: [eventId, date, description, dayType, offered, worked, hoursOffered, hoursAwarded, multiplier]
       properties:
         eventId:
           type: integer
@@ -1045,7 +1031,6 @@ components:
           type: string
         dayType:
           type: string
-          enum: [weekday, weekend, holiday]
         offered:
           type: boolean
         worked:
@@ -1056,6 +1041,9 @@ components:
           type: number
         hoursOverride:
           type: ["number", "null"]
+        multiplier:
+          type: number
+          default: 1
 
     Stats:
       type: object

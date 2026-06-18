@@ -14,9 +14,7 @@ export const subclassesTable = pgTable("subclasses", {
   id: serial("id").primaryKey(),
   rosterId: integer("roster_id").notNull().references(() => rostersTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  weekdayPriority: integer("weekday_priority").notNull().default(1),
-  weekendPriority: integer("weekend_priority").notNull().default(1),
-  holidayPriority: integer("holiday_priority").notNull().default(1),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

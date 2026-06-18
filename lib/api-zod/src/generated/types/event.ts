@@ -5,7 +5,6 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { EventDayType } from './eventDayType';
 import type { EventEntry } from './eventEntry';
 
 export interface Event {
@@ -14,7 +13,7 @@ export interface Event {
   date: Date;
   description: string;
   defaultHours: number;
-  dayType: EventDayType;
+  dayType: string;
   multiplier: number;
   entries: EventEntry[];
 }

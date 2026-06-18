@@ -10,7 +10,6 @@ export interface Subclass {
   id: number;
   rosterId: number;
   name: string;
-  weekdayPriority: number;
-  weekendPriority: number;
-  holidayPriority: number;
+  /** Lower value = higher priority in Up Next ordering */
+  sortOrder: number;
 }

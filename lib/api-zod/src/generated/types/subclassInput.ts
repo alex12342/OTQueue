@@ -9,10 +9,5 @@
 export interface SubclassInput {
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
-  weekdayPriority?: number;
-  /** @minimum 1 */
-  weekendPriority?: number;
-  /** @minimum 1 */
-  holidayPriority?: number;
+  sortOrder?: number;
 }

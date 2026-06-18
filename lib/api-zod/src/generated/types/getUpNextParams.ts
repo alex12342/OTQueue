@@ -5,9 +5,8 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
-import type { GetUpNextDayType } from './getUpNextDayType';
 
 export type GetUpNextParams = {
 rosterId: number;
-dayType?: GetUpNextDayType;
+dayType?: string;
 };
