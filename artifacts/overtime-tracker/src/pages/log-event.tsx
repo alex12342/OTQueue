@@ -13,7 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon, Save, Info, Zap } from "lucide-react";
+import { CalendarIcon, Save, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
 
@@ -47,7 +47,6 @@ export default function LogEvent() {
   const [dayType, setDayType] = useState<string>("weekday");
   const [dayTypeOverridden, setDayTypeOverridden] = useState(false);
   const [multiplier, setMultiplier] = useState("1");
-  const [multiplierOverridden, setMultiplierOverridden] = useState(false);
 
   const [entries, setEntries] = useState<Record<number, EntryState>>({});
 
@@ -80,15 +79,11 @@ export default function LogEvent() {
   }, [suggestion, dayTypeOverridden, dayTypeConfigs]);
 
   useEffect(() => {
-    if (!multiplierOverridden && dayTypeConfigs) {
+    if (dayTypeConfigs) {
       const config = dayTypeConfigs.find((c) => c.dayType === dayType);
-      if (config?.multiplier != null) {
-        setMultiplier(String(config.multiplier));
-      } else {
-        setMultiplier("1");
-      }
+      setMultiplier(config?.multiplier != null ? String(config.multiplier) : "1");
     }
-  }, [dayType, dayTypeConfigs, multiplierOverridden]);
+  }, [dayType, dayTypeConfigs]);
 
   const handleDateChange = (d: Date | undefined) => {
     if (d) {
@@ -154,6 +149,10 @@ export default function LogEvent() {
       toast({ title: "Validation Error", description: "Description is required.", variant: "destructive" });
       return;
     }
+    if (!dayType) {
+      toast({ title: "Validation Error", description: "Day type is required.", variant: "destructive" });
+      return;
+    }
 
     createMutation.mutate({
       data: {
@@ -172,8 +171,6 @@ export default function LogEvent() {
       },
     });
   };
-
-  const configMultiplier = dayTypeConfigs?.find((c) => c.dayType === dayType)?.multiplier;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl">
@@ -219,7 +216,7 @@ export default function LogEvent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hours">Default Hours</Label>
+              <Label htmlFor="hours">Hours</Label>
               <Input
                 id="hours"
                 type="number"
@@ -245,7 +242,6 @@ export default function LogEvent() {
                 onValueChange={(v: string) => {
                   setDayType(v);
                   setDayTypeOverridden(true);
-                  setMultiplierOverridden(false);
                 }}
               >
                 <SelectTrigger className="bg-background">
@@ -263,27 +259,6 @@ export default function LogEvent() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="multiplier">Hour Multiplier</Label>
-              {configMultiplier != null && !multiplierOverridden && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  Auto-set from day type config
-                </p>
-              )}
-              <Input
-                id="multiplier"
-                type="number"
-                step="0.1"
-                min="0"
-                value={multiplier}
-                onChange={(e) => {
-                  setMultiplier(e.target.value);
-                  setMultiplierOverridden(true);
-                }}
-                className="bg-background"
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
