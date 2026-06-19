@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   useListEmployees,
@@ -49,6 +49,8 @@ export default function EditEvent() {
   const [description, setDescription] = useState("");
   const [defaultHours, setDefaultHours] = useState("4");
   const [dayType, setDayType] = useState<string>("weekday");
+  const [multiplier, setMultiplier] = useState("1");
+  const [dayTypeChangedByUser, setDayTypeChangedByUser] = useState(false);
   const [entries, setEntries] = useState<Record<number, EntryState>>({});
 
   const { data: event, isLoading: eventLoading } = useGetEvent(eventId, {
@@ -78,6 +80,7 @@ export default function EditEvent() {
     setDescription(event.description);
     setDefaultHours(String(event.defaultHours));
     setDayType(event.dayType ?? "weekday");
+    setMultiplier(event.multiplier != null ? String(event.multiplier) : "1");
 
     const preloaded: Record<number, EntryState> = {};
     for (const entry of event.entries ?? []) {
@@ -91,6 +94,13 @@ export default function EditEvent() {
     setEntries(preloaded);
     setInitialized(true);
   }, [event, initialized]);
+
+  // When the user explicitly changes the day type, sync multiplier from config
+  useEffect(() => {
+    if (!dayTypeChangedByUser || !dayTypeConfigs) return;
+    const config = dayTypeConfigs.find((c) => c.dayType === dayType);
+    setMultiplier(config?.multiplier != null ? String(config.multiplier) : "1");
+  }, [dayType, dayTypeChangedByUser, dayTypeConfigs]);
 
   const activeEmployees = React.useMemo(() => {
     if (!employees) return [];
@@ -149,6 +159,7 @@ export default function EditEvent() {
         description,
         defaultHours: parseFloat(defaultHours) || 0,
         dayType,
+        multiplier: parseFloat(multiplier) || 1,
         entries: activeEntries.map((e) => ({
           employeeId: e.employeeId,
           offered: e.offered,
@@ -235,7 +246,7 @@ export default function EditEvent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hours">Default Hours</Label>
+              <Label htmlFor="hours">Hours</Label>
               <Input
                 id="hours"
                 type="number"
@@ -250,7 +261,7 @@ export default function EditEvent() {
 
             <div className="space-y-2">
               <Label>Day Type</Label>
-              <Select value={dayType} onValueChange={(v: string) => setDayType(v)}>
+              <Select value={dayType} onValueChange={(v: string) => { setDayType(v); setDayTypeChangedByUser(true); }}>
                 <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
