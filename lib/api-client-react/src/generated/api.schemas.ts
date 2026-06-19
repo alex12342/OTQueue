@@ -63,6 +63,20 @@ export interface CreateDayTypeConfigInput {
   sortOrder?: number;
 }
 
+export interface SubclassDayTypeSortEntry {
+  subclassId: number;
+  name: string;
+  /** Effective sort order for this day type (override if isOverride, else global) */
+  sortOrder: number;
+  /** True when a day-type-specific override exists for this subclass */
+  isOverride: boolean;
+}
+
+export interface SubclassDayTypeSortInputItem {
+  subclassId: number;
+  sortOrder: number;
+}
+
 export interface Role {
   id: number;
   rosterId: number;

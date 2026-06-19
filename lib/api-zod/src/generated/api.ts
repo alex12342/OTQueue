@@ -195,6 +195,55 @@ export const DeleteDayTypeConfigParams = zod.object({
 
 
 /**
+ * @summary List subclasses ordered by day-type-specific sort, falling back to global
+ */
+export const ListSubclassDayTypeSortParams = zod.object({
+  "id": zod.coerce.number(),
+  "dayType": zod.coerce.string()
+})
+
+export const ListSubclassDayTypeSortResponseItem = zod.object({
+  "subclassId": zod.number(),
+  "name": zod.string(),
+  "sortOrder": zod.number().describe('Effective sort order for this day type (override if isOverride, else global)'),
+  "isOverride": zod.boolean().describe('True when a day-type-specific override exists for this subclass')
+})
+export const ListSubclassDayTypeSortResponse = zod.array(ListSubclassDayTypeSortResponseItem)
+
+
+/**
+ * @summary Bulk-set per-day-type subclass order (replaces all rows for this day type)
+ */
+export const PutSubclassDayTypeSortParams = zod.object({
+  "id": zod.coerce.number(),
+  "dayType": zod.coerce.string()
+})
+
+export const PutSubclassDayTypeSortBodyItem = zod.object({
+  "subclassId": zod.number(),
+  "sortOrder": zod.number()
+})
+export const PutSubclassDayTypeSortBody = zod.array(PutSubclassDayTypeSortBodyItem)
+
+export const PutSubclassDayTypeSortResponseItem = zod.object({
+  "subclassId": zod.number(),
+  "name": zod.string(),
+  "sortOrder": zod.number().describe('Effective sort order for this day type (override if isOverride, else global)'),
+  "isOverride": zod.boolean().describe('True when a day-type-specific override exists for this subclass')
+})
+export const PutSubclassDayTypeSortResponse = zod.array(PutSubclassDayTypeSortResponseItem)
+
+
+/**
+ * @summary Reset per-day-type subclass order (reverts to global default)
+ */
+export const DeleteSubclassDayTypeSortParams = zod.object({
+  "id": zod.coerce.number(),
+  "dayType": zod.coerce.string()
+})
+
+
+/**
  * @summary List roles for a roster
  */
 export const ListRolesParams = zod.object({

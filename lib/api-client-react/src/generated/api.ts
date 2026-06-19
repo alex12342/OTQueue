@@ -43,6 +43,8 @@ import type {
   RosterSettingsInput,
   Stats,
   Subclass,
+  SubclassDayTypeSortEntry,
+  SubclassDayTypeSortInputItem,
   SubclassInput,
   SuggestDayTypeParams,
   UpNextResult
@@ -946,6 +948,234 @@ export const useDeleteDayTypeConfig = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteDayTypeConfigMutationOptions(options));
+    }
+
+export const getListSubclassDayTypeSortUrl = (id: number,
+    dayType: string,) => {
+
+
+
+
+  return `/api/rosters/${id}/subclass-day-type-sort/${dayType}`
+}
+
+/**
+ * @summary List subclasses ordered by day-type-specific sort, falling back to global
+ */
+export const listSubclassDayTypeSort = async (id: number,
+    dayType: string, options?: RequestInit): Promise<SubclassDayTypeSortEntry[]> => {
+
+  return customFetch<SubclassDayTypeSortEntry[]>(getListSubclassDayTypeSortUrl(id,dayType),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSubclassDayTypeSortQueryKey = (id: number,
+    dayType: string,) => {
+    return [
+    `/api/rosters/${id}/subclass-day-type-sort/${dayType}`
+    ] as const;
+    }
+
+
+export const getListSubclassDayTypeSortQueryOptions = <TData = Awaited<ReturnType<typeof listSubclassDayTypeSort>>, TError = ErrorType<unknown>>(id: number,
+    dayType: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSubclassDayTypeSort>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSubclassDayTypeSortQueryKey(id,dayType);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSubclassDayTypeSort>>> = ({ signal }) => listSubclassDayTypeSort(id,dayType, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id && dayType), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSubclassDayTypeSort>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSubclassDayTypeSortQueryResult = NonNullable<Awaited<ReturnType<typeof listSubclassDayTypeSort>>>
+export type ListSubclassDayTypeSortQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List subclasses ordered by day-type-specific sort, falling back to global
+ */
+
+export function useListSubclassDayTypeSort<TData = Awaited<ReturnType<typeof listSubclassDayTypeSort>>, TError = ErrorType<unknown>>(
+ id: number,
+    dayType: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSubclassDayTypeSort>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSubclassDayTypeSortQueryOptions(id,dayType,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPutSubclassDayTypeSortUrl = (id: number,
+    dayType: string,) => {
+
+
+
+
+  return `/api/rosters/${id}/subclass-day-type-sort/${dayType}`
+}
+
+/**
+ * @summary Bulk-set per-day-type subclass order (replaces all rows for this day type)
+ */
+export const putSubclassDayTypeSort = async (id: number,
+    dayType: string,
+    subclassDayTypeSortInputItem: SubclassDayTypeSortInputItem[], options?: RequestInit): Promise<SubclassDayTypeSortEntry[]> => {
+
+  return customFetch<SubclassDayTypeSortEntry[]>(getPutSubclassDayTypeSortUrl(id,dayType),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      subclassDayTypeSortInputItem,)
+  }
+);}
+
+
+
+
+export const getPutSubclassDayTypeSortMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putSubclassDayTypeSort>>, TError,{id: number;dayType: string;data: BodyType<SubclassDayTypeSortInputItem[]>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putSubclassDayTypeSort>>, TError,{id: number;dayType: string;data: BodyType<SubclassDayTypeSortInputItem[]>}, TContext> => {
+
+const mutationKey = ['putSubclassDayTypeSort'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putSubclassDayTypeSort>>, {id: number;dayType: string;data: BodyType<SubclassDayTypeSortInputItem[]>}> = (props) => {
+          const {id,dayType,data} = props ?? {};
+
+          return  putSubclassDayTypeSort(id,dayType,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutSubclassDayTypeSortMutationResult = NonNullable<Awaited<ReturnType<typeof putSubclassDayTypeSort>>>
+    export type PutSubclassDayTypeSortMutationBody = BodyType<SubclassDayTypeSortInputItem[]>
+    export type PutSubclassDayTypeSortMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk-set per-day-type subclass order (replaces all rows for this day type)
+ */
+export const usePutSubclassDayTypeSort = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putSubclassDayTypeSort>>, TError,{id: number;dayType: string;data: BodyType<SubclassDayTypeSortInputItem[]>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof putSubclassDayTypeSort>>,
+        TError,
+        {id: number;dayType: string;data: BodyType<SubclassDayTypeSortInputItem[]>},
+        TContext
+      > => {
+      return useMutation(getPutSubclassDayTypeSortMutationOptions(options));
+    }
+
+export const getDeleteSubclassDayTypeSortUrl = (id: number,
+    dayType: string,) => {
+
+
+
+
+  return `/api/rosters/${id}/subclass-day-type-sort/${dayType}`
+}
+
+/**
+ * @summary Reset per-day-type subclass order (reverts to global default)
+ */
+export const deleteSubclassDayTypeSort = async (id: number,
+    dayType: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSubclassDayTypeSortUrl(id,dayType),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSubclassDayTypeSortMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSubclassDayTypeSort>>, TError,{id: number;dayType: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSubclassDayTypeSort>>, TError,{id: number;dayType: string}, TContext> => {
+
+const mutationKey = ['deleteSubclassDayTypeSort'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSubclassDayTypeSort>>, {id: number;dayType: string}> = (props) => {
+          const {id,dayType} = props ?? {};
+
+          return  deleteSubclassDayTypeSort(id,dayType,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSubclassDayTypeSortMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSubclassDayTypeSort>>>
+
+    export type DeleteSubclassDayTypeSortMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reset per-day-type subclass order (reverts to global default)
+ */
+export const useDeleteSubclassDayTypeSort = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSubclassDayTypeSort>>, TError,{id: number;dayType: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSubclassDayTypeSort>>,
+        TError,
+        {id: number;dayType: string},
+        TContext
+      > => {
+      return useMutation(getDeleteSubclassDayTypeSortMutationOptions(options));
     }
 
 export const getListRolesUrl = (rosterId: number,) => {

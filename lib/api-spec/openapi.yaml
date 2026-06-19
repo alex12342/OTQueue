@@ -258,6 +258,82 @@ paths:
         "204":
           description: Deleted
 
+  /rosters/{id}/subclass-day-type-sort/{dayType}:
+    get:
+      operationId: listSubclassDayTypeSort
+      tags: [classifications]
+      summary: List subclasses ordered by day-type-specific sort, falling back to global
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayType
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ordered subclass list for this day type
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubclassDayTypeSortEntry"
+    put:
+      operationId: putSubclassDayTypeSort
+      tags: [classifications]
+      summary: Bulk-set per-day-type subclass order (replaces all rows for this day type)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayType
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/SubclassDayTypeSortInputItem"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubclassDayTypeSortEntry"
+    delete:
+      operationId: deleteSubclassDayTypeSort
+      tags: [classifications]
+      summary: Reset per-day-type subclass order (reverts to global default)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayType
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
   # ── Roles ─────────────────────────────────────────────────────────────────
   /rosters/{rosterId}/roles:
     get:
@@ -832,6 +908,30 @@ components:
           default: 0
 
     # ── Classifications ───────────────────────────────────────────────────────
+    SubclassDayTypeSortEntry:
+      type: object
+      required: [subclassId, name, sortOrder, isOverride]
+      properties:
+        subclassId:
+          type: integer
+        name:
+          type: string
+        sortOrder:
+          type: integer
+          description: Effective sort order for this day type (override if isOverride, else global)
+        isOverride:
+          type: boolean
+          description: True when a day-type-specific override exists for this subclass
+
+    SubclassDayTypeSortInputItem:
+      type: object
+      required: [subclassId, sortOrder]
+      properties:
+        subclassId:
+          type: integer
+        sortOrder:
+          type: integer
+
     Role:
       type: object
       required: [id, rosterId, name]

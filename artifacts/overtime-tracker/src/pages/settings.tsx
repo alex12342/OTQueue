@@ -23,8 +23,12 @@ import {
   useUpsertDayTypeConfig,
   useCreateDayTypeConfig,
   useDeleteDayTypeConfig,
+  useListSubclassDayTypeSort,
+  getListSubclassDayTypeSortQueryKey,
+  usePutSubclassDayTypeSort,
+  useDeleteSubclassDayTypeSort,
 } from "@workspace/api-client-react";
-import type { Roster, Role, Subclass, DayTypeConfig } from "@workspace/api-client-react";
+import type { Roster, Role, Subclass, DayTypeConfig, SubclassDayTypeSortEntry } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -429,6 +433,11 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
     query: { queryKey: getListSubclassesQueryKey(rosterId) },
   });
 
+  const { data: dayTypeConfigs = [] } = useListDayTypeConfig(rosterId, {
+    query: { queryKey: getListDayTypeConfigQueryKey(rosterId) },
+  });
+  const enabledDayTypes = dayTypeConfigs.filter((c) => c.enabled);
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getListSubclassesQueryKey(rosterId) });
 
   const createMutation = useCreateSubclass({
@@ -510,6 +519,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
   };
 
   return (
+    <>
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -596,6 +606,146 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
         )}
       </CardContent>
     </Card>
+    {subclasses.length > 1 && enabledDayTypes.length > 0 && (
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Per-Day-Type Ordering</CardTitle>
+          <CardDescription>
+            Override subclass priority for a specific day type. When enabled, the Up Next list uses this order instead of the global one.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {enabledDayTypes.map((cfg) => (
+            <DayTypeSortSection
+              key={cfg.dayType}
+              rosterId={rosterId}
+              dayType={cfg.dayType}
+              dayTypeName={cfg.name}
+            />
+          ))}
+        </CardContent>
+      </Card>
+    )}
+  </>
+  );
+}
+
+// ── Per-Day-Type Sort Section ──────────────────────────────────────────────────
+
+function DayTypeSortSection({ rosterId, dayType, dayTypeName }: {
+  rosterId: number;
+  dayType: string;
+  dayTypeName: string;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const qk = getListSubclassDayTypeSortQueryKey(rosterId, dayType);
+
+  const { data: entries = [], isLoading } = useListSubclassDayTypeSort(rosterId, dayType, {
+    query: { queryKey: qk },
+  });
+
+  const hasOverride = entries.some((e) => e.isOverride);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: qk });
+
+  const putMutation = usePutSubclassDayTypeSort({
+    mutation: {
+      onSuccess: () => { toast({ title: `Custom order saved for ${dayTypeName}` }); invalidate(); },
+      onError: () => toast({ title: "Error saving order", variant: "destructive" }),
+    },
+  });
+
+  const deleteMutation = useDeleteSubclassDayTypeSort({
+    mutation: {
+      onSuccess: () => { toast({ title: `Reset to global order for ${dayTypeName}` }); invalidate(); },
+      onError: () => toast({ title: "Error resetting order", variant: "destructive" }),
+    },
+  });
+
+  const handleToggle = (on: boolean) => {
+    if (!on) {
+      deleteMutation.mutate({ id: rosterId, dayType });
+    } else {
+      putMutation.mutate({
+        id: rosterId,
+        dayType,
+        data: entries.map((e, idx) => ({ subclassId: e.subclassId, sortOrder: idx })),
+      });
+    }
+  };
+
+  const handleMoveUp = (entry: SubclassDayTypeSortEntry, idx: number) => {
+    if (idx === 0) return;
+    const reordered = [...entries];
+    [reordered[idx - 1], reordered[idx]] = [reordered[idx], reordered[idx - 1]];
+    putMutation.mutate({
+      id: rosterId,
+      dayType,
+      data: reordered.map((e, i) => ({ subclassId: e.subclassId, sortOrder: i })),
+    });
+  };
+
+  const handleMoveDown = (entry: SubclassDayTypeSortEntry, idx: number) => {
+    if (idx === entries.length - 1) return;
+    const reordered = [...entries];
+    [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1], reordered[idx]];
+    putMutation.mutate({
+      id: rosterId,
+      dayType,
+      data: reordered.map((e, i) => ({ subclassId: e.subclassId, sortOrder: i })),
+    });
+  };
+
+  if (isLoading || entries.length === 0) return null;
+
+  const isBusy = putMutation.isPending || deleteMutation.isPending;
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 bg-muted/30">
+        <div>
+          <p className="font-medium text-sm">{dayTypeName}</p>
+          <p className="text-xs text-muted-foreground">
+            {hasOverride ? "Custom order active" : "Using global order"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{hasOverride ? "Custom" : "Global"}</span>
+          <Switch checked={hasOverride} onCheckedChange={handleToggle} disabled={isBusy} />
+        </div>
+      </div>
+      {hasOverride && (
+        <div className="divide-y">
+          {entries.map((e, idx) => (
+            <div key={e.subclassId} className="flex items-center gap-3 px-4 py-2.5">
+              <div className="flex flex-col gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  disabled={idx === 0 || isBusy}
+                  onClick={() => handleMoveUp(e, idx)}
+                >
+                  <ChevronUp className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  disabled={idx === entries.length - 1 || isBusy}
+                  onClick={() => handleMoveDown(e, idx)}
+                >
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </div>
+              <span className="text-sm">{e.name}</span>
+              <span className="ml-auto text-xs text-muted-foreground">#{idx + 1}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

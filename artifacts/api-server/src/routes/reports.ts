@@ -7,6 +7,7 @@ import {
   eventsTable,
   rosterSettingsTable,
   subclassesTable,
+  subclassDayTypeSortTable,
 } from "@workspace/db";
 import { GetUpNextQueryParams, GetStatsQueryParams, SuggestDayTypeQueryParams } from "@workspace/api-zod";
 
@@ -153,6 +154,18 @@ router.get("/up-next", async (req, res): Promise<void> => {
 
   const subclassMap = new Map(subclasses.map((s) => [s.id, s]));
 
+  const dayTypeOverrides = await db
+    .select()
+    .from(subclassDayTypeSortTable)
+    .where(
+      and(
+        eq(subclassDayTypeSortTable.rosterId, rosterId),
+        eq(subclassDayTypeSortTable.dayType, dayType),
+      ),
+    );
+
+  const dayTypeOverrideMap = new Map(dayTypeOverrides.map((o) => [o.subclassId, o.sortOrder]));
+
   const withData = await Promise.all(
     employees.map(async (emp) => {
       const [hrs] = await db
@@ -168,7 +181,9 @@ router.get("/up-next", async (req, res): Promise<void> => {
       const fairnessScore = Number(hrs?.fairnessScore ?? 0);
       const subclass = emp.subclassId ? subclassMap.get(emp.subclassId) : null;
 
-      const subclassPriority = subclass?.sortOrder ?? 999;
+      const subclassPriority = emp.subclassId !== null && dayTypeOverrideMap.has(emp.subclassId)
+        ? dayTypeOverrideMap.get(emp.subclassId)!
+        : (subclass?.sortOrder ?? 999);
 
       return {
         id: emp.id,

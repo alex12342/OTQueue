@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, rolesTable, subclassesTable } from "@workspace/db";
+import { db, rolesTable, subclassesTable, subclassDayTypeSortTable } from "@workspace/db";
 import {
   ListRolesParams,
   CreateRoleParams,
@@ -14,6 +14,10 @@ import {
   UpdateSubclassParams,
   UpdateSubclassBody,
   DeleteSubclassParams,
+  ListSubclassDayTypeSortParams,
+  PutSubclassDayTypeSortParams,
+  PutSubclassDayTypeSortBody,
+  DeleteSubclassDayTypeSortParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -211,6 +215,107 @@ router.delete("/rosters/:rosterId/subclasses/:id", async (req, res): Promise<voi
     res.status(404).json({ error: "Subclass not found" });
     return;
   }
+
+  res.sendStatus(204);
+});
+
+// ── Per-day-type subclass sort ─────────────────────────────────────────────
+
+async function buildDayTypeSortResult(rosterId: number, dayType: string) {
+  const subclasses = await db
+    .select()
+    .from(subclassesTable)
+    .where(eq(subclassesTable.rosterId, rosterId));
+
+  const overrides = await db
+    .select()
+    .from(subclassDayTypeSortTable)
+    .where(
+      and(
+        eq(subclassDayTypeSortTable.rosterId, rosterId),
+        eq(subclassDayTypeSortTable.dayType, dayType),
+      ),
+    );
+
+  const overrideMap = new Map(overrides.map((o) => [o.subclassId, o.sortOrder]));
+
+  return subclasses
+    .map((s) => ({
+      subclassId: s.id,
+      name: s.name,
+      sortOrder: overrideMap.has(s.id) ? overrideMap.get(s.id)! : s.sortOrder,
+      isOverride: overrideMap.has(s.id),
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+router.get("/rosters/:id/subclass-day-type-sort/:dayType", async (req, res): Promise<void> => {
+  const params = ListSubclassDayTypeSortParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const result = await buildDayTypeSortResult(params.data.id, params.data.dayType);
+  res.json(result);
+});
+
+router.put("/rosters/:id/subclass-day-type-sort/:dayType", async (req, res): Promise<void> => {
+  const params = PutSubclassDayTypeSortParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const body = PutSubclassDayTypeSortBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const { id: rosterId, dayType } = params.data;
+
+  await db
+    .delete(subclassDayTypeSortTable)
+    .where(
+      and(
+        eq(subclassDayTypeSortTable.rosterId, rosterId),
+        eq(subclassDayTypeSortTable.dayType, dayType),
+      ),
+    );
+
+  if (body.data.length > 0) {
+    await db.insert(subclassDayTypeSortTable).values(
+      body.data.map((item) => ({
+        rosterId,
+        subclassId: item.subclassId,
+        dayType,
+        sortOrder: item.sortOrder,
+      })),
+    );
+  }
+
+  const result = await buildDayTypeSortResult(rosterId, dayType);
+  res.json(result);
+});
+
+router.delete("/rosters/:id/subclass-day-type-sort/:dayType", async (req, res): Promise<void> => {
+  const params = DeleteSubclassDayTypeSortParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { id: rosterId, dayType } = params.data;
+
+  await db
+    .delete(subclassDayTypeSortTable)
+    .where(
+      and(
+        eq(subclassDayTypeSortTable.rosterId, rosterId),
+        eq(subclassDayTypeSortTable.dayType, dayType),
+      ),
+    );
 
   res.sendStatus(204);
 });

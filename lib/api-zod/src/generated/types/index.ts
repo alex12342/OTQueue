@@ -34,6 +34,8 @@ export * from './rosterSettings';
 export * from './rosterSettingsInput';
 export * from './stats';
 export * from './subclass';
+export * from './subclassDayTypeSortEntry';
+export * from './subclassDayTypeSortInputItem';
 export * from './subclassInput';
 export * from './suggestDayTypeParams';
 export * from './upNextEmployee';
