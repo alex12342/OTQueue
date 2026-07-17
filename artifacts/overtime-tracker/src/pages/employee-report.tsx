@@ -53,6 +53,7 @@ export default function EmployeeReport() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [editActive, setEditActive] = useState(true);
+  const [editStartingHours, setEditStartingHours] = useState<string>("");
 
   const { data: report, isLoading, error } = useGetEmployeeReport(empId, {
     query: {
@@ -111,19 +112,34 @@ export default function EmployeeReport() {
   const openEdit = () => {
     if (!report?.employee) return;
     setEditActive(report.employee.active);
+    setEditStartingHours(String(report.employee.startingNormalizedHours ?? 0));
     setEditOpen(true);
   };
 
   const handleEdit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const seniorityRaw = fd.get("seniority");
+    const seniority = seniorityRaw != null && seniorityRaw !== "" 
+      ? parseInt(seniorityRaw as string, 10) 
+      : 1;
+    
+    if (isNaN(seniority) || seniority < 1) {
+      return;
+    }
+    
+    const data: Record<string, unknown> = {
+      name: fd.get("name") as string,
+      seniority,
+      active: editActive,
+    };
+    if (editStartingHours.trim() !== "") {
+      data.startingNormalizedHours = parseFloat(editStartingHours);
+    }
+    
     updateMutation.mutate({
       id: empId,
-      data: {
-        name: fd.get("name") as string,
-        seniority: parseInt(fd.get("seniority") as string, 10),
-        active: editActive,
-      },
+      data,
     });
   };
 
@@ -170,6 +186,8 @@ export default function EmployeeReport() {
                   <span>&bull;</span>
                   {report?.employee.subclassName && <span>{report.employee.subclassName}</span>}
                   {report?.employee.roleName && <span className="italic">{report.employee.roleName}</span>}
+                  <span>&bull;</span>
+                  <span>Starting fairness value: {report?.employee.startingNormalizedHours ?? 0}h</span>
                 </>
               )}
             </div>
@@ -256,6 +274,19 @@ export default function EmployeeReport() {
                     defaultValue={report.employee.seniority}
                     required
                     data-testid="input-edit-seniority"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-starting-hours">Starting Fairness Hours</Label>
+                  <Input
+                    id="edit-starting-hours"
+                    name="startingNormalizedHours"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={editStartingHours}
+                    onChange={(e) => setEditStartingHours(e.target.value)}
+                    data-testid="input-edit-starting-hours"
                   />
                 </div>
               </div>

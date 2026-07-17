@@ -120,6 +120,8 @@ export interface Employee {
   totalWorkedHours?: number;
   /** Weighted offered hours used for rotation ordering */
   fairnessScore?: number;
+  /** Baseline hours used for fairness computation; not counted in offered/worked totals */
+  startingNormalizedHours?: number;
 }
 
 export interface EmployeeInput {
@@ -133,6 +135,8 @@ export interface EmployeeInput {
   /** @nullable */
   subclassId?: number | null;
   active?: boolean;
+  /** @minimum 0 */
+  startingNormalizedHours?: number;
 }
 
 export interface EmployeeUpdate {
@@ -145,6 +149,8 @@ export interface EmployeeUpdate {
   /** @nullable */
   subclassId?: number | null;
   active?: boolean;
+  /** @minimum 0 */
+  startingNormalizedHours?: number;
 }
 
 export interface EventEntry {
@@ -249,6 +255,11 @@ export interface Stats {
   employeeCount: number;
   topWorkers?: EmployeeStat[];
   recentEvents?: Event[];
+  /**
+     * ID of the most recent "Reset Hours" event used for time-window filtering
+     * @nullable
+     */
+  normalizedHoursResetEventId?: number | null;
 }
 
 export type DayTypeSuggestionSuggestedDayType = typeof DayTypeSuggestionSuggestedDayType[keyof typeof DayTypeSuggestionSuggestedDayType];

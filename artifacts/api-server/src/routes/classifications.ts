@@ -37,7 +37,7 @@ router.get("/rosters/:rosterId/roles", async (req, res): Promise<void> => {
     .where(eq(rolesTable.rosterId, params.data.rosterId))
     .orderBy(rolesTable.name);
 
-  res.json(roles.map((r) => ({ id: r.id, rosterId: r.rosterId, name: r.name })));
+  res.json(roles.map((r: typeof rolesTable.$inferSelect) => ({ id: r.id, rosterId: r.rosterId, name: r.name })));
 });
 
 router.post("/rosters/:rosterId/roles", async (req, res): Promise<void> => {
@@ -124,7 +124,7 @@ router.get("/rosters/:rosterId/subclasses", async (req, res): Promise<void> => {
     .orderBy(subclassesTable.sortOrder);
 
   res.json(
-    subclasses.map((s) => ({
+    subclasses.map((s: typeof subclassesTable.$inferSelect) => ({
       id: s.id,
       rosterId: s.rosterId,
       name: s.name,
@@ -237,16 +237,16 @@ async function buildDayTypeSortResult(rosterId: number, dayType: string) {
       ),
     );
 
-  const overrideMap = new Map(overrides.map((o) => [o.subclassId, o.sortOrder]));
+  const overrideMap = new Map<number, number>(overrides.map((o: typeof subclassDayTypeSortTable.$inferSelect) => [o.subclassId, o.sortOrder]));
 
   return subclasses
-    .map((s) => ({
+    .map((s: typeof subclassesTable.$inferSelect) => ({
       subclassId: s.id,
       name: s.name,
       sortOrder: overrideMap.has(s.id) ? overrideMap.get(s.id)! : s.sortOrder,
       isOverride: overrideMap.has(s.id),
     }))
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+    .sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder);
 }
 
 router.get("/rosters/:id/subclass-day-type-sort/:dayType", async (req, res): Promise<void> => {

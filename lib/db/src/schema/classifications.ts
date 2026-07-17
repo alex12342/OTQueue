@@ -1,6 +1,6 @@
 import { pgTable, text, serial, integer, timestamp, primaryKey, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { rostersTable } from "./rosters";
 
 export const rolesTable = pgTable("roles", {
@@ -31,14 +31,26 @@ export const subclassDayTypeSortTable = pgTable(
   ]
 );
 
-export const insertRoleSchema = createInsertSchema(rolesTable).omit({ id: true, createdAt: true });
+export const insertRoleSchema = z.object({
+  name: z.string(),
+  rosterId: z.number(),
+});
 export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type Role = typeof rolesTable.$inferSelect;
 
-export const insertSubclassSchema = createInsertSchema(subclassesTable).omit({ id: true, createdAt: true });
+export const insertSubclassSchema = z.object({
+  name: z.string(),
+  rosterId: z.number(),
+  sortOrder: z.number(),
+});
 export type InsertSubclass = z.infer<typeof insertSubclassSchema>;
 export type Subclass = typeof subclassesTable.$inferSelect;
 
-export const insertSubclassDayTypeSortSchema = createInsertSchema(subclassDayTypeSortTable);
+export const insertSubclassDayTypeSortSchema = z.object({
+  rosterId: z.number(),
+  subclassId: z.number(),
+  dayType: z.string(),
+  sortOrder: z.number(),
+});
 export type InsertSubclassDayTypeSort = z.infer<typeof insertSubclassDayTypeSortSchema>;
 export type SubclassDayTypeSort = typeof subclassDayTypeSortTable.$inferSelect;

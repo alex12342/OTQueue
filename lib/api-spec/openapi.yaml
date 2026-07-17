@@ -1005,6 +1005,9 @@ components:
         fairnessScore:
           type: number
           description: Weighted offered hours used for rotation ordering
+        startingNormalizedHours:
+          type: number
+          description: Baseline hours used for fairness computation; not counted in offered/worked totals
 
     EmployeeInput:
       type: object
@@ -1025,6 +1028,9 @@ components:
         active:
           type: boolean
           default: true
+        startingNormalizedHours:
+          type: number
+          minimum: 0
 
     EmployeeUpdate:
       type: object
@@ -1041,6 +1047,9 @@ components:
           type: ["integer", "null"]
         active:
           type: boolean
+        startingNormalizedHours:
+          type: number
+          minimum: 0
 
     # ── Events ────────────────────────────────────────────────────────────────
     Event:
@@ -1230,6 +1239,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Event"
+        normalizedHoursResetEventId:
+          type: ["integer", "null"]
+          description: ID of the most recent "Reset Hours" event used for time-window filtering
 
     EmployeeStat:
       type: object

@@ -1,6 +1,6 @@
 import { pgTable, text, serial, numeric, date, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { rostersTable } from "./rosters";
 
 export const eventsTable = pgTable("events", {
@@ -14,6 +14,13 @@ export const eventsTable = pgTable("events", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const insertEventSchema = createInsertSchema(eventsTable).omit({ id: true, createdAt: true });
+export const insertEventSchema = z.object({
+  date: z.string(),
+  description: z.string(),
+  rosterId: z.number(),
+  dayType: z.string().optional(),
+  multiplier: z.string().optional(),
+  defaultHours: z.string(),
+});
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof eventsTable.$inferSelect;

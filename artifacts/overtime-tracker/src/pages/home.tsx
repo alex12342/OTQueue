@@ -9,10 +9,11 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, Clock, Users } from "lucide-react";
+import { BarChart3, Users, PlusCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useRoster } from "@/hooks/use-roster";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { activeRosterId, activeRoster } = useRoster();
@@ -78,20 +79,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Offered</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoadingStats ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <div className="text-3xl font-bold">{stats?.totalOfferedHours || 0}h</div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Worked</CardTitle>
@@ -153,7 +141,13 @@ export default function Home() {
         <div className="p-0">
           {!activeRosterId ? (
             <div className="p-12 text-center text-muted-foreground">
-              <p>No roster selected. Choose one from the sidebar.</p>
+              <p className="mb-4">No roster selected. Choose one from the sidebar or create a new one.</p>
+              <Link href="/settings">
+                <Button className="gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Create Roster
+                </Button>
+              </Link>
             </div>
           ) : isLoadingUpNext ? (
             <div className="space-y-4 p-6">

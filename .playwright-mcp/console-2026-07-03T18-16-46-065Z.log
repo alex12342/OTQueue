@@ -1,0 +1,19 @@
+[      13ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Bq9GFszp.js:226
+[      14ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[      31ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[     131ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
+[   60258ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Bq9GFszp.js:226
+[   60260ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[   60267ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[   60369ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[   60369ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[   60369ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[ 1177909ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Bq9GFszp.js:226
+[ 1177910ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[ 1177917ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[ 1252664ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Bq9GFszp.js:226
+[ 1252665ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[ 1252679ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[ 3844007ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Bq9GFszp.js:226
+[ 3844008ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-Bq9GFszp.js:235
+[ 3844019ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-Bq9GFszp.js:235

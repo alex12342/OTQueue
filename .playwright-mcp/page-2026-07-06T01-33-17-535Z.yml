@@ -1,0 +1,30 @@
+- generic [ref=f6e2]:
+  - generic [ref=f6e4]:
+    - generic [ref=f6e6]:
+      - heading "OTQue" [level=1] [ref=f6e7]
+      - generic [ref=f6e8]: Welcome back! Please sign in to continue.
+    - generic [ref=f6e9]:
+      - alert [ref=f6e35]:
+        - generic [ref=f6e36]: Invalid credentials or account inactive
+      - generic [ref=f6e10]:
+        - generic [ref=f6e11]:
+          - text: Email Address
+          - generic [ref=f6e12]:
+            - img [ref=f6e13]
+            - textbox "Email Address" [ref=f6e16]:
+              - /placeholder: name@example.com
+              - text: admin@otqueue.local
+        - generic [ref=f6e17]:
+          - text: Password
+          - generic [ref=f6e18]:
+            - img [ref=f6e19]
+            - textbox "Password" [ref=f6e22]:
+              - /placeholder: Enter your password
+              - text: Admin@123!
+            - button [ref=f6e23]:
+              - img [ref=f6e30]
+        - button "Sign In" [ref=f6e29]
+      - link "Forgot password?" [ref=f6e28] [cursor=pointer]:
+        - /url: /forgot-password
+  - region "Notifications (F8)":
+    - list

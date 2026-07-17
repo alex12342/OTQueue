@@ -1,0 +1,140 @@
+[      53ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[      56ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[      79ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[      80ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[      91ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[      98ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     100ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     105ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     112ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     113ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     117ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     123ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     124ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     128ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     135ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     136ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     148ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     150ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     153ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     159ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     162ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     165ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     172ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     173ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     177ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     184ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     185ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     189ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     195ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     196ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     200ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     208ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     209ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     212ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[     684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[     689ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[    4691ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[    4692ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[    4696ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[    4703ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[    4704ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[    4708ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[    5682ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[    5683ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[    5689ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   15680ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   15682ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   15685ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   15693ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   15694ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   15698ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   16684ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   16685ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   16689ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   25679ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   25681ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   25685ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   25691ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   25693ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   25696ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   26683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   26684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   26688ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   35683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   35686ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   35692ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   35705ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   35706ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   36683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   36684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   36688ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   47681ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   47682ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   47697ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   47698ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   47702ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   48687ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   48689ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   48697ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   57681ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   57684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   57690ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   58683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   58684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   58688ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   65681ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   65683ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   65688ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   65719ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   65721ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   65727ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   66698ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   66700ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   75679ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   75680ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   75690ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   75691ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   76683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   76684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   87680ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   87682ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   87685ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   87695ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   87699ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   88687ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   88688ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   96679ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   96680ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   96684ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   96691ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   96692ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   96696ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   97682ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[   97684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[   97687ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  108686ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  108688ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  108714ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  108715ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  108719ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  109687ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  109690ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  109695ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  119680ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  119681ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  119685ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  119692ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  119693ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  119697ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  120682ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  120684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  130683ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-B5qh1v_j.js:226
+[  130684ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-B5qh1v_j.js:275
+[  181375ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-BLTHEufZ.js:226
+[  181378ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-BLTHEufZ.js:275
+[  181396ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-BLTHEufZ.js:275
+[  181496ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[  181496ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[  181496ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0

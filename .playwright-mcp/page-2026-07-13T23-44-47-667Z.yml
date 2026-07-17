@@ -1,0 +1,91 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]: OTQue
+      - generic [ref=f1e10]:
+        - paragraph [ref=f1e11]: Roster
+        - button "test" [ref=f1e12]
+      - generic [ref=f1e16]:
+        - navigation [ref=f1e17]:
+          - generic [ref=f1e18]: Menu
+          - link "Up Next" [ref=f1e19] [cursor=pointer]:
+            - /url: /
+          - link "Log Event" [ref=f1e25] [cursor=pointer]:
+            - /url: /events/new
+          - link "Event Log" [ref=f1e28] [cursor=pointer]:
+            - /url: /log
+          - link "Employees" [active] [ref=f1e33] [cursor=pointer]:
+            - /url: /employees
+        - generic [ref=f1e39]:
+          - link "Settings" [ref=f1e40] [cursor=pointer]:
+            - /url: /settings
+          - link "Help" [ref=f1e44] [cursor=pointer]:
+            - /url: /help
+          - link "My Account" [ref=f1e47] [cursor=pointer]:
+            - /url: /my-account
+          - link "Logout" [ref=f1e51] [cursor=pointer]:
+            - /url: /logout
+    - main [ref=f1e56]:
+      - generic [ref=f1e134]:
+        - generic [ref=f1e135]:
+          - generic [ref=f1e136]:
+            - heading "Employees" [level=1] [ref=f1e137]
+            - paragraph [ref=f1e138]: Manage roster, seniority, and active status.
+          - button "Add Employee" [ref=f1e139]
+        - table [ref=f1e143]:
+          - rowgroup [ref=f1e144]:
+            - row [ref=f1e145]:
+              - columnheader "Name" [ref=f1e146]
+              - columnheader "Seniority" [ref=f1e147]
+              - columnheader "Role" [ref=f1e148]
+              - columnheader "Subclass" [ref=f1e149]
+              - columnheader "Status" [ref=f1e150]
+              - columnheader "Offered Hours" [ref=f1e151]
+              - columnheader "Actions" [ref=f1e152]
+          - rowgroup [ref=f1e153]:
+            - row [ref=f1e154]:
+              - cell [ref=f1e155]:
+                - link "Test User 1" [ref=f1e156] [cursor=pointer]:
+                  - /url: /employees/1/report
+              - cell "#1" [ref=f1e157]
+              - cell "—" [ref=f1e158]
+              - cell "Full Time" [ref=f1e159]
+              - cell "Active" [ref=f1e161]
+              - cell "4h" [ref=f1e163]
+              - cell [ref=f1e164]:
+                - button [ref=f1e165]
+            - row [ref=f1e166]:
+              - cell [ref=f1e167]:
+                - link "test user 2" [ref=f1e168] [cursor=pointer]:
+                  - /url: /employees/2/report
+              - cell "#2" [ref=f1e169]
+              - cell "—" [ref=f1e170]
+              - cell "—" [ref=f1e171]
+              - cell "Active" [ref=f1e172]
+              - cell "4h" [ref=f1e174]
+              - cell [ref=f1e175]:
+                - button [ref=f1e176]
+            - row [ref=f1e177]:
+              - cell [ref=f1e178]:
+                - link "Dryer" [ref=f1e179] [cursor=pointer]:
+                  - /url: /employees/3/report
+              - cell "#3" [ref=f1e180]
+              - cell "—" [ref=f1e181]
+              - cell "—" [ref=f1e182]
+              - cell "Active" [ref=f1e183]
+              - cell "4h" [ref=f1e185]
+              - cell [ref=f1e186]:
+                - button [ref=f1e187]
+            - row [ref=f1e188]:
+              - cell [ref=f1e189]:
+                - link "Torznab" [ref=f1e190] [cursor=pointer]:
+                  - /url: /employees/4/report
+              - cell "#4" [ref=f1e191]
+              - cell "—" [ref=f1e192]
+              - cell "Full Time" [ref=f1e193]
+              - cell "Active" [ref=f1e195]
+              - cell "4h" [ref=f1e197]
+              - cell [ref=f1e198]:
+                - button [ref=f1e199]
+  - region "Notifications (F8)":
+    - list

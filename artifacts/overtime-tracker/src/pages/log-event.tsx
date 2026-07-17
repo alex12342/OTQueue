@@ -26,7 +26,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn, invalidateEventQueries } from "@/lib/utils";
 
 type EntryState = {
   employeeId: number;
@@ -43,7 +43,7 @@ export default function LogEvent() {
 
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
-  const [defaultHours, setDefaultHours] = useState("4");
+  const [defaultHours, setDefaultHours] = useState("2");
   const [dayType, setDayType] = useState<string>("weekday");
   const [dayTypeOverridden, setDayTypeOverridden] = useState(false);
   const [multiplier, setMultiplier] = useState("1");
@@ -111,11 +111,7 @@ export default function LogEvent() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Success", description: "Overtime event logged successfully." });
-        queryClient.invalidateQueries({ queryKey: getListEventsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: "weekday" }) });
-        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: "weekend" }) });
-        queryClient.invalidateQueries({ queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: "holiday" }) });
-        queryClient.invalidateQueries({ queryKey: getGetStatsQueryKey() });
+        invalidateEventQueries(queryClient, activeRosterId);
         setLocation("/log");
       },
       onError: () => {
@@ -337,7 +333,6 @@ export default function LogEvent() {
                           <Input
                             type="number"
                             step="0.5"
-                            min="0"
                             placeholder={entry.worked ? defaultHours : "-"}
                             value={entry.hoursOverride}
                             onChange={(e) => handleEntryChange(emp.id, "hoursOverride", e.target.value)}

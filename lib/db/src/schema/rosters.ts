@@ -1,6 +1,6 @@
 import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const rostersTable = pgTable("rosters", {
   id: serial("id").primaryKey(),
@@ -9,6 +9,9 @@ export const rostersTable = pgTable("rosters", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const insertRosterSchema = createInsertSchema(rostersTable).omit({ id: true, createdAt: true });
+export const insertRosterSchema = z.object({
+  name: z.string(),
+  description: z.string().nullish(),
+});
 export type InsertRoster = z.infer<typeof insertRosterSchema>;
 export type Roster = typeof rostersTable.$inferSelect;

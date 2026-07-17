@@ -15,4 +15,9 @@ export interface Stats {
   employeeCount: number;
   topWorkers?: EmployeeStat[];
   recentEvents?: Event[];
+  /**
+     * ID of the most recent "Reset Hours" event used for time-window filtering
+     * @nullable
+     */
+  normalizedHoursResetEventId?: number | null;
 }

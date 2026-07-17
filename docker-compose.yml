@@ -1,0 +1,14 @@
+services:
+  otqueue-app:
+    build: .
+    container_name: otqueue
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    ports:
+      - "8085:80"
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      # Maps a 'data' folder on your host server to the container's app data directory
+      - /home/alex/docker-compose/otqueue/data:/app/data

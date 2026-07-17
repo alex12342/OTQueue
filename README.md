@@ -1,4 +1,4 @@
-# OTQueue
+# OTQue
 
 A web app for tracking and fairly distributing overtime at shift-based jobs. Supports multiple rosters, role/subclass classification, holiday day types, and weighted fairness hours.
 

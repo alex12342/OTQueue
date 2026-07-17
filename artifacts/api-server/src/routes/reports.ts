@@ -152,7 +152,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
     .from(subclassesTable)
     .where(eq(subclassesTable.rosterId, rosterId));
 
-  const subclassMap = new Map(subclasses.map((s) => [s.id, s]));
+  const subclassMap = new Map<number, typeof subclassesTable.$inferSelect>(subclasses.map((s: typeof subclassesTable.$inferSelect) => [s.id, s]));
 
   const dayTypeOverrides = await db
     .select()
@@ -164,18 +164,33 @@ router.get("/up-next", async (req, res): Promise<void> => {
       ),
     );
 
-  const dayTypeOverrideMap = new Map(dayTypeOverrides.map((o) => [o.subclassId, o.sortOrder]));
+  const dayTypeOverrideMap = new Map<number, number>(dayTypeOverrides.map((o: typeof subclassDayTypeSortTable.$inferSelect) => [o.subclassId, o.sortOrder]));
 
   const withData = await Promise.all(
-    employees.map(async (emp) => {
-      const [hrs] = await db
+    employees.map(async (emp: typeof employeesTable.$inferSelect) => {
+      // Find the most recent "Reset Hours" event for time-window filtering
+      const [resetEvent] = await db
+        .select({ createdAt: eventsTable.createdAt })
+        .from(eventsTable)
+        .where(
+          and(
+            eq(eventsTable.rosterId, rosterId),
+            sql`${eventsTable.description} = 'Reset Hours'`,
+          ),
+        )
+        .orderBy(sql`${eventsTable.createdAt} DESC`)
+        .limit(1);
+
+      let empHoursQuery = db
         .select({
           totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
           fairnessScore: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) * ${eventsTable.multiplier}::numeric ELSE 0 END), 0)`,
         })
         .from(eventEntriesTable)
         .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-        .where(eq(eventEntriesTable.employeeId, emp.id));
+        .where(and(eq(eventEntriesTable.employeeId, emp.id), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
+
+      const [hrs] = await empHoursQuery;
 
       const rawOfferedHours = Number(hrs?.totalOfferedHours ?? 0);
       const fairnessScore = Number(hrs?.fairnessScore ?? 0);
@@ -237,13 +252,26 @@ router.get("/stats", async (req, res): Promise<void> => {
 
   const rosterId = parsed.data.rosterId;
 
+  // Find the most recent "Reset Hours" event for time-window filtering
+  const [resetEvent] = await db
+    .select({ id: eventsTable.id, createdAt: eventsTable.createdAt })
+    .from(eventsTable)
+    .where(
+      and(
+        eq(eventsTable.rosterId, rosterId!),
+        sql`${eventsTable.description} = 'Reset Hours'`,
+      ),
+    )
+    .orderBy(sql`${eventsTable.createdAt} DESC`)
+    .limit(1);
+
   const [eventCount] = await db
     .select({ count: sql<number>`COUNT(*)` })
     .from(eventsTable)
     .$dynamic()
     .where(rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`);
 
-  const [hourTotals] = await db
+  let hoursQuery = db
     .select({
       totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
       totalWorkedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.worked} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
@@ -252,6 +280,12 @@ router.get("/stats", async (req, res): Promise<void> => {
     .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
     .$dynamic()
     .where(rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`);
+
+  if (resetEvent) {
+    hoursQuery = hoursQuery.where(sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`);
+  }
+
+  const [hourTotals] = await hoursQuery;
 
   const [empCount] = await db
     .select({ count: sql<number>`COUNT(*)` })
@@ -270,15 +304,17 @@ router.get("/stats", async (req, res): Promise<void> => {
     .where(rosterId !== undefined ? eq(employeesTable.rosterId, rosterId) : sql`true`);
 
   const topWorkers = await Promise.all(
-    allEmployees.map(async (emp) => {
-      const [hrs] = await db
+    allEmployees.map(async (emp: typeof employeesTable.$inferSelect) => {
+      let empHoursQuery = db
         .select({
           totalWorkedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.worked} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
           totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
         })
         .from(eventEntriesTable)
         .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-        .where(eq(eventEntriesTable.employeeId, emp.id));
+        .where(and(eq(eventEntriesTable.employeeId, emp.id), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
+
+      const [hrs] = await empHoursQuery;
 
       return {
         id: emp.id,
@@ -301,7 +337,7 @@ router.get("/stats", async (req, res): Promise<void> => {
     .orderBy(desc(eventsTable.date), desc(eventsTable.createdAt))
     .limit(5);
   const recentEventsWithEntries = await Promise.all(
-    recentEventsRaw.map(async (event) => {
+    recentEventsRaw.map(async (event: typeof eventsTable.$inferSelect) => {
       const entries = await db
         .select({
           id: eventEntriesTable.id,
@@ -323,7 +359,7 @@ router.get("/stats", async (req, res): Promise<void> => {
         description: event.description,
         defaultHours,
         dayType: event.dayType,
-        entries: entries.map((e) => {
+        entries: entries.map((e: { id: number; employeeId: number | null; employeeName: string | null; offered: boolean; worked: boolean; hoursOverride: string | null }) => {
           const override = e.hoursOverride ? Number(e.hoursOverride) : null;
           return {
             id: e.id,
@@ -347,6 +383,7 @@ router.get("/stats", async (req, res): Promise<void> => {
     employeeCount: Number(empCount?.count ?? 0),
     topWorkers: sortedTopWorkers,
     recentEvents: recentEventsWithEntries,
+    normalizedHoursResetEventId: resetEvent?.id ?? null,
   });
 });
 

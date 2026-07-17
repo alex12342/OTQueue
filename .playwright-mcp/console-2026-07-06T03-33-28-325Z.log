@@ -1,0 +1,18 @@
+[      30ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CEuLw0ES.js:226
+[      32ms] [LOG] [auth] fetchCurrentUser: storedUser = null @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[      34ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:8085/api/auth/verify-session:0
+[      41ms] [LOG] [AuthGuard] already initialized, isAuth = false @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[     142ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
+[  149861ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CEuLw0ES.js:226
+[  149862ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 28961553-c1ce-42ef-9c2f-6bb32b228a77, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  149868ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  162109ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CEuLw0ES.js:226
+[  162111ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 28961553-c1ce-42ef-9c2f-6bb32b228a77, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  162117ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  162217ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
+[  417477ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CEuLw0ES.js:226
+[  417479ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 28961553-c1ce-42ef-9c2f-6bb32b228a77, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  417484ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  452663ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CEuLw0ES.js:226
+[  452665ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 28961553-c1ce-42ef-9c2f-6bb32b228a77, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CEuLw0ES.js:275
+[  452672ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CEuLw0ES.js:275

@@ -20,12 +20,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
 import { useRoster } from "@/hooks/use-roster";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Employees() {
   const { toast } = useToast();
@@ -33,6 +35,10 @@ export default function Employees() {
   const { activeRosterId } = useRoster();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
+  const [subclassWarningOpen, setSubclassWarningOpen] = useState(false);
+  const [pendingEditData, setPendingEditData] = useState<{subclassId: number | null; active: boolean} | null>(null);
+  const [activeToggle, setActiveToggle] = useState(true);
+  const [manualStartingHours, setManualStartingHours] = useState(false);
 
   const { data: employees, isLoading } = useListEmployees(
     { rosterId: activeRosterId ?? undefined },
@@ -67,7 +73,16 @@ export default function Employees() {
 
   const updateMutation = useUpdateEmployee({
     mutation: {
-      onSuccess: () => { toast({ title: "Employee updated" }); setEditingEmp(null); invalidate(); },
+      onSuccess: () => {
+        if (pendingEditData) {
+          toast({ title: "Subclass updated", description: "Your fairness baseline has been reset and recomputed from your new subclass group." });
+          setPendingEditData(null);
+        } else {
+          toast({ title: "Employee updated" });
+        }
+        setEditingEmp(null);
+        invalidate();
+      },
       onError: () => toast({ title: "Error", description: "Failed to update employee", variant: "destructive" }),
     },
   });
@@ -85,16 +100,21 @@ export default function Employees() {
     const fd = new FormData(e.currentTarget);
     const roleId = fd.get("roleId") as string;
     const subclassId = fd.get("subclassId") as string;
-    createMutation.mutate({
-      data: {
-        rosterId: activeRosterId,
-        name: fd.get("name") as string,
-        seniority: parseInt(fd.get("seniority") as string, 10),
-        roleId: roleId && roleId !== "none" ? parseInt(roleId, 10) : null,
-        subclassId: subclassId && subclassId !== "none" ? parseInt(subclassId, 10) : null,
-        active: (e.currentTarget.elements.namedItem("active") as HTMLInputElement)?.checked ?? true,
-      },
-    });
+    const body: Record<string, unknown> = {
+      rosterId: activeRosterId,
+      name: fd.get("name") as string,
+      seniority: parseInt(fd.get("seniority") as string, 10),
+      roleId: roleId && roleId !== "none" ? parseInt(roleId, 10) : null,
+      subclassId: subclassId && subclassId !== "none" ? parseInt(subclassId, 10) : null,
+      active: fd.get("active") === "1",
+    };
+    if (manualStartingHours) {
+      const raw = fd.get("startingNormalizedHours") as string;
+      if (raw && raw.trim() !== "") {
+        body.startingNormalizedHours = parseFloat(raw);
+      }
+    }
+    createMutation.mutate({ data: body as any });
   };
 
   const handleEdit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -103,14 +123,25 @@ export default function Employees() {
     const fd = new FormData(e.currentTarget);
     const roleId = fd.get("roleId") as string;
     const subclassId = fd.get("subclassId") as string;
+    const newSubclassId = subclassId && subclassId !== "none" ? parseInt(subclassId, 10) : null;
+
+    // Check if subclass is changing
+    const oldSubclassId = editingEmp.subclassId ?? null;
+    if (newSubclassId !== oldSubclassId) {
+      setPendingEditData({ subclassId: newSubclassId, active: activeToggle });
+      setSubclassWarningOpen(true);
+      setActiveToggle(editingEmp.active);
+      return;
+    }
+
     updateMutation.mutate({
       id: editingEmp.id,
       data: {
         name: fd.get("name") as string,
         seniority: parseInt(fd.get("seniority") as string, 10),
         roleId: roleId && roleId !== "none" ? parseInt(roleId, 10) : null,
-        subclassId: subclassId && subclassId !== "none" ? parseInt(subclassId, 10) : null,
-        active: (e.currentTarget.elements.namedItem("active") as HTMLInputElement)?.checked ?? editingEmp.active,
+        subclassId: newSubclassId,
+        active: fd.get("active") === "1",
       },
     });
   };
@@ -120,11 +151,13 @@ export default function Employees() {
     onSubmit,
     isPending,
     submitLabel,
+    showStartingHours = false,
   }: {
     defaultValues?: Partial<Employee>;
     onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     isPending: boolean;
     submitLabel: string;
+    showStartingHours?: boolean;
   }) => (
     <form onSubmit={onSubmit} className="space-y-4 pt-4">
       <div className="space-y-2">
@@ -158,9 +191,37 @@ export default function Employees() {
         </Select>
       </div>
       <div className="flex items-center space-x-2 pt-2">
-        <Switch id="active" name="active" defaultChecked={defaultValues?.active ?? true} />
+        <input type="hidden" name="active" value={activeToggle ? "1" : "0"} />
+        <Switch id="active" checked={activeToggle} onCheckedChange={setActiveToggle} defaultChecked={defaultValues?.active ?? true} />
         <Label htmlFor="active">Active Status</Label>
       </div>
+      {showStartingHours && (
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="manualStartingHours"
+              checked={manualStartingHours}
+              onCheckedChange={(checked) => setManualStartingHours(checked === true)}
+            />
+            <Label htmlFor="manualStartingHours" className="text-sm font-normal cursor-pointer">
+              Manually set starting fairness value
+            </Label>
+          </div>
+          {manualStartingHours && (
+            <div className="space-y-2 pl-6">
+              <Label htmlFor="startingNormalizedHours">Starting Fairness Hours</Label>
+              <Input
+                id="startingNormalizedHours"
+                name="startingNormalizedHours"
+                type="number"
+                min="0"
+                step="0.1"
+                defaultValue={defaultValues?.startingNormalizedHours ?? ""}
+              />
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isPending}>{submitLabel}</Button>
       </div>
@@ -187,13 +248,14 @@ export default function Employees() {
               onSubmit={handleCreate}
               isPending={createMutation.isPending}
               submitLabel="Save Employee"
+              showStartingHours
             />
           </DialogContent>
         </Dialog>
       </div>
 
       <Dialog open={!!editingEmp} onOpenChange={(open) => !open && setEditingEmp(null)}>
-        <DialogContent>
+        <DialogContent key={editingEmp?.id}>
           <DialogHeader><DialogTitle>Edit Employee</DialogTitle></DialogHeader>
           {editingEmp && (
             <EmployeeForm
@@ -205,6 +267,39 @@ export default function Employees() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={subclassWarningOpen} onOpenChange={setSubclassWarningOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change subclass?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Changing an employee's subclass will reset their fairness baseline to 0 and recompute it from their new subclass group. This ensures fair rotation within the new group.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!editingEmp || !pendingEditData) return;
+                setSubclassWarningOpen(false);
+                updateMutation.mutate({
+                  id: editingEmp.id,
+                  data: {
+                    name: editingEmp.name,
+                    seniority: editingEmp.seniority,
+                    roleId: editingEmp.roleId,
+                    subclassId: pendingEditData.subclassId,
+                    active: pendingEditData.active,
+                  },
+                });
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card className="overflow-hidden border-border shadow-sm">
         <CardContent className="p-0">

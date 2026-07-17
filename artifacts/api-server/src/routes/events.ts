@@ -38,7 +38,7 @@ async function getEventWithEntries(id: number) {
     defaultHours,
     dayType: event.dayType,
     multiplier: Number(event.multiplier),
-    entries: entries.map((e) => {
+    entries: entries.map((e: { id: number; employeeId: number | null; employeeName: string | null; offered: boolean; worked: boolean; hoursOverride: string | null }) => {
       const override = e.hoursOverride ? Number(e.hoursOverride) : null;
       const hoursOffered = e.offered ? (override ?? defaultHours) : 0;
       const hoursAwarded = e.worked ? (override ?? defaultHours) : 0;
@@ -69,7 +69,7 @@ router.get("/events", async (req, res): Promise<void> => {
   }
 
   const events = await query.orderBy(desc(eventsTable.date), desc(eventsTable.createdAt));
-  const withEntries = await Promise.all(events.map((e) => getEventWithEntries(e.id)));
+  const withEntries = await Promise.all(events.map((e: typeof eventsTable.$inferSelect) => getEventWithEntries(e.id)));
   res.json(withEntries.filter(Boolean));
 });
 

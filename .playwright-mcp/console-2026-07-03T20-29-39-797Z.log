@@ -1,0 +1,17 @@
+[      14ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CUL82zqY.js:226
+[      16ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CUL82zqY.js:275
+[      29ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CUL82zqY.js:275
+[21814173ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8085/api/suggest-day-type?date=2026-07-03:0
+[21874891ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CUL82zqY.js:226
+[21874892ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CUL82zqY.js:275
+[21874902ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CUL82zqY.js:275
+[21884236ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8085/api/suggest-day-type?date=2026-07-03:0
+[21903964ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CUL82zqY.js:226
+[21903966ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8effc151-21fe-4375-bf0b-8dff9924cad8, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-CUL82zqY.js:275
+[21903980ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-CUL82zqY.js:275
+[21904085ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
+[21907335ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8085/api/suggest-day-type?date=2026-07-03:0
+[21910633ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8085/api/suggest-day-type?date=2026-07-03:0
+[22279759ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8085/api/suggest-day-type?date=2026-07-03:0
+[22286283ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8085/api/suggest-day-type?date=2026-07-03:0
+[22309112ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://localhost:8085/assets/index-CUL82zqY.js:279

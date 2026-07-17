@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { ClipboardList, Users, History, PlusCircle, LayoutDashboard, Settings, ChevronDown } from "lucide-react";
+import { ClipboardList, Users, History, PlusCircle, LayoutDashboard, Settings, ChevronDown, BookOpen, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRoster } from "@/hooks/use-roster";
 import {
@@ -29,22 +29,21 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
       <div className="hidden w-64 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
           <ClipboardList className="h-6 w-6 mr-3 text-sidebar-primary" />
-          <span className="font-bold text-lg tracking-tight">OTQueue</span>
+          <span className="font-bold text-lg tracking-tight">OTQue</span>
         </div>
 
         {/* Roster selector */}
-        {rosters.length > 0 && (
-          <div className="px-4 py-3 border-b border-sidebar-border">
-            <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider mb-1.5">Roster</p>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-                <span className="truncate">{activeRoster?.name ?? "Select roster"}</span>
-                <ChevronDown className="h-4 w-4 shrink-0 ml-2 text-sidebar-foreground/50" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Switch Roster</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {rosters.map((r) => (
+        <div className="px-4 py-3 border-b border-sidebar-border">
+          <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider mb-1.5">Roster</p>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+              <span className="truncate">{rosters.length > 0 ? (activeRoster?.name ?? "Select roster") : "Manage Rosters"}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 ml-2 text-sidebar-foreground/50" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Switch Roster</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {rosters.length > 0 ? rosters.map((r) => (
                   <DropdownMenuItem
                     key={r.id}
                     onClick={() => setActiveRosterId(r.id)}
@@ -55,17 +54,18 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
                       <span className="ml-auto text-xs text-muted-foreground">active</span>
                     )}
                   </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer w-full">
-                    Manage Rosters
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+                ))
+                : (
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer w-full">
+                      Manage Rosters
+                    </Link>
+                  </DropdownMenuItem>
+                )
+              }
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div className="flex flex-1 flex-col overflow-y-auto">
           <nav className="flex-1 space-y-1 px-4 py-6">
@@ -119,6 +119,57 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
               />
               Settings
             </Link>
+            <Link
+              href="/help"
+              className={cn(
+                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+                location === "/help"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <BookOpen
+                className={cn(
+                  "mr-3 h-5 w-5 shrink-0",
+                  location === "/help"
+                    ? "text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/50 group-hover:text-sidebar-accent-foreground"
+                )}
+              />
+              Help
+            </Link>
+            <Link
+              href="/my-account"
+              className={cn(
+                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+                location === "/my-account"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <User
+                className={cn(
+                  "mr-3 h-5 w-5 shrink-0",
+                  location === "/my-account"
+                    ? "text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/50 group-hover:text-sidebar-accent-foreground"
+                )}
+              />
+              My Account
+            </Link>
+            <Link
+              href="/logout"
+              className={cn(
+                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <LogOut
+                className={cn(
+                  "mr-3 h-5 w-5 shrink-0 text-sidebar-foreground/50 group-hover:text-sidebar-accent-foreground"
+                )}
+              />
+              Logout
+            </Link>
           </div>
         </div>
       </div>
@@ -129,7 +180,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:hidden">
           <div className="flex items-center">
             <ClipboardList className="h-6 w-6 mr-3 text-primary" />
-            <span className="font-bold text-lg">OTQueue</span>
+            <span className="font-bold text-lg">OTQue</span>
           </div>
         </header>
 

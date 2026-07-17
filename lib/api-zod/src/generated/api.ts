@@ -388,7 +388,8 @@ export const ListEmployeesResponseItem = zod.object({
   "active": zod.boolean(),
   "totalOfferedHours": zod.number().optional(),
   "totalWorkedHours": zod.number().optional(),
-  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering'),
+  "startingNormalizedHours": zod.number().optional().describe('Baseline hours used for fairness computation; not counted in offered\/worked totals')
 })
 export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
 
@@ -399,6 +400,9 @@ export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
 
 
 export const createEmployeeBodyActiveDefault = true;
+export const createEmployeeBodyStartingNormalizedHoursMin = 0;
+
+
 
 export const CreateEmployeeBody = zod.object({
   "rosterId": zod.number(),
@@ -406,7 +410,8 @@ export const CreateEmployeeBody = zod.object({
   "seniority": zod.number().min(1),
   "roleId": zod.number().nullish(),
   "subclassId": zod.number().nullish(),
-  "active": zod.boolean().default(createEmployeeBodyActiveDefault)
+  "active": zod.boolean().default(createEmployeeBodyActiveDefault),
+  "startingNormalizedHours": zod.number().min(createEmployeeBodyStartingNormalizedHoursMin).optional()
 })
 
 
@@ -429,7 +434,8 @@ export const GetEmployeeResponse = zod.object({
   "active": zod.boolean(),
   "totalOfferedHours": zod.number().optional(),
   "totalWorkedHours": zod.number().optional(),
-  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering'),
+  "startingNormalizedHours": zod.number().optional().describe('Baseline hours used for fairness computation; not counted in offered\/worked totals')
 })
 
 
@@ -442,6 +448,8 @@ export const UpdateEmployeeParams = zod.object({
 
 
 
+export const updateEmployeeBodyStartingNormalizedHoursMin = 0;
+
 
 
 export const UpdateEmployeeBody = zod.object({
@@ -449,7 +457,8 @@ export const UpdateEmployeeBody = zod.object({
   "seniority": zod.number().min(1).optional(),
   "roleId": zod.number().nullish(),
   "subclassId": zod.number().nullish(),
-  "active": zod.boolean().optional()
+  "active": zod.boolean().optional(),
+  "startingNormalizedHours": zod.number().min(updateEmployeeBodyStartingNormalizedHoursMin).optional()
 })
 
 export const UpdateEmployeeResponse = zod.object({
@@ -464,7 +473,8 @@ export const UpdateEmployeeResponse = zod.object({
   "active": zod.boolean(),
   "totalOfferedHours": zod.number().optional(),
   "totalWorkedHours": zod.number().optional(),
-  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering'),
+  "startingNormalizedHours": zod.number().optional().describe('Baseline hours used for fairness computation; not counted in offered\/worked totals')
 })
 
 
@@ -498,7 +508,8 @@ export const GetEmployeeReportResponse = zod.object({
   "active": zod.boolean(),
   "totalOfferedHours": zod.number().optional(),
   "totalWorkedHours": zod.number().optional(),
-  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering')
+  "fairnessScore": zod.number().optional().describe('Weighted offered hours used for rotation ordering'),
+  "startingNormalizedHours": zod.number().optional().describe('Baseline hours used for fairness computation; not counted in offered\/worked totals')
 }),
   "totalOfferedHours": zod.number(),
   "totalWorkedHours": zod.number(),
@@ -734,7 +745,8 @@ export const GetStatsResponse = zod.object({
   "hoursAwarded": zod.number(),
   "hoursOffered": zod.number()
 }))
-})).optional()
+})).optional(),
+  "normalizedHoursResetEventId": zod.number().nullish().describe('ID of the most recent \"Reset Hours\" event used for time-window filtering')
 })
 
 

@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, boolean, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { rostersTable } from "./rosters";
 
 export const dayTypeConfigTable = pgTable(
@@ -20,6 +20,13 @@ export const dayTypeConfigTable = pgTable(
   (t) => [uniqueIndex("roster_day_type_config_unique").on(t.rosterId, t.dayType)]
 );
 
-export const insertDayTypeConfigSchema = createInsertSchema(dayTypeConfigTable).omit({ id: true, updatedAt: true });
+export const insertDayTypeConfigSchema = z.object({
+  rosterId: z.number(),
+  dayType: z.string(),
+  name: z.string().optional(),
+  enabled: z.boolean().optional(),
+  multiplier: z.string().nullish(),
+  sortOrder: z.number(),
+});
 export type InsertDayTypeConfig = z.infer<typeof insertDayTypeConfigSchema>;
 export type DayTypeConfig = typeof dayTypeConfigTable.$inferSelect;

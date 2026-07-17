@@ -1,0 +1,12 @@
+[      15ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Cxq4WCs5.js:226
+[      16ms] [LOG] [auth] fetchCurrentUser: storedUser = null @ http://localhost:8085/assets/index-Cxq4WCs5.js:235
+[      24ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:8085/api/auth/verify-session:0
+[      34ms] [LOG] [AuthGuard] already initialized, isAuth = false @ http://localhost:8085/assets/index-Cxq4WCs5.js:235
+[     134ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
+[  229682ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-Cxq4WCs5.js:226
+[  229684ms] [LOG] [auth] fetchCurrentUser: storedUser = null @ http://localhost:8085/assets/index-Cxq4WCs5.js:235
+[  229688ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:8085/api/auth/verify-session:0
+[  229696ms] [LOG] [AuthGuard] already initialized, isAuth = false @ http://localhost:8085/assets/index-Cxq4WCs5.js:235
+[  656489ms] [LOG] Status: 200 @ :0
+[  656489ms] [LOG] Headers: [Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2), Array(2)] @ :0
+[  656490ms] [LOG] Data: {message: Login successful, user: Object, csrfToken: 5cd4a9a0-093c-41b5-87f8-c5331af1e391} @ :0

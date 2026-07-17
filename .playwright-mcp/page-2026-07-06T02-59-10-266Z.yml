@@ -1,0 +1,34 @@
+- generic [ref=f78e2]:
+  - generic [ref=f78e4]:
+    - generic [ref=f78e6]:
+      - heading "OTQue" [level=1] [ref=f78e7]
+      - generic [ref=f78e8]: Change your password.
+    - generic [ref=f78e10]:
+      - generic [ref=f78e11]:
+        - text: Current Password
+        - generic [ref=f78e12]:
+          - img [ref=f78e13]
+          - textbox "Current Password" [ref=f78e16]:
+            - /placeholder: Enter your current password
+          - button [ref=f78e17]:
+            - img [ref=f78e18]
+      - generic [ref=f78e21]:
+        - text: New Password
+        - generic [ref=f78e22]:
+          - img [ref=f78e23]
+          - textbox "New Password" [ref=f78e26]:
+            - /placeholder: At least 12 characters
+          - button [ref=f78e27]:
+            - img [ref=f78e28]
+        - paragraph [ref=f78e31]: At least 12 characters with uppercase, lowercase, number, and special character
+      - generic [ref=f78e32]:
+        - text: Confirm New Password
+        - generic [ref=f78e33]:
+          - img [ref=f78e34]
+          - textbox "Confirm New Password" [ref=f78e37]:
+            - /placeholder: Repeat your new password
+          - button [ref=f78e38]:
+            - img [ref=f78e39]
+      - button "Change Password" [disabled]
+  - region "Notifications (F8)":
+    - list

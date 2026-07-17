@@ -1,0 +1,30 @@
+- generic [ref=f19e2]:
+  - generic [ref=f19e4]:
+    - generic [ref=f19e6]:
+      - heading "OTQue" [level=1] [ref=f19e7]
+      - generic [ref=f19e8]: Welcome back! Please sign in to continue.
+    - generic [ref=f19e9]:
+      - generic [ref=f19e10]:
+        - generic [ref=f19e11]:
+          - text: Email Address
+          - generic [ref=f19e12]:
+            - img [ref=f19e13]
+            - textbox "Email Address" [ref=f19e16]:
+              - /placeholder: name@example.com
+        - generic [ref=f19e17]:
+          - text: Password
+          - generic [ref=f19e18]:
+            - img [ref=f19e19]
+            - textbox "Password" [ref=f19e22]:
+              - /placeholder: Enter your password
+            - button [ref=f19e23]:
+              - img [ref=f19e24]
+        - button "Sign In" [disabled]
+      - link "Forgot password?" [ref=f19e28] [cursor=pointer]:
+        - /url: /forgot-password
+      - paragraph [ref=f19e30]:
+        - text: Don't have an account?
+        - link "Create admin account" [ref=f19e31] [cursor=pointer]:
+          - /url: /admin-setup
+  - region "Notifications (F8)":
+    - list

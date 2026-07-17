@@ -24,4 +24,6 @@ export interface Employee {
   totalWorkedHours?: number;
   /** Weighted offered hours used for rotation ordering */
   fairnessScore?: number;
+  /** Baseline hours used for fairness computation; not counted in offered/worked totals */
+  startingNormalizedHours?: number;
 }

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useListRosters,
   getListRostersQueryKey,
+  useListEmployees,
+  getListEmployeesQueryKey,
   useCreateRoster,
   useUpdateRoster,
   useDeleteRoster,
@@ -37,11 +39,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
-import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { customFetch, setAuthTokenGetter } from "@workspace/api-client-react";
+import { getUserRole, initAuth } from "@/lib/auth";
+import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown, RotateCcw, Search, Shield, Users as UsersIcon, Eye, X, Lock, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -55,16 +60,25 @@ export default function Settings() {
         <p className="text-muted-foreground mt-1">Configure rosters, sorting criteria, and classification rules.</p>
       </div>
 
-      <Tabs defaultValue="criteria">
+      <Tabs defaultValue="rosters">
         <div className="overflow-x-auto">
           <TabsList className="flex w-full min-w-max">
+            <TabsTrigger value="rosters" className="flex-1">Rosters</TabsTrigger>
             <TabsTrigger value="criteria" className="flex-1">Criteria</TabsTrigger>
             <TabsTrigger value="day-types" className="flex-1">Day Types</TabsTrigger>
             <TabsTrigger value="subclasses" className="flex-1">Subclasses</TabsTrigger>
             <TabsTrigger value="roles" className="flex-1">Roles</TabsTrigger>
-            <TabsTrigger value="rosters" className="flex-1">Rosters</TabsTrigger>
+            <TabsTrigger value="reset-hours" className="flex-1">Reset Hours</TabsTrigger>
+            <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="rosters">
+          <RostersTab
+            activeRosterId={activeRosterId}
+            onRosterSelect={setActiveRosterId}
+          />
+        </TabsContent>
 
         <TabsContent value="criteria">
           {activeRosterId ? (
@@ -98,11 +112,16 @@ export default function Settings() {
           )}
         </TabsContent>
 
-        <TabsContent value="rosters">
-          <RostersTab
-            activeRosterId={activeRosterId}
-            onRosterSelect={setActiveRosterId}
-          />
+        <TabsContent value="reset-hours">
+          {activeRosterId ? (
+            <ResetHoursTab rosterId={activeRosterId} />
+          ) : (
+            <Card><CardContent className="p-6 text-muted-foreground">Select a roster to reset hours.</CardContent></Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UsersTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -193,6 +212,7 @@ function DayTypesTab({ rosterId }: { rosterId: number }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingDt, setEditingDt] = useState<DayTypeConfig | null>(null);
   const [localMultipliers, setLocalMultipliers] = useState<Record<string, string>>({});
+  const [deleteConfirm, setDeleteConfirm] = useState<{ dayType: string; name: string } | null>(null);
 
   const { data: configs = [], isLoading } = useListDayTypeConfig(rosterId, {
     query: { queryKey: getListDayTypeConfigQueryKey(rosterId) },
@@ -287,6 +307,7 @@ function DayTypesTab({ rosterId }: { rosterId: number }) {
   if (isLoading) return <Skeleton className="h-48 w-full mt-4" />;
 
   return (
+    <>
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -405,11 +426,7 @@ function DayTypesTab({ rosterId }: { rosterId: number }) {
                   <Button
                     variant="ghost" size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => {
-                      if (confirm(`Delete day type "${cfg.name}"? This won't change existing logged events.`)) {
-                        deleteMutation.mutate({ id: rosterId, dayType: cfg.dayType });
-                      }
-                    }}
+                    onClick={() => setDeleteConfirm({ dayType: cfg.dayType, name: cfg.name })}
                   ><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
@@ -418,6 +435,32 @@ function DayTypesTab({ rosterId }: { rosterId: number }) {
         )}
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Day Type</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete "{deleteConfirm?.name}"? This won't change existing logged events.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (deleteConfirm) {
+                deleteMutation.mutate({ id: rosterId, dayType: deleteConfirm.dayType });
+                setDeleteConfirm(null);
+              }
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
@@ -428,6 +471,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingSubclass, setEditingSubclass] = useState<Subclass | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null);
 
   const { data: subclasses = [], isLoading } = useListSubclasses(rosterId, {
     query: { queryKey: getListSubclassesQueryKey(rosterId) },
@@ -591,11 +635,7 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => {
-                      if (confirm(`Delete "${s.name}"? Employees assigned to it will lose their subclass.`)) {
-                        deleteMutation.mutate({ rosterId, id: s.id });
-                      }
-                    }}
+                    onClick={() => setDeleteConfirm({ id: s.id, name: s.name })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -606,6 +646,32 @@ function SubclassesTab({ rosterId }: { rosterId: number }) {
         )}
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Subclass</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete "{deleteConfirm?.name}"? Employees assigned to it will lose their subclass.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (deleteConfirm) {
+                deleteMutation.mutate({ rosterId, id: deleteConfirm.id });
+                setDeleteConfirm(null);
+              }
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
     {subclasses.length > 1 && enabledDayTypes.length > 0 && (
       <Card className="mt-4">
         <CardHeader>
@@ -757,6 +823,7 @@ function RolesTab({ rosterId }: { rosterId: number }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [editName, setEditName] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null);
 
   const { data: roles = [], isLoading } = useListRoles(rosterId, {
     query: { queryKey: getListRolesQueryKey(rosterId) },
@@ -786,6 +853,7 @@ function RolesTab({ rosterId }: { rosterId: number }) {
   });
 
   return (
+    <>
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -857,11 +925,7 @@ function RolesTab({ rosterId }: { rosterId: number }) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => {
-                      if (confirm(`Delete role "${r.name}"?`)) {
-                        deleteMutation.mutate({ rosterId, id: r.id });
-                      }
-                    }}
+                    onClick={() => setDeleteConfirm({ id: r.id, name: r.name })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -870,6 +934,121 @@ function RolesTab({ rosterId }: { rosterId: number }) {
             ))}
           </div>
         )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteConfirm?.name}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirm) {
+                  deleteMutation.mutate({ rosterId, id: deleteConfirm.id });
+                  setDeleteConfirm(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
+  );
+}
+
+// ── Reset Hours Tab ─────────────────────────────────────────────────────────
+function ResetHoursTab({ rosterId }: { rosterId: number }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isResetting, setIsResetting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      const res = await customFetch<Response>(`/api/rosters/${rosterId}/normalize-hours`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(err.error || "Failed to reset hours");
+      }
+      const body = await res.json();
+      queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey({ rosterId }) });
+      setConfirmOpen(false);
+      toast({
+        title: "Hours reset",
+        description: `A "Reset Hours" event has been added to the event log. Deleting it will undo the reset.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Reset failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Reset Hours</CardTitle>
+        <CardDescription>
+          Reset all employee normalized hour totals to 0 for this roster. A "Reset Hours" event is added to the event log; deleting that event will undo the reset.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="rounded-lg bg-muted p-4">
+          <h4 className="font-medium mb-2">What this does:</h4>
+          <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+            <li>Calculates each employee's current normalized (fairness) hours</li>
+            <li>Creates a "Reset Hours" marker event in the event log</li>
+            <li>Effectively resets all fairness scores to 0</li>
+            <li>Historical event data remains intact and can be undone by deleting the reset event</li>
+          </ul>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setConfirmOpen(true)}
+            disabled={isResetting}
+            className="gap-1"
+          >
+            <RotateCcw className="h-4 w-4" />
+            {isResetting ? "Resetting..." : "Reset All Totals to 0"}
+          </Button>
+          {isResetting && <span className="text-sm text-muted-foreground">This may take a moment...</span>}
+        </div>
+
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset All Hour Totals?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will create a "Reset Hours" event in the event log that zeroes out fairness scores for all employees in this roster. Deleting that event will undo the reset.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleReset}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Reset Totals
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
@@ -882,6 +1061,7 @@ function RostersTab({ activeRosterId, onRosterSelect }: { activeRosterId: number
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingRoster, setEditingRoster] = useState<Roster | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null);
 
   const { data: rosters = [], isLoading } = useListRosters({
     query: { queryKey: getListRostersQueryKey() },
@@ -937,6 +1117,7 @@ function RostersTab({ activeRosterId, onRosterSelect }: { activeRosterId: number
   );
 
   return (
+    <>
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -1010,11 +1191,7 @@ function RostersTab({ activeRosterId, onRosterSelect }: { activeRosterId: number
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        if (confirm(`Delete roster "${r.name}"? This will also delete all employees, events, roles, and subclasses in it.`)) {
-                          deleteMutation.mutate({ id: r.id });
-                        }
-                      }}
+                      onClick={() => setDeleteConfirm({ id: r.id, name: r.name })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -1026,5 +1203,592 @@ function RostersTab({ activeRosterId, onRosterSelect }: { activeRosterId: number
         )}
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Roster</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete "{deleteConfirm?.name}"? This will also delete all employees, events, roles, and subclasses in it.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (deleteConfirm) {
+                deleteMutation.mutate({ id: deleteConfirm.id });
+                setDeleteConfirm(null);
+              }
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
+  );
+}
+
+// ── Users Tab (Admin Only) ────────────────────────────────────────────────────
+
+interface SettingsUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "user" | "admin";
+  isActive: boolean;
+}
+
+function UsersTab() {
+  const { toast } = useToast();
+  const [users, setUsers] = useState<SettingsUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState<SettingsUser | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createFormError, setCreateFormError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [editingRole, setEditingRole] = useState<{ userId: string; role: "user" | "admin" } | null>(null);
+  const [editRoleValue, setEditRoleValue] = useState<"user" | "admin">("user");
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [editingEmail, setEditingEmail] = useState<string | null>(null);
+  const [editEmailValue, setEditEmailValue] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [updateEmailLoading, setUpdateEmailLoading] = useState(false);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await customFetch<SettingsUser[]>("/api/admin/users", { method: "GET" });
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkAuth = async () => {
+      const role = getUserRole();
+      if (!role) {
+        await initAuth();
+        if (cancelled) return;
+        setIsAuthReady(true);
+        setIsAdmin(getUserRole() === "admin");
+      } else {
+        if (cancelled) return;
+        setIsAuthReady(true);
+        setIsAdmin(role === "admin");
+      }
+    };
+    checkAuth();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin, fetchUsers]);
+
+  const filteredUsers = useMemo(() =>
+    users.filter(user =>
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+    [users, searchQuery]
+  );
+
+  const activeCount = useMemo(() => users.filter(u => u.isActive).length, [users]);
+  const adminCount = useMemo(() => users.filter(u => u.role === "admin").length, [users]);
+
+  const handleToggleActive = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    try {
+      await customFetch<void>(`/api/admin/users/${userId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: !user.isActive }),
+      });
+      toast({
+        title: user.isActive ? "User deactivated" : "User activated",
+        description: `${user.name} is now ${user.isActive ? "inactive" : "active"}.`,
+      });
+      fetchUsers();
+    } catch (error) {
+      console.error("Error toggling status:", error);
+      toast({ title: "Error updating user status", variant: "destructive" });
+    }
+  };
+
+  const confirmDelete = async (userId: string) => {
+    try {
+      await customFetch<void>(`/api/admin/users/${userId}`, { method: "DELETE" });
+      toast({ title: "User deleted" });
+      fetchUsers();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({ title: "Error deleting user", variant: "destructive" });
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCreateFormError(null);
+
+    const fd = new FormData(e.currentTarget);
+    const email = fd.get("email") as string;
+    const password = fd.get("password") as string;
+    const name = fd.get("name") as string;
+    if (!email || !password || !name) return;
+    try {
+      await customFetch<void>("/api/admin/users", {
+        method: "POST",
+        body: JSON.stringify({ email, password, name }),
+      });
+      toast({ title: "User created", description: `Invite sent to ${email}` });
+      setShowCreateForm(false);
+      fetchUsers();
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || "Failed to create user";
+      setCreateFormError(msg);
+      toast({ title: "Failed to create user", description: msg, variant: "destructive" });
+    }
+  };
+
+  const handleUpdateRole = async (userId: string) => {
+    try {
+      await customFetch<SettingsUser>(`/api/admin/users/${userId}`, {
+        method: "PUT",
+        body: JSON.stringify({ role: editRoleValue }),
+      });
+      toast({ title: "Role updated" });
+      setEditingRole(null);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast({ title: "Error updating role", variant: "destructive" });
+    }
+  };
+
+  const handleUpdateEmail = async (userId: string) => {
+    try {
+      setUpdateEmailLoading(true);
+      await customFetch<SettingsUser>(`/api/admin/users/${userId}`, {
+        method: "PUT",
+        body: JSON.stringify({ email: editEmailValue }),
+      });
+      toast({ title: "Email updated" });
+      setEditingEmail(null);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating email:", error);
+      toast({ title: "Error updating email", variant: "destructive" });
+    } finally {
+      setUpdateEmailLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    try {
+      setResetPasswordLoading(true);
+      await customFetch<void>(`/api/admin/users/${userId}/reset-password`, {
+        method: "POST",
+      });
+      toast({ title: "Password reset email sent", description: `Sent to ${selectedUser?.email}` });
+      setShowResetPassword(false);
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      toast({ title: "Error sending reset email", variant: "destructive" });
+    } finally {
+      setResetPasswordLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (userId: string) => {
+    if (!newPassword) return;
+    try {
+      setChangePasswordLoading(true);
+      await customFetch<SettingsUser>(`/api/admin/users/${userId}`, {
+        method: "PUT",
+        body: JSON.stringify({ password: newPassword }),
+      });
+      toast({ title: "Password updated" });
+      setNewPassword("");
+      setShowResetPassword(false);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast({ title: "Error updating password", variant: "destructive" });
+    } finally {
+      setChangePasswordLoading(false);
+    }
+  };
+
+  if (!isAuthReady) {
+    return <Skeleton className="h-48 w-full mt-4" />;
+  }
+
+  if (!isAdmin) {
+    return (
+      <Card className="mt-4">
+        <CardContent className="p-6 text-muted-foreground">
+          Access denied. Only administrators can manage users.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4">
+        <div>
+          <h2 className="text-xl font-semibold">User Management</h2>
+          <p className="text-sm text-muted-foreground">
+            Create, edit, and manage system users. Deactivating a user prevents them from logging in.
+          </p>
+        </div>
+        <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+          {showCreateForm ? (
+            <><X className="h-4 w-4 mr-1" /> Cancel</>
+          ) : (
+            <><PlusCircle className="h-4 w-4 mr-1" /> Create User</>
+          )}
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="border rounded-lg p-4 bg-muted/30">
+          <div className="text-sm text-muted-foreground">Total Users</div>
+          <div className="text-2xl font-bold">{users.length}</div>
+        </div>
+        <div className="border rounded-lg p-4 bg-muted/30">
+          <div className="text-sm text-muted-foreground">Active</div>
+          <div className="text-2xl font-bold text-green-600">{activeCount}</div>
+        </div>
+        <div className="border rounded-lg p-4 bg-muted/30">
+          <div className="text-sm text-muted-foreground">Admins</div>
+          <div className="text-2xl font-bold text-purple-600">{adminCount}</div>
+        </div>
+      </div>
+
+      {/* Create User Form */}
+      {showCreateForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Create New User</CardTitle>
+            <CardDescription>Add a new user to the system. An invite email will be sent.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {createFormError && (
+              <div className="mb-4 flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {createFormError}
+              </div>
+            )}
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="create-name">Name</Label>
+                <Input id="create-name" name="name" required placeholder="Full name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-email">Email</Label>
+                <Input id="create-email" name="email" type="email" required placeholder="name@example.com" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-password">Password</Label>
+                <Input id="create-password" name="password" type="password" required placeholder="At least 12 characters" minLength={12} />
+                <p className="text-xs text-muted-foreground">At least 12 characters with uppercase, lowercase, number, and special character</p>
+              </div>
+              <Button type="submit" className="w-full">Create User</Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search by email or name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 h-10 border-border bg-background"
+        />
+      </div>
+
+      {/* User List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">All Users</CardTitle>
+          <CardDescription>Click a user to view details and manage their account.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-md" />)}</div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              {users.length === 0 ? "No users yet. Create one above." : "No users match your search."}
+            </div>
+          ) : (
+            <div className="divide-y">
+              {filteredUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className={`flex items-center gap-4 px-4 py-3 transition-colors cursor-pointer ${
+                    selectedUser?.id === user.id
+                      ? "bg-muted"
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => setSelectedUser(selectedUser?.id === user.id ? null : user)}
+                >
+                  {/* Role icon */}
+                  <div className={`p-2 rounded-full shrink-0 ${
+                    user.role === "admin"
+                      ? "bg-purple-100 text-purple-600"
+                      : "bg-blue-100 text-blue-600"
+                  }`}>
+                    {user.role === "admin" ? <Shield className="h-4 w-4" /> : <UsersIcon className="h-4 w-4" />}
+                  </div>
+
+                  {/* Name / Email */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{user.name}</div>
+                    <div className="text-sm text-muted-foreground truncate">{user.email}</div>
+                  </div>
+
+                  {/* Role badge or inline editor */}
+                  {editingRole?.userId === user.id ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <select
+                        className="h-8 text-sm border rounded px-2 bg-background"
+                        value={editRoleValue}
+                        onChange={(e) => setEditRoleValue(e.target.value as "user" | "admin")}
+                      >
+                        <option value="user">user</option>
+                        <option value="admin">admin</option>
+                      </select>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={(e) => { e.stopPropagation(); handleUpdateRole(user.id); }}>
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); setEditingRole(null); }}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Badge variant={user.role === "admin" ? "outline" : "default"} className="shrink-0">
+                      {user.role}
+                    </Badge>
+                  )}
+
+                  {/* Active toggle with label */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Lock className={`h-3.5 w-3.5 ${user.isActive ? "text-green-500" : "text-red-400"}`} />
+                    <span className="text-xs text-muted-foreground w-12 text-right">
+                      {user.isActive ? "Active" : "Inactive"}
+                    </span>
+                    <Switch
+                      checked={user.isActive}
+                      onCheckedChange={() => handleToggleActive(user.id)}
+                    />
+                  </div>
+
+                  {/* Delete */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(user.id); }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Selected User Details Panel */}
+      {selectedUser && (
+        <Card className="border-primary/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle className="text-base">User Details</CardTitle>
+              <CardDescription>{selectedUser.name}</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setSelectedUser(null)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Role</Label>
+                {editingRole?.userId === selectedUser.id ? (
+                  <div className="flex items-center gap-1">
+                    <select
+                      className="h-8 text-sm border rounded px-2 bg-background"
+                      value={editRoleValue}
+                      onChange={(e) => setEditRoleValue(e.target.value as "user" | "admin")}
+                    >
+                      <option value="user">user</option>
+                      <option value="admin">admin</option>
+                    </select>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={() => handleUpdateRole(selectedUser.id)}>
+                      <CheckCircle className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingRole(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Badge variant={selectedUser.role === "admin" ? "outline" : "default"}>
+                      {selectedUser.role}
+                    </Badge>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditingRole({ userId: selectedUser.id, role: selectedUser.role }); setEditRoleValue(selectedUser.role); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Status</Label>
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm ${
+                  selectedUser.isActive
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}>
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  {selectedUser.isActive ? "Active" : "Inactive"}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Email</Label>
+              {editingEmail === selectedUser.id ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    className="h-8 text-sm"
+                    value={editEmailValue}
+                    onChange={(e) => setEditEmailValue(e.target.value)}
+                    type="email"
+                  />
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={() => handleUpdateEmail(selectedUser.id)} disabled={updateEmailLoading}>
+                    <CheckCircle className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingEmail(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="text-sm">{selectedUser.email}</div>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditingEmail(selectedUser.id); setEditEmailValue(selectedUser.email); }}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Password</Label>
+              {showResetPassword ? (
+                <div className="space-y-2">
+                  <Input
+                    type="password"
+                    placeholder="New password (min 12 characters)"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    minLength={12}
+                    className="h-8 text-sm"
+                  />
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-green-600" onClick={() => handleChangePassword(selectedUser.id)} disabled={changePasswordLoading || !newPassword}>
+                      <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                      Set Password
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setShowResetPassword(false); setNewPassword(""); }}>
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">Or send a password reset email:</div>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleResetPassword(selectedUser.id)} disabled={resetPasswordLoading}>
+                    {resetPasswordLoading ? "Sending..." : "Send Reset Email"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-muted-foreground">••••••••••••</div>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setShowResetPassword(true)}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">
+                When a user is <strong>inactive</strong>, they cannot log in. Their account and data are preserved.
+                Reactivate them to restore access.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 text-destructive hover:text-destructive"
+                onClick={() => { setDeleteConfirm(selectedUser.id); setSelectedUser(null); }}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete User
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone. All associated data will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirm) {
+                  confirmDelete(deleteConfirm);
+                  setDeleteConfirm(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -1,0 +1,62 @@
+- generic [ref=f19e2]:
+  - generic [ref=f19e3]:
+    - generic [ref=f19e4]:
+      - generic [ref=f19e5]:
+        - heading "Employees" [level=1] [ref=f19e6]
+        - paragraph [ref=f19e7]: Manage roster, seniority, and active status.
+      - button "Add Employee" [ref=f19e8]:
+        - img
+        - text: Add Employee
+    - table [ref=f19e12]:
+      - rowgroup [ref=f19e13]:
+        - row "Name Seniority Role Subclass Status Offered Hours Actions" [ref=f19e14]:
+          - columnheader "Name" [ref=f19e15]
+          - columnheader "Seniority" [ref=f19e16]
+          - columnheader "Role" [ref=f19e17]
+          - columnheader "Subclass" [ref=f19e18]
+          - columnheader "Status" [ref=f19e19]
+          - columnheader "Offered Hours" [ref=f19e20]
+          - columnheader "Actions" [ref=f19e21]
+      - rowgroup [ref=f19e22]:
+        - row [ref=f19e23]:
+          - cell [ref=f19e24]
+          - cell [ref=f19e26]
+          - cell [ref=f19e28]
+          - cell [ref=f19e30]
+          - cell [ref=f19e32]
+          - cell [ref=f19e34]
+          - cell [ref=f19e36]
+        - row [ref=f19e38]:
+          - cell [ref=f19e39]
+          - cell [ref=f19e41]
+          - cell [ref=f19e43]
+          - cell [ref=f19e45]
+          - cell [ref=f19e47]
+          - cell [ref=f19e49]
+          - cell [ref=f19e51]
+        - row [ref=f19e53]:
+          - cell [ref=f19e54]
+          - cell [ref=f19e56]
+          - cell [ref=f19e58]
+          - cell [ref=f19e60]
+          - cell [ref=f19e62]
+          - cell [ref=f19e64]
+          - cell [ref=f19e66]
+        - row [ref=f19e68]:
+          - cell [ref=f19e69]
+          - cell [ref=f19e71]
+          - cell [ref=f19e73]
+          - cell [ref=f19e75]
+          - cell [ref=f19e77]
+          - cell [ref=f19e79]
+          - cell [ref=f19e81]
+        - row [ref=f19e83]:
+          - cell [ref=f19e84]
+          - cell [ref=f19e86]
+          - cell [ref=f19e88]
+          - cell [ref=f19e90]
+          - cell [ref=f19e92]
+          - cell [ref=f19e94]
+          - cell [ref=f19e96]
+  - region "Notifications (F8)":
+    - list

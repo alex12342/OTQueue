@@ -1,0 +1,81 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]: OTQue
+      - generic [ref=f1e10]:
+        - paragraph [ref=f1e11]: Roster
+        - button "test" [ref=f1e12]
+      - generic [ref=f1e16]:
+        - navigation [ref=f1e17]:
+          - generic [ref=f1e18]: Menu
+          - link "Up Next" [ref=f1e19] [cursor=pointer]:
+            - /url: /
+          - link "Log Event" [ref=f1e25] [cursor=pointer]:
+            - /url: /events/new
+          - link "Event Log" [ref=f1e28] [cursor=pointer]:
+            - /url: /log
+          - link "Employees" [ref=f1e33] [cursor=pointer]:
+            - /url: /employees
+        - generic [ref=f1e39]:
+          - link "Settings" [ref=f1e40] [cursor=pointer]:
+            - /url: /settings
+          - link "Help" [ref=f1e44] [cursor=pointer]:
+            - /url: /help
+          - link "My Account" [ref=f1e47] [cursor=pointer]:
+            - /url: /my-account
+          - link "Logout" [ref=f1e51] [cursor=pointer]:
+            - /url: /logout
+    - main [ref=f1e56]:
+      - generic [ref=f1e200]:
+        - generic [ref=f1e201]:
+          - generic [ref=f1e202]:
+            - link [ref=f1e203] [cursor=pointer]:
+              - /url: /employees
+            - generic [ref=f1e206]:
+              - heading "Torznab" [level=1] [ref=f1e207]
+              - generic [ref=f1e208]:
+                - generic [ref=f1e209]: Active
+                - generic [ref=f1e210]: •
+                - generic [ref=f1e211]: "Seniority #4"
+                - generic [ref=f1e212]: •
+                - generic [ref=f1e213]: Full Time
+                - generic [ref=f1e214]: •
+                - generic [ref=f1e215]: "Starting fairness value: 2h"
+          - generic [ref=f1e216]:
+            - button "Export CSV" [ref=f1e217]
+            - button "Edit" [ref=f1e218]
+            - button "Remove" [ref=f1e219]
+        - generic [ref=f1e220]:
+          - generic [ref=f1e221]:
+            - generic [ref=f1e222]: Total Offered
+            - generic [ref=f1e227]: 4h
+          - generic [ref=f1e229]:
+            - generic [ref=f1e230]: Total Worked
+            - generic [ref=f1e235]: 2h
+          - generic [ref=f1e237]:
+            - generic [ref=f1e238]: Normalized Total
+            - generic [ref=f1e242]: 2h
+          - generic [ref=f1e244]:
+            - generic [ref=f1e245]: Acceptance Rate
+            - generic [ref=f1e248]: 0.0%
+        - generic [ref=f1e250]:
+          - generic [ref=f1e251]:
+            - generic [ref=f1e252]: Overtime History
+            - generic [ref=f1e258]: Chronological list of all events offered to this employee.
+          - table [ref=f1e261]:
+            - rowgroup [ref=f1e262]:
+              - row [ref=f1e263]:
+                - columnheader "Date" [ref=f1e264]
+                - columnheader "Event Description" [ref=f1e265]
+                - columnheader "Status" [ref=f1e266]
+                - columnheader "Hours Offered" [ref=f1e267]
+                - columnheader "Normalized" [ref=f1e268]
+            - rowgroup [ref=f1e269]:
+              - row [ref=f1e270]:
+                - cell "Jul 12, 2026" [ref=f1e271]
+                - cell "Fairness Baseline" [ref=f1e272]
+                - cell "Declined" [ref=f1e274]
+                - cell "2h" [ref=f1e276]
+                - cell "2h" [ref=f1e278]
+  - region "Notifications (F8)":
+    - list

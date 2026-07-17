@@ -1,0 +1,64 @@
+- generic [ref=f8e2]:
+  - generic [ref=f8e51]:
+    - generic [ref=f8e52]:
+      - generic [ref=f8e53]:
+        - img [ref=f8e54]
+        - generic [ref=f8e57]: OTQue
+      - generic [ref=f8e58]:
+        - navigation [ref=f8e59]:
+          - generic [ref=f8e60]: Menu
+          - link "Up Next" [ref=f8e61] [cursor=pointer]:
+            - /url: /
+            - img [ref=f8e62]
+            - text: Up Next
+          - link "Log Event" [ref=f8e67] [cursor=pointer]:
+            - /url: /events/new
+            - img [ref=f8e68]
+            - text: Log Event
+          - link "Event Log" [ref=f8e70] [cursor=pointer]:
+            - /url: /log
+            - img [ref=f8e71]
+            - text: Event Log
+          - link "Employees" [ref=f8e75] [cursor=pointer]:
+            - /url: /employees
+            - img [ref=f8e76]
+            - text: Employees
+        - generic [ref=f8e81]:
+          - link "Settings" [ref=f8e82] [cursor=pointer]:
+            - /url: /settings
+            - img [ref=f8e83]
+            - text: Settings
+          - link "Help" [ref=f8e86] [cursor=pointer]:
+            - /url: /help
+            - img [ref=f8e87]
+            - text: Help
+          - link "Logout" [ref=f8e89] [cursor=pointer]:
+            - /url: /logout
+            - img [ref=f8e90]
+            - text: Logout
+    - main [ref=f8e94]:
+      - generic [ref=f8e96]:
+        - generic [ref=f8e97]:
+          - generic [ref=f8e98]:
+            - heading "Overview" [level=1] [ref=f8e99]
+            - paragraph [ref=f8e100]: Current overtime rotation and statistics.
+          - link "Log Overtime Event" [ref=f8e101] [cursor=pointer]:
+            - /url: /events/new
+        - generic [ref=f8e102]:
+          - generic [ref=f8e103]:
+            - generic [ref=f8e104]:
+              - generic [ref=f8e105]: Total Worked
+              - img [ref=f8e106]
+            - generic [ref=f8e109]: 0h
+          - generic [ref=f8e110]:
+            - generic [ref=f8e111]:
+              - generic [ref=f8e112]: Active Employees
+              - img [ref=f8e113]
+            - generic [ref=f8e119]: "0"
+        - generic [ref=f8e120]:
+          - generic [ref=f8e123]:
+            - generic [ref=f8e124]: Up Next Rotation
+            - generic [ref=f8e125]: Ordered by subclass priority → fairness hours → seniority.
+          - paragraph [ref=f8e128]: No active employees found in this roster.
+  - region "Notifications (F8)":
+    - list

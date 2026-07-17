@@ -16,4 +16,6 @@ export interface EmployeeUpdate {
   /** @nullable */
   subclassId?: number | null;
   active?: boolean;
+  /** @minimum 0 */
+  startingNormalizedHours?: number;
 }

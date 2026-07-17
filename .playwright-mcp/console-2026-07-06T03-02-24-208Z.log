@@ -1,0 +1,13 @@
+[      12ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-BLTHEufZ.js:226
+[      13ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8d361373-02aa-4636-9a1e-57d49f467b4c, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-BLTHEufZ.js:275
+[      27ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-BLTHEufZ.js:226
+[      28ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 8d361373-02aa-4636-9a1e-57d49f467b4c, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-BLTHEufZ.js:275
+[      36ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-BLTHEufZ.js:275
+[     136ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[     136ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[     136ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
+[  304315ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
+[  313090ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:8085/api/auth/login:0
+[  313090ms] [ERROR] Login error: ApiError: HTTP 401 Unauthorized: Invalid credentials
+    at Ue (http://localhost:8085/assets/index-BLTHEufZ.js:236:67869)
+    at async N (http://localhost:8085/assets/index-BLTHEufZ.js:276:44345) @ http://localhost:8085/assets/index-BLTHEufZ.js:275

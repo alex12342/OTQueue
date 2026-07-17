@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil, Search, Download, X, Zap } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil, Search, Download, X, Zap, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
@@ -198,9 +198,16 @@ export default function EventLog() {
                   <div>
                     <div className="flex items-center gap-3 mb-1">
                       <CardTitle className="text-lg">{event.description}</CardTitle>
-                      <Badge variant={event.dayType === "weekend" ? "secondary" : "outline"} className="capitalize">
-                        {event.dayType}
-                      </Badge>
+                      {event.dayType === "system" ? (
+                        <Badge variant="outline" className="gap-1 font-mono text-xs">
+                          <Settings className="h-3 w-3" />
+                          System
+                        </Badge>
+                      ) : (
+                        <Badge variant={event.dayType === "weekend" ? "secondary" : "outline"} className="capitalize">
+                          {event.dayType}
+                        </Badge>
+                      )}
                       {hasMultiplier && (
                         <Badge variant="secondary" className="gap-1 font-mono text-xs">
                           <Zap className="h-3 w-3" />
