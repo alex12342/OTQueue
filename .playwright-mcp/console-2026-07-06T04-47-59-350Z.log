@@ -1,2 +1,0 @@
-[      13ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CqgDzBvR.js:226
-[      14ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 28961553-c1ce-42ef-9c2f-6bb32b228a77, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: false} @ http://localhost:8085/assets/index-CqgDzBvR.js:275

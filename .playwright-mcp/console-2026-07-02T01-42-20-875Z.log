@@ -1,9 +1,0 @@
-[     143ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.1.44:8085/assets/index-CbLcJFEV.js:226
-[     148ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://192.168.1.44:8085/api/auth/verify-session:0
-[     176ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.1.44:8085/assets/index-CbLcJFEV.js:226
-[     184ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://192.168.1.44:8085/api/auth/verify-session:0
-[     296ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://192.168.1.44:8085/login:0
-[   49742ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.1.44:8085/assets/index-CbLcJFEV.js:226
-[   49746ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://192.168.1.44:8085/api/auth/verify-session:0
-[   49854ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://192.168.1.44:8085/login:0
-[  286258ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://192.168.1.44:8085/api/auth/verify-session:0

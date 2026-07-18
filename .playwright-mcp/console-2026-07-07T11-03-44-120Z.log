@@ -1,7 +1,0 @@
-[      13ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-DRQWv33Q.js:226
-[      15ms] [LOG] [auth] fetchCurrentUser: storedUser = null @ http://localhost:8085/assets/index-DRQWv33Q.js:275
-[     123ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/login:0
-[   39213ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-DRQWv33Q.js:226
-[   39328ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
-[   39328ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
-[   39328ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0

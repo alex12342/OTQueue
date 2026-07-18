@@ -1,9 +1,0 @@
-- generic [ref=f10e2]:
-  - generic [ref=f10e4]:
-    - generic [ref=f10e5]:
-      - img [ref=f10e43]
-      - generic [ref=f10e46]: Password Changed!
-      - generic [ref=f10e47]: Your password has been changed successfully.
-    - button "Continue to Dashboard" [ref=f10e48] [cursor=pointer]
-  - region "Notifications (F8)":
-    - list

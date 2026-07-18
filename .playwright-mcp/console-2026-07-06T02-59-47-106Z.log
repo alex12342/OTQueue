@@ -1,8 +1,0 @@
-[      13ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-BLTHEufZ.js:226
-[      14ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-BLTHEufZ.js:275
-[      29ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-BLTHEufZ.js:226
-[      30ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-BLTHEufZ.js:275
-[      38ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-BLTHEufZ.js:275
-[     138ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
-[     138ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0
-[     138ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8085/change-password:0

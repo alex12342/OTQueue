@@ -1,3 +1,0 @@
-[      11ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-zJApWjhA.js:226
-[      12ms] [LOG] [auth] fetchCurrentUser: storedUser = {id: 526d07cb-360f-4fd4-84c9-7ac984c85cbb, email: admin@otqueue.local, name: Admin, role: admin, passwordChangeRequired: true} @ http://localhost:8085/assets/index-zJApWjhA.js:275
-[      17ms] [LOG] [AuthGuard] already initialized, isAuth = true @ http://localhost:8085/assets/index-zJApWjhA.js:275

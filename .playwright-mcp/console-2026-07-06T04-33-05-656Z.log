@@ -1,3 +1,0 @@
-[     141ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8085/assets/index-CbVEMjr7.js:226
-[     144ms] [LOG] [auth] fetchCurrentUser: storedUser = null @ http://localhost:8085/assets/index-CbVEMjr7.js:275
-[     156ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:8085/api/auth/verify-session:0
