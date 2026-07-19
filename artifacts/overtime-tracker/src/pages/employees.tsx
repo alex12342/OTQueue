@@ -29,6 +29,100 @@ import { Link } from "wouter";
 import { useRoster } from "@/hooks/use-roster";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const EmployeeForm = ({
+  defaultValues,
+  onSubmit,
+  isPending,
+  submitLabel,
+  showStartingHours = false,
+  roles,
+  subclasses,
+  manualStartingHours,
+  setManualStartingHours,
+  activeToggle,
+  setActiveToggle,
+}: {
+  defaultValues?: Partial<Employee>;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  isPending: boolean;
+  submitLabel: string;
+  showStartingHours?: boolean;
+  roles: any[];
+  subclasses: any[];
+  manualStartingHours: boolean;
+  setManualStartingHours: (v: boolean) => void;
+  activeToggle: boolean;
+  setActiveToggle: (v: boolean) => void;
+}) => (
+  <form onSubmit={onSubmit} className="space-y-4 pt-4">
+    <div className="space-y-2">
+      <Label htmlFor="name">Full Name</Label>
+      <Input id="name" name="name" defaultValue={defaultValues?.name} required />
+    </div>
+    <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="seniority">Seniority #</Label>
+        <Input id="seniority" name="seniority" type="number" min="1" defaultValue={defaultValues?.seniority} required />
+      </div>
+      <div className="space-y-2">
+        <Label>Role</Label>
+        <Select name="roleId" defaultValue={String(defaultValues?.roleId ?? "none")}>
+          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {roles.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+    <div className="space-y-2">
+      <Label>Subclass</Label>
+      <Select name="subclassId" defaultValue={String(defaultValues?.subclassId ?? "none")}>
+        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">None</SelectItem>
+          {subclasses.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="flex items-center space-x-2 pt-2">
+      <input type="hidden" name="active" value={activeToggle ? "1" : "0"} />
+      <Switch id="active" checked={activeToggle} onCheckedChange={setActiveToggle} defaultChecked={defaultValues?.active ?? true} />
+      <Label htmlFor="active">Active Status</Label>
+    </div>
+    {showStartingHours && (
+      <div className="space-y-2 pt-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="manualStartingHours"
+            checked={manualStartingHours}
+            onCheckedChange={(checked) => setManualStartingHours(checked === true)}
+          />
+          <Label htmlFor="manualStartingHours" className="text-sm font-normal cursor-pointer">
+            Manually set starting fairness value
+          </Label>
+        </div>
+        {manualStartingHours && (
+          <div className="space-y-2 pl-6">
+            <Label htmlFor="startingNormalizedHours">Starting Fairness Hours</Label>
+            <Input
+              id="startingNormalizedHours"
+              name="startingNormalizedHours"
+              type="number"
+              min="0"
+              step="0.1"
+              defaultValue={defaultValues?.startingNormalizedHours ?? ""}
+            />
+          </div>
+        )}
+      </div>
+    )}
+    <div className="flex justify-end pt-4">
+      <Button type="submit" disabled={isPending}>{submitLabel}</Button>
+    </div>
+  </form>
+);
+
 export default function Employees() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -146,88 +240,6 @@ export default function Employees() {
     });
   };
 
-  const EmployeeForm = ({
-    defaultValues,
-    onSubmit,
-    isPending,
-    submitLabel,
-    showStartingHours = false,
-  }: {
-    defaultValues?: Partial<Employee>;
-    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-    isPending: boolean;
-    submitLabel: string;
-    showStartingHours?: boolean;
-  }) => (
-    <form onSubmit={onSubmit} className="space-y-4 pt-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
-        <Input id="name" name="name" defaultValue={defaultValues?.name} required />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="seniority">Seniority #</Label>
-          <Input id="seniority" name="seniority" type="number" min="1" defaultValue={defaultValues?.seniority} required />
-        </div>
-        <div className="space-y-2">
-          <Label>Role</Label>
-          <Select name="roleId" defaultValue={String(defaultValues?.roleId ?? "none")}>
-            <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {roles.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label>Subclass</Label>
-        <Select name="subclassId" defaultValue={String(defaultValues?.subclassId ?? "none")}>
-          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            {subclasses.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex items-center space-x-2 pt-2">
-        <input type="hidden" name="active" value={activeToggle ? "1" : "0"} />
-        <Switch id="active" checked={activeToggle} onCheckedChange={setActiveToggle} defaultChecked={defaultValues?.active ?? true} />
-        <Label htmlFor="active">Active Status</Label>
-      </div>
-      {showStartingHours && (
-        <div className="space-y-2 pt-2">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="manualStartingHours"
-              checked={manualStartingHours}
-              onCheckedChange={(checked) => setManualStartingHours(checked === true)}
-            />
-            <Label htmlFor="manualStartingHours" className="text-sm font-normal cursor-pointer">
-              Manually set starting fairness value
-            </Label>
-          </div>
-          {manualStartingHours && (
-            <div className="space-y-2 pl-6">
-              <Label htmlFor="startingNormalizedHours">Starting Fairness Hours</Label>
-              <Input
-                id="startingNormalizedHours"
-                name="startingNormalizedHours"
-                type="number"
-                min="0"
-                step="0.1"
-                defaultValue={defaultValues?.startingNormalizedHours ?? ""}
-              />
-            </div>
-          )}
-        </div>
-      )}
-      <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isPending}>{submitLabel}</Button>
-      </div>
-    </form>
-  );
-
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
@@ -249,6 +261,12 @@ export default function Employees() {
               isPending={createMutation.isPending}
               submitLabel="Save Employee"
               showStartingHours
+              roles={roles}
+              subclasses={subclasses}
+              manualStartingHours={manualStartingHours}
+              setManualStartingHours={setManualStartingHours}
+              activeToggle={activeToggle}
+              setActiveToggle={setActiveToggle}
             />
           </DialogContent>
         </Dialog>
@@ -263,6 +281,12 @@ export default function Employees() {
               onSubmit={handleEdit}
               isPending={updateMutation.isPending}
               submitLabel="Update Employee"
+              roles={roles}
+              subclasses={subclasses}
+              manualStartingHours={manualStartingHours}
+              setManualStartingHours={setManualStartingHours}
+              activeToggle={activeToggle}
+              setActiveToggle={setActiveToggle}
             />
           )}
         </DialogContent>
