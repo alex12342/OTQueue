@@ -1,2 +1,0 @@
-- [OTQueue schema conventions](otqueue-schema.md) — multi-roster schema; every resource scoped to a roster; codegen must run after any OpenAPI change.
-- [OTQueue frontend patterns](otqueue-frontend.md) — RosterContext in localStorage; all pages use useRoster(); Vite HMR can get stuck after lib errors — restart workflow to clear.
