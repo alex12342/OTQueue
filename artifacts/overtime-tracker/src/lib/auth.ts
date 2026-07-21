@@ -2,7 +2,7 @@ import { customFetch, setAuthTokenGetter } from "@workspace/api-client-react";
 
 let _isLoggedIn = false;
 let _userEmail: string | null = null;
-let _userRole: string | null = null;
+let _userRole: "user" | "admin" | "viewer" | null = null;
 let _userId: string | null = null;
 let _isAuthInitialized = false;
 let _passwordChangeRequired = false;
@@ -50,7 +50,7 @@ export function getAuthToken(): string | null {
 /**
  * Set the current user info and token (called after successful login)
  */
-export function setCurrentUser(email: string, role: string, token: string, user: { id: string; name: string; passwordChangeRequired: boolean }) {
+export function setCurrentUser(email: string, role: "user" | "admin" | "viewer", token: string, user: { id: string; name: string; passwordChangeRequired: boolean }) {
   _token = token;
   setAuthTokenGetter(() => _token);
   _isLoggedIn = true;
@@ -106,7 +106,7 @@ function getStoredToken(): string | null {
 /**
  * Get the stored user from localStorage
  */
-function getStoredUser(): { id: string; email: string; name: string; role: string; passwordChangeRequired: boolean } | null {
+function getStoredUser(): { id: string; email: string; name: string; role: "user" | "admin" | "viewer"; passwordChangeRequired: boolean } | null {
   try {
     const stored = localStorage.getItem(USER_STORAGE_KEY);
     return stored ? JSON.parse(stored) : null;
@@ -147,7 +147,7 @@ export function getUserId(): string | null {
  * Set the current user info (called after successful login)
  * Kept for backwards compatibility
  */
-export function setCurrentUserEmail(email: string, role: string, id: string) {
+export function setCurrentUserEmail(email: string, role: "user" | "admin" | "viewer", id: string) {
   _isLoggedIn = true;
   _userEmail = email;
   _userRole = role;
@@ -158,12 +158,12 @@ export function setCurrentUserEmail(email: string, role: string, id: string) {
 /**
  * Fetch current user info from the API
  */
-export async function fetchCurrentUser(): Promise<{ email: string; role: string; id: string; passwordChangeRequired?: boolean } | null> {
+export async function fetchCurrentUser(): Promise<{ email: string; role: "user" | "admin" | "viewer"; id: string; passwordChangeRequired?: boolean } | null> {
   // Always verify with the API when we have a token — server is the source of truth
   // for passwordChangeRequired and other server-managed fields
   if (_token) {
     try {
-      const data = await customFetch<{ authenticated: boolean; user: { id: string; email: string; role: string; passwordChangeRequired?: boolean } }>("/api/auth/verify-session", {
+      const data = await customFetch<{ authenticated: boolean; user: { id: string; email: string; role: "user" | "admin" | "viewer"; passwordChangeRequired?: boolean } }>("/api/auth/verify-session", {
         method: "GET",
       });
       if (data.authenticated && data.user) {
@@ -214,6 +214,10 @@ export function isAdmin(): boolean {
   return _isLoggedIn && _userRole === "admin";
 }
 
+export function isViewer(): boolean {
+  return _isLoggedIn && _userRole === "viewer";
+}
+
 export function isAuthInitialized(): boolean {
   return _isAuthInitialized;
 }
@@ -241,5 +245,6 @@ export default {
   getUserEmail,
   getUserRole,
   isAdmin,
+  isViewer,
   isAuthInitialized,
 };

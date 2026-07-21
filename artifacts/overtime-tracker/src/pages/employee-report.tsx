@@ -31,6 +31,7 @@ import { ArrowLeft, Clock, History, BarChart, CheckCircle2, Pencil, Trash2, Down
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format as formatDate } from "date-fns";
+import { isViewer } from "@/lib/auth";
 
 function downloadCsv(filename: string, rows: string[][]) {
   const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
@@ -50,6 +51,7 @@ export default function EmployeeReport() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const empId = parseInt(id, 10);
+  const viewer = isViewer();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editActive, setEditActive] = useState(true);
@@ -207,52 +209,57 @@ export default function EmployeeReport() {
               <Download className="w-4 h-4" />
               Export CSV
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={openEdit}
-              data-testid="button-edit-employee"
-            >
-              <Pencil className="w-4 h-4" />
-              Edit
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                  data-testid="button-delete-employee"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Remove
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Remove {report.employee.name}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete the employee. Their past event entries will remain in the log but they will no longer appear in the rotation. This cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteMutation.mutate({ id: empId })}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            {!viewer && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={openEdit}
+                data-testid="button-edit-employee"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit
+              </Button>
+            )}
+            {!viewer && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                    data-testid="button-delete-employee"
                   >
-                    Remove Employee
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    <Trash2 className="w-4 h-4" />
+                    Remove
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove {report.employee.name}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the employee. Their past event entries will remain in the log but they will no longer appear in the rotation. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMutation.mutate({ id: empId })}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Remove Employee
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )}
       </div>
 
       {/* Edit dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      {!viewer && (
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Employee</DialogTitle>
@@ -308,6 +315,7 @@ export default function EmployeeReport() {
           )}
         </DialogContent>
       </Dialog>
+      )}
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

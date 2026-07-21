@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useListEvents, useDeleteEvent, getListEventsQueryKey, getGetStatsQueryKey } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { isViewer } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -45,6 +46,7 @@ export default function EventLog() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const viewer = isViewer();
 
   const { activeRosterId } = useRoster();
 
@@ -227,47 +229,49 @@ export default function EventLog() {
                       </span>
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Link href={`/events/${event.id}/edit`}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-foreground"
-                        data-testid={`button-edit-event-${event.id}`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                  {!viewer && (
+                    <div className="flex items-center gap-1">
+                      <Link href={`/events/${event.id}/edit`}>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-muted-foreground hover:text-destructive"
-                          data-testid={`button-delete-event-${event.id}`}
+                          className="text-muted-foreground hover:text-foreground"
+                          data-testid={`button-edit-event-${event.id}`}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete this event?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete the event and reverse its hours from the employees' totals. This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate({ id: event.id })}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      </Link>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive"
+                            data-testid={`button-delete-event-${event.id}`}
                           >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete the event and reverse its hours from the employees' totals. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteMutation.mutate({ id: event.id })}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">

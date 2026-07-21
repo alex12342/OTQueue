@@ -14,10 +14,12 @@ import { Link } from "wouter";
 import { useRoster } from "@/hooks/use-roster";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { isViewer } from "@/lib/auth";
 
 export default function Home() {
   const { activeRosterId, activeRoster } = useRoster();
   const [dayType, setDayType] = useState<string>("");
+  const viewer = isViewer();
 
   const { data: dayTypeConfigs } = useListDayTypeConfig(activeRosterId ?? 0, {
     query: {
@@ -71,12 +73,14 @@ export default function Home() {
             )}
           </p>
         </div>
-        <Link
-          href="/events/new"
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-        >
-          Log Overtime Event
-        </Link>
+        {!viewer && (
+          <Link
+            href="/events/new"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          >
+            Log Overtime Event
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -161,13 +165,11 @@ export default function Home() {
             </div>
           ) : (
             <div className="divide-y">
-              {upNextData.employees.map((emp, index) => (
-                <div
+              {upNextData.employees.map((emp) => (
+                <Link
                   key={emp.id}
-                  className={cn(
-                    "flex items-center justify-between p-4 sm:px-6 hover:bg-muted/30 transition-colors border-l-4",
-                    index === 0 ? "bg-primary/5 border-l-primary" : "border-l-transparent"
-                  )}
+                  href={`/employees/${emp.id}/report`}
+                  className="flex items-center justify-between p-4 sm:px-6 hover:bg-muted/30 transition-colors border-l-4 cursor-pointer block border-l-transparent"
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground font-bold text-sm">
@@ -196,7 +198,7 @@ export default function Home() {
                     <div className="text-lg font-bold text-foreground">{emp.totalOfferedHours}h</div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">Offered</div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

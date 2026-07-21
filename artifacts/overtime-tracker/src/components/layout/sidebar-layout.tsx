@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { ClipboardList, Users, History, PlusCircle, LayoutDashboard, Settings, ChevronDown, BookOpen, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRoster } from "@/hooks/use-roster";
+import { isViewer } from "@/lib/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +13,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
-const navigation = [
+const allNavigation = [
   { name: "Up Next", href: "/", icon: LayoutDashboard },
   { name: "Log Event", href: "/events/new", icon: PlusCircle },
   { name: "Event Log", href: "/log", icon: History },
@@ -22,6 +23,14 @@ const navigation = [
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { rosters, activeRoster, setActiveRosterId } = useRoster();
+  const viewer = isViewer();
+
+  const navigation = allNavigation.filter(item => {
+    if (!viewer) return true;
+    // Viewers can only see read-only pages
+    if (item.href === "/events/new") return false;
+    return true;
+  });
 
   return (
     <div className="flex min-h-screen w-full bg-background">

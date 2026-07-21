@@ -24,6 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { isViewer } from "@/lib/auth";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
 import { useRoster } from "@/hooks/use-roster";
@@ -127,6 +128,7 @@ export default function Employees() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { activeRosterId } = useRoster();
+  const viewer = isViewer();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
   const [subclassWarningOpen, setSubclassWarningOpen] = useState(false);
@@ -248,12 +250,13 @@ export default function Employees() {
           <p className="text-muted-foreground mt-1">Manage roster, seniority, and active status.</p>
         </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2" disabled={!activeRosterId}>
-              <PlusCircle className="w-4 h-4" /> Add Employee
-            </Button>
-          </DialogTrigger>
+        {!viewer && (
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2" disabled={!activeRosterId}>
+                <PlusCircle className="w-4 h-4" /> Add Employee
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Add New Employee</DialogTitle></DialogHeader>
             <EmployeeForm
@@ -270,6 +273,7 @@ export default function Employees() {
             />
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <Dialog open={!!editingEmp} onOpenChange={(open) => !open && setEditingEmp(null)}>
@@ -400,19 +404,23 @@ export default function Employees() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setEditingEmp(emp)}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => {
-                                if (confirm("Delete this employee? This cannot be undone.")) {
-                                  deleteMutation.mutate({ id: emp.id });
-                                }
-                              }}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
+                            {!viewer && (
+                              <>
+                                <DropdownMenuItem onClick={() => setEditingEmp(emp)}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => {
+                                    if (confirm("Delete this employee? This cannot be undone.")) {
+                                      deleteMutation.mutate({ id: emp.id });
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import {
   useListEmployees,
   getListEmployeesQueryKey,
   useCreateEvent,
   getGetUpNextQueryKey,
+  useGetUpNext,
   getListEventsQueryKey,
   getGetStatsQueryKey,
   useSuggestDayType,
@@ -44,7 +45,7 @@ export default function LogEvent() {
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [defaultHours, setDefaultHours] = useState("2");
-  const [dayType, setDayType] = useState<string>("weekday");
+  const [dayType, setDayType] = useState<string>("");
   const [dayTypeOverridden, setDayTypeOverridden] = useState(false);
   const [multiplier, setMultiplier] = useState("1");
 
@@ -64,16 +65,32 @@ export default function LogEvent() {
     },
   });
 
+  const enabledDayTypes = useMemo(() => {
+    if (!dayTypeConfigs) return [];
+    return dayTypeConfigs.filter((c) => c.enabled);
+  }, [dayTypeConfigs]);
+
+  // Initialize dayType to the first enabled day type when available
+  useEffect(() => {
+    if (!dayTypeConfigs || dayTypeConfigs.length === 0) return;
+    if (!dayType) {
+      const enabled = dayTypeConfigs.filter((c) => c.enabled);
+      if (enabled.length > 0) {
+        setDayType(enabled[0].dayType);
+      }
+    }
+  }, [dayTypeConfigs, dayType]);
+
   // When suggestion arrives, pick the best matching enabled day type key
   useEffect(() => {
     if (suggestion && !dayTypeOverridden && dayTypeConfigs) {
       const suggested = suggestion.suggestedDayType;
-      const enabledTypes = dayTypeConfigs.filter((c) => c.enabled);
-      const exact = enabledTypes.find((c) => c.dayType === suggested);
+      const enabled = dayTypeConfigs.filter((c) => c.enabled);
+      const exact = enabled.find((c) => c.dayType === suggested);
       if (exact) {
         setDayType(exact.dayType);
-      } else if (enabledTypes.length > 0) {
-        setDayType(enabledTypes[0].dayType);
+      } else if (enabled.length > 0) {
+        setDayType(enabled[0].dayType);
       }
     }
   }, [suggestion, dayTypeOverridden, dayTypeConfigs]);
@@ -102,10 +119,22 @@ export default function LogEvent() {
     }
   );
 
-  const activeEmployees = React.useMemo(
-    () => (employees || []).filter((e) => e.active).sort((a, b) => a.seniority - b.seniority),
-    [employees]
+  const { data: upNext } = useGetUpNext(
+    { rosterId: activeRosterId ?? 0, dayType: dayType || "" },
+    {
+      query: {
+        queryKey: getGetUpNextQueryKey({ rosterId: activeRosterId ?? 0, dayType: dayType || "" }),
+        enabled: activeRosterId != null && !!dayType,
+      },
+    }
   );
+
+  const activeEmployees = React.useMemo(() => {
+    const filtered = (employees || []).filter((e) => e.active);
+    if (!upNext?.employees?.length) return filtered.sort((a, b) => a.seniority - b.seniority);
+    const rankMap = new Map(upNext.employees.map((e) => [e.id, e.rank]));
+    return filtered.sort((a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999));
+  }, [employees, upNext]);
 
   const createMutation = useCreateEvent({
     mutation: {
@@ -180,7 +209,7 @@ export default function LogEvent() {
           <CardTitle className="text-lg">Event Details</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label>Date</Label>
               <Popover>
@@ -225,35 +254,35 @@ export default function LogEvent() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Day Type</Label>
-              {suggestion && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Info className="h-3 w-3" />
-                  Suggested: {suggestion.reason}
-                </p>
-              )}
-              <Select
-                value={dayType}
-                onValueChange={(v: string) => {
-                  setDayType(v);
-                  setDayTypeOverridden(true);
-                }}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(dayTypeConfigs ?? [])
-                    .filter((c) => c.enabled)
-                    .map((c) => (
+            {enabledDayTypes.length > 0 && (
+              <div className="space-y-2">
+                <Label>Day Type</Label>
+                {suggestion && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Info className="h-3 w-3" />
+                    Suggested: {suggestion.reason}
+                  </p>
+                )}
+                <Select
+                  value={dayType}
+                  onValueChange={(v: string) => {
+                    setDayType(v);
+                    setDayTypeOverridden(true);
+                  }}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enabledDayTypes.map((c) => (
                       <SelectItem key={c.dayType} value={c.dayType}>
                         {c.name}
                       </SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
           </div>
         </CardContent>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "wouter";
-import { Users, Shield, Search, Trash2, Edit2, Eye, X } from "lucide-react";
+import { Users, Shield, Search, Trash2, Edit2, Eye, X, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,13 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { customFetch } from "@workspace/api-client-react";
-import { getUserRole } from "@/lib/auth";
+import { getUserRole, isViewer } from "@/lib/auth";
 
 interface User {
   id: string;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "viewer";
   isActive: boolean;
 }
 
@@ -28,6 +28,8 @@ export default function AdminUsers() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createFormError, setCreateFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [createRole, setCreateRole] = useState<"user" | "admin" | "viewer">("user");
+  const viewer = isViewer();
 
   const fetchUsers = async () => {
     try {
@@ -44,6 +46,10 @@ export default function AdminUsers() {
   };
 
   useEffect(() => {
+    if (viewer) {
+      window.location.href = "/my-account";
+      return;
+    }
     const userRole = getUserRole();
     if (userRole !== "admin") {
       window.location.href = "/login";
@@ -101,7 +107,7 @@ export default function AdminUsers() {
     try {
       await customFetch<void>("/api/admin/users", {
         method: "POST",
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, role: createRole }),
       });
       fetchUsers();
     } catch (error) {
@@ -196,6 +202,19 @@ export default function AdminUsers() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Password</label>
                 <Input name="password" type="password" required placeholder="At least 12 characters" minLength={12} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Role</label>
+                <select
+                  className="w-full h-10 px-3 text-sm border rounded-md bg-background"
+                  value={createRole}
+                  onChange={(e) => setCreateRole(e.target.value as "user" | "admin" | "viewer")}
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                  <option value="viewer">viewer</option>
+                </select>
+                <p className="text-xs text-muted-foreground">Viewers can only read data and cannot modify the rotation.</p>
               </div>
               <Button type="submit" className="w-full">Create User</Button>
             </form>

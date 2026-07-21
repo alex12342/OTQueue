@@ -12,7 +12,7 @@ export const usersTable = pgTable("users", {
   role: varchar("role", { length: 50 })
     .notNull()
     .default("user")
-    .$type<"user" | "admin">(),
+    .$type<"user" | "admin" | "viewer">(),
   isActive: boolean("is_active").notNull().default(true),
   passwordChangeRequired: boolean("password_change_required").notNull().default(false),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
@@ -43,7 +43,7 @@ export const insertUserSchema = z.object({
   email: z.string().email(),
   password: z.string(),
   name: z.string(),
-  role: z.enum(["user", "admin"]).optional(),
+  role: z.enum(["user", "admin", "viewer"]).optional(),
   isActive: z.boolean().optional(),
   passwordChangeRequired: z.boolean().optional(),
   lastLoginAt: z.date().nullish(),

@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 interface AuthRequest extends Request {
   userId?: string;
-  userRole?: "user" | "admin";
+  userRole?: "user" | "admin" | "viewer";
   userEmail?: string;
 }
 
@@ -45,7 +45,7 @@ export const authMiddleware = async (
 
     if (user && user.isActive) {
       req.userId = String(user.id);
-      req.userRole = user.role as "user" | "admin";
+      req.userRole = user.role as "user" | "admin" | "viewer";
       req.userEmail = user.email;
     }
   } catch (error) {
@@ -105,7 +105,7 @@ export const optionalAuthMiddleware = async (
 
     if (user && user.isActive) {
       req.userId = String(user.id);
-      req.userRole = user.role as "user" | "admin";
+      req.userRole = user.role as "user" | "admin" | "viewer";
       req.userEmail = user.email;
     }
   } catch (error) {

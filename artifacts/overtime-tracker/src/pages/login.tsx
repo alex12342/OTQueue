@@ -51,7 +51,7 @@ export default function Login() {
       });
       
       // Store the JWT token and user info
-      setCurrentUser(data.user.email, data.user.role, data.token, data.user);
+        setCurrentUser(data.user.email, data.user.role as "user" | "admin" | "viewer", data.token, data.user);
       
       // Check if user needs to change password
       if (data.user?.passwordChangeRequired) {

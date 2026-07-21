@@ -45,13 +45,40 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
 import { customFetch, setAuthTokenGetter } from "@workspace/api-client-react";
-import { getUserRole, initAuth } from "@/lib/auth";
-import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown, RotateCcw, Search, Shield, Users as UsersIcon, Eye, X, Lock, CheckCircle, AlertCircle } from "lucide-react";
+import { getUserRole, initAuth, isViewer } from "@/lib/auth";
+import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown, RotateCcw, Search, Shield, Users as UsersIcon, Eye, X, Lock, CheckCircle, AlertCircle, BookOpen } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { activeRosterId, setActiveRosterId } = useRoster();
+  const viewer = isViewer();
+
+  if (viewer) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+          <p className="text-muted-foreground mt-1">Configure rosters, sorting criteria, and classification rules.</p>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center py-12">
+              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">View-Only Account</h2>
+              <p className="text-muted-foreground text-center max-w-md">
+                Your account is restricted to read-only access. You can view your position on the rotation and event logs, but cannot modify settings.
+              </p>
+              <p className="text-muted-foreground text-center mt-4">
+                To update your account details or password, visit{" "}
+                <a href="/my-account" className="text-primary underline hover:text-primary/80">My Account</a>.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -1238,7 +1265,7 @@ interface SettingsUser {
   id: string;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "viewer";
   isActive: boolean;
 }
 
@@ -1250,9 +1277,10 @@ function UsersTab() {
   const [selectedUser, setSelectedUser] = useState<SettingsUser | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createFormError, setCreateFormError] = useState<string | null>(null);
+  const [createRole, setCreateRole] = useState<"user" | "admin" | "viewer">("user");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [editingRole, setEditingRole] = useState<{ userId: string; role: "user" | "admin" } | null>(null);
-  const [editRoleValue, setEditRoleValue] = useState<"user" | "admin">("user");
+  const [editingRole, setEditingRole] = useState<{ userId: string; role: "user" | "admin" | "viewer" } | null>(null);
+  const [editRoleValue, setEditRoleValue] = useState<"user" | "admin" | "viewer">("user");
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
@@ -1353,7 +1381,7 @@ function UsersTab() {
     try {
       await customFetch<void>("/api/admin/users", {
         method: "POST",
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, role: createRole }),
       });
       toast({ title: "User created", description: `Invite sent to ${email}` });
       setShowCreateForm(false);
@@ -1511,6 +1539,20 @@ function UsersTab() {
                 <Input id="create-password" name="password" type="password" required placeholder="At least 12 characters" minLength={12} />
                 <p className="text-xs text-muted-foreground">At least 12 characters with uppercase, lowercase, number, and special character</p>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-role">Role</Label>
+                <select
+                  id="create-role"
+                  className="w-full h-10 px-3 text-sm border rounded-md bg-background"
+                  value={createRole}
+                  onChange={(e) => setCreateRole(e.target.value as "user" | "admin" | "viewer")}
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                  <option value="viewer">viewer</option>
+                </select>
+                <p className="text-xs text-muted-foreground">Viewers can only read data and cannot modify the rotation.</p>
+              </div>
               <Button type="submit" className="w-full">Create User</Button>
             </form>
           </CardContent>
@@ -1558,9 +1600,11 @@ function UsersTab() {
                   <div className={`p-2 rounded-full shrink-0 ${
                     user.role === "admin"
                       ? "bg-purple-100 text-purple-600"
-                      : "bg-blue-100 text-blue-600"
+                      : user.role === "viewer"
+                        ? "bg-green-100 text-green-600"
+                        : "bg-blue-100 text-blue-600"
                   }`}>
-                    {user.role === "admin" ? <Shield className="h-4 w-4" /> : <UsersIcon className="h-4 w-4" />}
+                    {user.role === "admin" ? <Shield className="h-4 w-4" /> : user.role === "viewer" ? <BookOpen className="h-4 w-4" /> : <UsersIcon className="h-4 w-4" />}
                   </div>
 
                   {/* Name / Email */}
@@ -1575,10 +1619,11 @@ function UsersTab() {
                       <select
                         className="h-8 text-sm border rounded px-2 bg-background"
                         value={editRoleValue}
-                        onChange={(e) => setEditRoleValue(e.target.value as "user" | "admin")}
+                        onChange={(e) => setEditRoleValue(e.target.value as "user" | "admin" | "viewer")}
                       >
                         <option value="user">user</option>
                         <option value="admin">admin</option>
+                        <option value="viewer">viewer</option>
                       </select>
                       <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={(e) => { e.stopPropagation(); handleUpdateRole(user.id); }}>
                         <CheckCircle className="h-4 w-4" />
@@ -1642,10 +1687,11 @@ function UsersTab() {
                     <select
                       className="h-8 text-sm border rounded px-2 bg-background"
                       value={editRoleValue}
-                      onChange={(e) => setEditRoleValue(e.target.value as "user" | "admin")}
+                      onChange={(e) => setEditRoleValue(e.target.value as "user" | "admin" | "viewer")}
                     >
                       <option value="user">user</option>
                       <option value="admin">admin</option>
+                      <option value="viewer">viewer</option>
                     </select>
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={() => handleUpdateRole(selectedUser.id)}>
                       <CheckCircle className="h-4 w-4" />
