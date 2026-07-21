@@ -35,7 +35,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Sidebar */}
-      <div className="hidden w-64 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
+      <div className="hidden h-screen sticky top-0 w-64 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
           <ClipboardList className="h-6 w-6 mr-3 text-sidebar-primary" />
           <span className="font-bold text-lg tracking-tight">OTQue</span>
