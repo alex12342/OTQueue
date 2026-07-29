@@ -31,3 +31,8 @@ services:
       # Maps the local 'data' folder to the app's real data directory inside the container. Change to your desired data storage location.
       - ./data:/app/data
 ```
+
+Default credentials are: 
+
+Email: admin@otqueue.local 
+Password: Admin@123!
