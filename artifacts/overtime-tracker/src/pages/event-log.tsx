@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useListEvents, useDeleteEvent, getListEventsQueryKey, getGetStatsQueryKey } from "@workspace/api-client-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { isViewer } from "@/lib/auth";
 import {
@@ -81,7 +81,7 @@ export default function EventLog() {
       if (ev.description.toLowerCase().includes(q)) return true;
       if (ev.date.includes(q)) return true;
       try {
-        if (format(new Date(ev.date), "MMM d, yyyy").toLowerCase().includes(q)) return true;
+        if (format(parseISO(ev.date), "MMM d, yyyy").toLowerCase().includes(q)) return true;
       } catch {}
       if (ev.dayType?.toLowerCase().includes(q)) return true;
       if (ev.entries?.some((e) => e.employeeName.toLowerCase().includes(q))) return true;
@@ -219,7 +219,7 @@ export default function EventLog() {
                     </div>
                     <CardDescription className="flex items-center gap-4 text-sm font-medium">
                       <span className="flex items-center gap-1">
-                        <CalendarIcon className="w-3.5 h-3.5" /> {format(new Date(event.date), "MMM d, yyyy")}
+                        <CalendarIcon className="w-3.5 h-3.5" /> {format(parseISO(event.date), "MMM d, yyyy")}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" /> {event.defaultHours}h Default

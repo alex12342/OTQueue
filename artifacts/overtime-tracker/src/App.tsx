@@ -1,6 +1,6 @@
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster, ToasterProvider } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import { RosterProvider } from "@/hooks/use-roster";
@@ -15,6 +15,7 @@ import Employees from "@/pages/employees";
 import EmployeeReport from "@/pages/employee-report";
 import Settings from "@/pages/settings";
 import AdminUsers from "@/pages/admin-users";
+import AdminEmailConfig from "@/pages/admin-email-config";
 import HelpPage from "@/pages/help";
 import Login from "@/pages/login";
 import Logout from "@/pages/logout";
@@ -65,6 +66,7 @@ function AppContent() {
         <Route path="/help" component={HelpPage} />
 
         <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/email-config" component={AdminEmailConfig} />
         <Route component={NotFound} />
       </Switch>
     </PasswordChangeRequiredGuard>
@@ -74,20 +76,23 @@ function AppContent() {
 }
 
 function App() {
+  console.log('[App] mount');
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <RosterProvider>
-            <AuthGuard>
-              <ErrorBoundary>
-                <AppContent />
-              </ErrorBoundary>
-            </AuthGuard>
-            <Toaster />
-          </RosterProvider>
-        </WouterRouter>
-      </TooltipProvider>
+      <ToasterProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <RosterProvider>
+              <AuthGuard>
+                <ErrorBoundary>
+                  <AppContent />
+                </ErrorBoundary>
+              </AuthGuard>
+              <Toaster />
+            </RosterProvider>
+          </WouterRouter>
+        </TooltipProvider>
+      </ToasterProvider>
     </QueryClientProvider>
   );
 }

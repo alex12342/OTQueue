@@ -30,7 +30,7 @@ RUN pnpm run build
 EXPOSE 80
 
 # Configure default Environment Variables
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 ENV DATABASE_URL=postgresql://postgres:postgres@localhost:5432/otqueue
 # JWT_SECRET is generated at runtime by entrypoint.sh and persisted in /app/data/.jwt-secret
 

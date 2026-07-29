@@ -586,13 +586,19 @@ router.post("/rosters/:id/normalize-hours", async (req, res): Promise<void> => {
     .set({ startingNormalizedHours: "0" })
     .where(eq(employeesTable.rosterId, rosterId));
 
-  const today = new Date().toISOString().split("T")[0];
+  const resetDate = req.body.date || new Date().toISOString().split("T")[0];
+
+  // Parse the local date string (YYYY-MM-DD) as UTC to avoid timezone shift.
+  const [year, month, day] = resetDate.split("-").map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day))
+    .toISOString()
+    .split("T")[0];
 
   const [event] = await db
     .insert(eventsTable)
     .values({
       rosterId,
-      date: today,
+      date: utcDate,
       description: "Reset Hours",
       defaultHours: "0",
       dayType: "system",

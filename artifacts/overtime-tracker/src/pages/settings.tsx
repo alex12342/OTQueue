@@ -46,7 +46,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
 import { customFetch, setAuthTokenGetter } from "@workspace/api-client-react";
 import { getUserRole, initAuth, isViewer } from "@/lib/auth";
-import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown, RotateCcw, Search, Shield, Users as UsersIcon, Eye, X, Lock, CheckCircle, AlertCircle, BookOpen } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown, RotateCcw, Search, Shield, Users as UsersIcon, Eye, X, Lock, CheckCircle, AlertCircle, BookOpen, Mail, Server, Lock as LockIcon, EyeOff, RefreshCw, Send, CheckCircle2, AlertCircle as AlertCircleIcon } from "lucide-react";
+import AdminEmailConfigPage from "@/pages/admin-email-config";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -97,6 +98,7 @@ export default function Settings() {
             <TabsTrigger value="roles" className="flex-1">Roles</TabsTrigger>
             <TabsTrigger value="reset-hours" className="flex-1">Reset Hours</TabsTrigger>
             <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
+            <TabsTrigger value="email-config" className="flex-1">Email Config</TabsTrigger>
           </TabsList>
         </div>
 
@@ -149,6 +151,10 @@ export default function Settings() {
 
         <TabsContent value="users">
           <UsersTab />
+        </TabsContent>
+
+        <TabsContent value="email-config">
+          <AdminEmailConfig />
         </TabsContent>
       </Tabs>
     </div>
@@ -998,24 +1004,24 @@ function ResetHoursTab({ rosterId }: { rosterId: number }) {
   const queryClient = useQueryClient();
   const [isResetting, setIsResetting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [resetDate, setResetDate] = useState(() => new Date().toISOString().split("T")[0]);
 
   const handleReset = async () => {
     setIsResetting(true);
     try {
-      const res = await customFetch<Response>(`/api/rosters/${rosterId}/normalize-hours`, {
+      const body = await customFetch<{ message: string; eventId: number }>(`/api/rosters/${rosterId}/normalize-hours`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: resetDate }),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || "Failed to reset hours");
-      }
-      const body = await res.json();
       queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey({ rosterId }) });
       setConfirmOpen(false);
-      toast({
-        title: "Hours reset",
-        description: `A "Reset Hours" event has been added to the event log. Deleting it will undo the reset.`,
-      });
+      setTimeout(() => {
+        toast({
+          title: "Hours reset",
+          description: `A "Reset Hours" event has been added to the event log on ${resetDate}. Deleting it will undo the reset.`,
+        });
+      }, 50);
     } catch (err) {
       toast({
         title: "Reset failed",
@@ -1045,6 +1051,14 @@ function ResetHoursTab({ rosterId }: { rosterId: number }) {
             <li>Historical event data remains intact and can be undone by deleting the reset event</li>
           </ul>
         </div>
+        <div className="space-y-2">
+          <Label>Reset Date</Label>
+          <Input
+            type="date"
+            value={resetDate}
+            onChange={(e) => setResetDate(e.target.value)}
+          />
+        </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={() => setConfirmOpen(true)}
@@ -1062,7 +1076,7 @@ function ResetHoursTab({ rosterId }: { rosterId: number }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Reset All Hour Totals?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will create a "Reset Hours" event in the event log that zeroes out fairness scores for all employees in this roster. Deleting that event will undo the reset.
+                This will create a "Reset Hours" event in the event log on {resetDate} that zeroes out fairness scores for all employees in this roster. Deleting that event will undo the reset.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -1836,5 +1850,40 @@ function UsersTab() {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+// ── Email Config Tab (Admin Only) ─────────────────────────────────────────────
+
+function AdminEmailConfig() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkAuth = async () => {
+      const role = getUserRole();
+      if (!role) {
+        await initAuth();
+        if (cancelled) return;
+        setIsAuthReady(true);
+        setIsAdmin(getUserRole() === "admin");
+      } else {
+        if (cancelled) return;
+        setIsAuthReady(true);
+        setIsAdmin(role === "admin");
+      }
+    };
+    checkAuth();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!isAuthReady) return <Skeleton className="h-48 w-full mt-4" />;
+  if (!isAdmin) return <Card><CardContent className="p-6"><p className="text-muted-foreground">Access denied.</p></CardContent></Card>;
+
+  return (
+    <div className="space-y-6 mt-4">
+      <AdminEmailConfigPage />
+    </div>
   );
 }

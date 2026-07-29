@@ -15,6 +15,7 @@ interface RosterContextValue {
 const RosterContext = createContext<RosterContextValue | null>(null);
 
 export function RosterProvider({ children }: { children: React.ReactNode }) {
+  console.log('[RosterProvider] mount');
   const [activeRosterId, setActiveRosterIdState] = useState<number | null>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? parseInt(stored, 10) : null;

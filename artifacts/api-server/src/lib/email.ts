@@ -1,5 +1,8 @@
 import nodemailer, { Transporter } from "nodemailer";
 import { logger } from "./logger";
+import { systemSettingsTable } from "@workspace/db/schema";
+import { eq } from "drizzle-orm";
+import { db } from "@workspace/db";
 
 interface EmailOptions {
   to: string;
@@ -8,38 +11,99 @@ interface EmailOptions {
   text?: string;
 }
 
-let transporter: Transporter | null = null;
+interface EmailConfig {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+  from: string;
+  secure: boolean;
+  tlsRejectUnauthorized: boolean;
+  protocol: "none" | "starttls" | "implicit";
+}
 
-function getTransporter(): Transporter {
+let transporter: Transporter | null = null;
+let configCache: EmailConfig | null = null;
+
+async function getConfig(): Promise<EmailConfig> {
+  if (configCache) {
+    return configCache;
+  }
+
+  const rows = await db
+    .select()
+    .from(systemSettingsTable)
+    .where(eq(systemSettingsTable.key, "email_config"))
+    .limit(1);
+
+  if (rows.length === 0) {
+    throw new Error("Email configuration not found. Please configure SMTP settings in the admin panel.");
+  }
+
+  const config: Record<string, string> = JSON.parse(rows[0].value);
+  const rawProtocol = config.email_protocol || "starttls";
+  const protocol: "none" | "starttls" | "implicit" =
+    rawProtocol === "none" || rawProtocol === "starttls" || rawProtocol === "implicit"
+      ? rawProtocol
+      : "starttls";
+  let secure = false;
+  let tlsRejectUnauthorized = true;
+
+  if (protocol === "implicit") {
+    secure = true;
+  } else if (protocol === "starttls") {
+    tlsRejectUnauthorized = true;
+  }
+
+  configCache = {
+    host: config.email_host || "localhost",
+    port: parseInt(config.email_port || "587", 10),
+    user: config.email_user || "",
+    pass: config.email_pass || "",
+    from: config.email_from || "noreply@localhost",
+    secure,
+    tlsRejectUnauthorized,
+    protocol,
+  };
+
+  return configCache;
+}
+
+export async function getTransporter(): Promise<Transporter> {
+  const config = await getConfig();
+
   if (transporter) {
     return transporter;
   }
 
-  const host = process.env.EMAIL_HOST || "smtp.gmail.com";
-  const port = parseInt(process.env.EMAIL_PORT || "587", 10);
-  const user = process.env.EMAIL_USER || "";
-  const pass = process.env.EMAIL_PASS || "";
-  const from = process.env.EMAIL_FROM || `noreply@localhost`;
-  const secure = process.env.EMAIL_SECURE === "true";
+  const transportOptions: any = {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: config.user && config.pass ? { user: config.user, pass: config.pass } : undefined,
+  };
 
-  transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: user && pass ? { user, pass } : undefined,
-    tls: {
-      rejectUnauthorized: process.env.EMAIL_TLS_REJECT_UNAUTHORIZED !== "false",
-    },
-  });
+  if (config.protocol !== "none") {
+    transportOptions.tls = {
+      rejectUnauthorized: config.tlsRejectUnauthorized,
+    };
+  }
+
+  transporter = nodemailer.createTransport(transportOptions);
 
   return transporter;
 }
 
+export function clearTransporterCache(): void {
+  transporter = null;
+  configCache = null;
+}
+
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  const from = process.env.EMAIL_FROM || `noreply@localhost`;
+  const config = await getConfig();
 
   const mailOptions = {
-    from,
+    from: config.from,
     to: options.to,
     subject: options.subject,
     html: options.html,
@@ -47,7 +111,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
   };
 
   try {
-    const info = await getTransporter().sendMail(mailOptions);
+    const transport = await getTransporter();
+    const info = await transport.sendMail(mailOptions);
     logger.info({ msg: "Email sent", messageId: info.messageId, to: options.to });
   } catch (error) {
     logger.error({ msg: "Failed to send email", error, to: options.to }, (error as Error).message);

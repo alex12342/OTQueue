@@ -30,7 +30,7 @@ import {
 import { ArrowLeft, Clock, History, BarChart, CheckCircle2, Pencil, Trash2, Download, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { format as formatDate } from "date-fns";
+import { format as formatDate, parseISO } from "date-fns";
 import { isViewer } from "@/lib/auth";
 
 function downloadCsv(filename: string, rows: string[][]) {
@@ -413,7 +413,7 @@ export default function EmployeeReport() {
                     return (
                       <tr key={evt.eventId} className="hover:bg-muted/10">
                         <td className="px-6 py-4 font-medium text-muted-foreground tabular-nums">
-                          {format(new Date(evt.date), "MMM d, yyyy")}
+                          {format(parseISO(evt.date), "MMM d, yyyy")}
                         </td>
                         <td className="px-6 py-4 font-medium text-foreground">
                           <div className="flex items-center gap-2">

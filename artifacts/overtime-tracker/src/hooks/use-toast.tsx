@@ -21,12 +21,18 @@ export const ToasterContext = createContext<ToasterContextValue>({
 });
 
 export function ToasterProvider({ children }: { children: React.ReactNode }) {
+  console.log('[ToasterProvider] mount');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const toast = useCallback((toast: Omit<Toast, "id">) => {
+    console.log('[ToasterProvider] toast called:', toast);
     const id = Math.random().toString(36).slice(2, 10);
-    setToasts((prev) => [...prev, { ...toast, id }]);
+    setToasts((prev) => {
+      const next = [...prev, { ...toast, id }];
+      console.log('[ToasterProvider] setToasts:', prev.length, '->', next.length);
+      return next;
+    });
 
     const timer = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -53,6 +59,7 @@ export function ToasterProvider({ children }: { children: React.ReactNode }) {
 
 export function Toaster() {
   const { toasts, dismiss } = React.useContext(ToasterContext);
+  console.log('[Toaster] toasts:', toasts.length, toasts);
 
   return (
     <div className="fixed top-0 right-0 z-50 flex flex-col gap-2 p-4 w-full max-w-md pointer-events-none">

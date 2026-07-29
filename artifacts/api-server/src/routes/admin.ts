@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { usersTable, insertUserSchema, passwordResetTokensTable } from "@workspace/db/schema";
+import { usersTable, insertUserSchema, passwordResetTokensTable, systemSettingsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { db } from "@workspace/db";
 import bcrypt from "bcryptjs";
 import { adminAuthMiddleware } from "../middlewares/auth";
-import { sendUserInviteEmail } from "../lib/email";
+import { sendUserInviteEmail, getTransporter, clearTransporterCache } from "../lib/email";
+import { logger } from "../lib/logger";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -61,7 +62,7 @@ router.post("/users", async (req: any, res: any) => {
       passwordHash,
       name: insertData.name,
       role: insertData.role || "user",
-      passwordChangeRequired: true,
+      passwordChangeRequired: false,
     }).returning();
 
     // Send invite email with password setup link
@@ -192,6 +193,136 @@ router.patch("/users/:id/status", async (req: any, res: any) => {
   } catch (error) {
     console.error("Update status error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ── Email Configuration Endpoints ─────────────────────────────────────────────
+
+router.get("/email-config", adminAuthMiddleware, async (req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(systemSettingsTable)
+      .where(eq(systemSettingsTable.key, "email_config"))
+      .limit(1);
+
+    let config: Record<string, string> = {};
+    if (rows.length > 0) {
+      config = JSON.parse(rows[0].value);
+    }
+
+    const rawProtocol = config.email_protocol || "starttls";
+    const protocol: "none" | "starttls" | "implicit" =
+      rawProtocol === "none" || rawProtocol === "starttls" || rawProtocol === "implicit"
+        ? rawProtocol
+        : "starttls";
+
+    res.json({
+      email_host: config.email_host || "",
+      email_port: parseInt(config.email_port || "587", 10),
+      email_user: config.email_user || "",
+      email_pass: config.email_pass ? "••••••" : "",
+      email_from: config.email_from || "",
+      email_protocol: protocol,
+      configured: Object.keys(config).length > 0,
+    });
+  } catch (error) {
+    console.error("Get email config error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.put("/email-config", adminAuthMiddleware, async (req, res) => {
+  try {
+    const { email_host, email_port, email_user, email_pass, email_from, email_protocol } = req.body;
+
+    const rawProtocol = email_protocol || "starttls";
+    const protocol: "none" | "starttls" | "implicit" =
+      rawProtocol === "none" || rawProtocol === "starttls" || rawProtocol === "implicit"
+        ? rawProtocol
+        : "starttls";
+
+    let secure = false;
+    let tlsRejectUnauthorized = true;
+
+    if (protocol === "implicit") {
+      secure = true;
+    } else if (protocol === "starttls") {
+      tlsRejectUnauthorized = true;
+    }
+
+    const config: Record<string, string> = {
+      email_host: email_host || "",
+      email_port: String(email_port || 587),
+      email_user: email_user || "",
+      email_from: email_from || "",
+      email_protocol: protocol,
+      email_secure: String(secure),
+      email_tls_reject_unauthorized: String(tlsRejectUnauthorized),
+    };
+
+    if (email_pass && email_pass !== "••••••" && email_pass !== "********") {
+      config.email_pass = email_pass;
+    }
+
+    const existing = await db
+      .select()
+      .from(systemSettingsTable)
+      .where(eq(systemSettingsTable.key, "email_config"))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(systemSettingsTable)
+        .set({ value: JSON.stringify(config), updatedAt: new Date() })
+        .where(eq(systemSettingsTable.key, "email_config"));
+    } else {
+      await db.insert(systemSettingsTable).values({
+        key: "email_config",
+        value: JSON.stringify(config),
+      });
+    }
+
+    clearTransporterCache();
+
+    logger.info({ msg: "Email configuration updated", protocol });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Update email config error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/email/test", adminAuthMiddleware, async (req, res) => {
+  try {
+    const { to } = req.body;
+
+    if (!to || !to.includes("@")) {
+      return res.status(400).json({ message: "Valid recipient email is required" });
+    }
+
+    const transport = await getTransporter();
+    const verified = await transport.verify();
+
+    if (!verified) {
+      logger.warn({ msg: "Email transport verification failed" });
+      return res.status(500).json({ message: "Email configuration verification failed" });
+    }
+
+    await transport.sendMail({
+      from: `"OTQue" <${req.body.email_from || "noreply@localhost"}>`,
+      to,
+      subject: "OTQue Email Configuration Test",
+      html: `<p>This is a test email sent from OTQue's email configuration.</p><p>If you received this, your email settings are working correctly.</p>`,
+    });
+
+    logger.info({ msg: "Test email sent successfully", to });
+    return res.json({ success: true, message: "Test email sent successfully" });
+  } catch (error) {
+    const message = (error as Error).message;
+    logger.error({ msg: "Test email failed", to: req.body.to, error }, message);
+    res.status(500).json({ message: `Failed to send test email: ${message}` });
+    return;
   }
 });
 
