@@ -148,15 +148,15 @@ See `.env.example` for the complete list with comments.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     otqueue-app (single container)       │
-│                                                          │
-│  ┌──────────┐    /api    ┌──────────┐                   │
+│                     otqueue-app (single container)      │
+│                                                         │
+│  ┌──────────┐    /api     ┌──────────┐                  │
 │  │  Nginx   │ ──────────► │ Express  │ ──► PostgreSQL   │
 │  │  :80     │  reverse    │  :8080   │   :5432          │
-│  │          │  proxy      │          │                   │
-│  │ Frontend │             │  API     │                   │
-│  │ (React)  │             │  Server  │                   │
-│  └──────────┘             └──────────┘                   │
+│  │          │  proxy      │          │                  │
+│  │ Frontend │             │  API     │                  │
+│  │ (React)  │             │  Server  │                  │
+│  └──────────┘             └──────────┘                  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -246,4 +246,4 @@ docker compose up -d
 
 ## License
 
-MIT
+GPL 3.0
