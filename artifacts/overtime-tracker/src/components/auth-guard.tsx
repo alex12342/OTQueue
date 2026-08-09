@@ -7,6 +7,7 @@ import ChangePassword from "@/pages/change-password";
 import NotFound from "@/pages/not-found";
 import SsoCallback from "@/pages/callback";
 import SetPassword from "@/pages/set-password";
+import Landing from "@/pages/landing";
 import { Loader2 } from "lucide-react";
 
 interface AuthGuardProps {
@@ -18,7 +19,7 @@ const AUTH_PAGES = ["/login", "/login/callback", "/forgot-password", "/set-passw
 /**
  * AuthGuard implements a three-state routing system:
  *
- * 1. no-session (!isLoggedIn) → show /login, /forgot-password; redirect all others to /login
+ * 1. no-session (!isLoggedIn) → show /login, /forgot-password, /; redirect all others to /login
  * 2. password-change-required (isLoggedIn + passwordChangeRequired=true) → show /change-password; redirect all others to /change-password
  * 3. authenticated (isLoggedIn + !passwordChangeRequired) → show app pages; redirect /login and /forgot-password to /
  */
@@ -67,9 +68,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // State 1: no-session — allow auth pages, redirect everything else to /login
+  // State 1: no-session — allow auth pages + home (landing), redirect everything else to /login
   if (!isAuth) {
-    if (!AUTH_PAGES.includes(currentPath)) {
+    if (!AUTH_PAGES.includes(currentPath) && currentPath !== "/") {
       setCurrentPath("/login");
       return null;
     }
@@ -79,6 +80,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
         <Route path="/login/callback" component={SsoCallback} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/set-password" component={SetPassword} />
+        <Route path="/" component={Landing} />
         <Route component={NotFound} />
       </Switch>
     );
