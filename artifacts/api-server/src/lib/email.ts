@@ -122,23 +122,23 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
 
 export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
   const appUrl = process.env.APP_URL || "http://localhost";
-  const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
+  const resetLink = `${appUrl}/set-password?token=${resetToken}`;
 
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header { background: #1a1a2e; color: #ffffff; padding: 32px; text-align: center; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f7f5f2; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .header { background: #0d7a5e; color: #ffffff; padding: 32px; text-align: center; }
         .header h1 { margin: 0; font-size: 24px; }
         .content { padding: 32px; }
-        .content p { color: #333333; line-height: 1.6; margin: 0 0 16px; }
-        .button { display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 16px 0; }
-        .button:hover { background: #4338ca; }
-        .footer { background: #f9fafb; padding: 24px 32px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; }
-        .link-text { color: #4f46e5; word-break: break-all; }
+        .content p { color: #1f2c2a; line-height: 1.6; margin: 0 0 16px; }
+        .button { display: inline-block; background: #0d7a5e; color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 4px; font-weight: 600; margin: 16px 0; }
+        .button:hover { background: #0b664f; }
+        .footer { background: #f9f8f6; padding: 24px 32px; text-align: center; color: #6b7a76; font-size: 12px; border-top: 1px solid #e8e5e0; }
+        .link-text { color: #0d7a5e; word-break: break-all; }
       </style>
     </head>
     <body>
@@ -180,16 +180,16 @@ export async function sendUserInviteEmail(email: string, name: string, inviteTok
     <html>
     <head>
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header { background: #1a1a2e; color: #ffffff; padding: 32px; text-align: center; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f7f5f2; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .header { background: #0d7a5e; color: #ffffff; padding: 32px; text-align: center; }
         .header h1 { margin: 0; font-size: 24px; }
         .content { padding: 32px; }
-        .content p { color: #333333; line-height: 1.6; margin: 0 0 16px; }
-        .button { display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 16px 0; }
-        .button:hover { background: #4338ca; }
-        .footer { background: #f9fafb; padding: 24px 32px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; }
-        .link-text { color: #4f46e5; word-break: break-all; }
+        .content p { color: #1f2c2a; line-height: 1.6; margin: 0 0 16px; }
+        .button { display: inline-block; background: #0d7a5e; color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 4px; font-weight: 600; margin: 16px 0; }
+        .button:hover { background: #0b664f; }
+        .footer { background: #f9f8f6; padding: 24px 32px; text-align: center; color: #6b7a76; font-size: 12px; border-top: 1px solid #e8e5e0; }
+        .link-text { color: #0d7a5e; word-break: break-all; }
       </style>
     </head>
     <body>
@@ -228,13 +228,13 @@ export async function sendPasswordChangedEmail(email: string): Promise<void> {
     <html>
     <head>
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header { background: #059669; color: #ffffff; padding: 32px; text-align: center; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f7f5f2; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .header { background: #0d7a5e; color: #ffffff; padding: 32px; text-align: center; }
         .header h1 { margin: 0; font-size: 24px; }
         .content { padding: 32px; }
-        .content p { color: #333333; line-height: 1.6; margin: 0 0 16px; }
-        .footer { background: #f9fafb; padding: 24px 32px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; }
+        .content p { color: #1f2c2a; line-height: 1.6; margin: 0 0 16px; }
+        .footer { background: #f9f8f6; padding: 24px 32px; text-align: center; color: #6b7a76; font-size: 12px; border-top: 1px solid #e8e5e0; }
       </style>
     </head>
     <body>

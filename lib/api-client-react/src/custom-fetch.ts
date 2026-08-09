@@ -364,7 +364,18 @@ export async function customFetch<T = unknown>(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
-    throw new ApiError(response, errorData, requestInfo);
+    const error = new ApiError(response, errorData, requestInfo);
+
+    // When the server rejects with 401, broadcast a global event so the
+    // React app can react (redirect to /login) regardless of which hook
+    // or page originally made the request.
+    if (response.status === 401) {
+      try {
+        window.dispatchEvent(new CustomEvent("otqueue:auth-expired"));
+      } catch {}
+    }
+
+    throw error;
   }
 
   return (await parseSuccessBody(response, responseType, requestInfo)) as T;

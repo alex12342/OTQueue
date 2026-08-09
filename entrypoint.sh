@@ -44,11 +44,19 @@ if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw otqueue; then
     sudo -u postgres createdb otqueue
 fi
 
-# 5. Automatically push database schema changes using Drizzle
+# 5. Run Drizzle schema push (adds missing columns, does not drop data)
 echo "Running database schema sync..."
 pnpm --filter @workspace/db run push-force
 
-# 6. Seed default admin user if no users exist
+# 6. Ensure google_id column exists on existing users tables.
+#    drizzle-kit push-force adds the column definition but some deployments
+#    may skip it. This SQL is idempotent — safe to run on fresh or existing DBs.
+echo "Ensuring google_id column exists on users table..."
+sudo -u postgres psql -d otqueue -c "
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE;
+" || echo "WARNING: Could not ensure google_id column — check database connectivity"
+
+# 7. Seed default admin user if no users exist
 echo "Checking for default admin user..."
 ADMIN_EMAIL="${DEFAULT_ADMIN_EMAIL:-admin@otqueue.local}"
 ADMIN_NAME="${DEFAULT_ADMIN_NAME:-Admin}"
@@ -120,7 +128,7 @@ echo "DEBUG: DEFAULT_ADMIN_EMAIL=$DEFAULT_ADMIN_EMAIL"
 echo "DEBUG: DEFAULT_ADMIN_PASSWORD=$DEFAULT_ADMIN_PASSWORD"
 cd /app && pnpm exec tsx artifacts/api-server/seed-admin.ts || echo "Note: Admin seed skipped (will be created via /api/auth/admin-setup endpoint)"
 
-# 7. Verify frontend build files and configure Nginx permissions
+# 8. Verify frontend build files and configure Nginx permissions
 echo "--- DIAGNOSTIC RUNTIME CHECK ---"
 TARGET_DIR="/app/artifacts/overtime-tracker/dist/public"
 if [ -d "$TARGET_DIR" ]; then
@@ -174,6 +182,6 @@ EOF
 echo "Starting Nginx routing service..."
 service nginx start
 
-# 7. Hands execution off to your Replit web application backend on port 8080
+# 9. Hands execution off to your Replit web application backend on port 8080
 echo "Launching OTQue backend API server internally..."
 exec pnpm --filter @workspace/api-server run dev

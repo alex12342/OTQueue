@@ -9,6 +9,10 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - SSO_ENABLED=${SSO_ENABLED}
+      - SSO_CLIENT_ID=${SSO_CLIENT_ID}
+      - SSO_CLIENT_SECRET=${SSO_CLIENT_SECRET}
+      - APP_URL=${APP_URL}
     volumes:
       # Maps a 'data' folder on your host server to the container's app data directory
       - /home/alex/docker-compose/otqueue/data:/app/data

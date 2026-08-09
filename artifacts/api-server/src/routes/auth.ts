@@ -45,6 +45,14 @@ const passwordResetLimiter = rateLimit({
   message: { message: "Too many password reset requests, please try again later." },
 });
 
+const passwordChangeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many password change attempts, please try again later." },
+});
+
 // ── Password strength validation ─────────────────────────────────────────────
 
 function validatePasswordStrength(password: string): { valid: boolean; message: string } {
@@ -252,7 +260,7 @@ router.get("/verify-reset-token/:token", async (req, res) => {
 
 // ── Reset password endpoint ──────────────────────────────────────────────────
 
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", passwordChangeLimiter, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 

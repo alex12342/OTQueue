@@ -4,7 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@workspace/db";
 import bcrypt from "bcryptjs";
 import { adminAuthMiddleware } from "../middlewares/auth";
-import { sendUserInviteEmail, getTransporter, clearTransporterCache } from "../lib/email";
+import { sendUserInviteEmail, sendEmail, getTransporter, clearTransporterCache } from "../lib/email";
 import { logger } from "../lib/logger";
 import { randomUUID } from "crypto";
 
@@ -61,7 +61,7 @@ router.post("/users", async (req: any, res: any) => {
       email: insertData.email,
       passwordHash,
       name: insertData.name,
-      role: insertData.role || "user",
+      role: insertData.role || "viewer",
       passwordChangeRequired: false,
     }).returning();
 
@@ -163,6 +163,102 @@ router.get("/stats", async (_req: any, res: any) => {
   } catch (error) {
     console.error("Get stats error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Send password reset email for a specific user (admin only)
+router.post("/users/:id/reset-password", async (req: any, res: any) => {
+  try {
+    const userId = req.params.id;
+
+    // Look up the user
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate a password reset token (reuses the same token table as forgot-password)
+    const resetToken = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // Token expires in 1 hour
+
+    // Clean up any existing tokens for this user, then store the new one
+    await db
+      .delete(passwordResetTokensTable)
+      .where(eq(passwordResetTokensTable.userId, user.id));
+
+    await db.insert(passwordResetTokensTable).values({
+      userId: user.id,
+      token: resetToken,
+      expiresAt,
+    });
+
+    // Send the reset email (silently ignore failures, same as forgot-password)
+    try {
+      const appUrl = process.env.APP_URL || "http://localhost";
+      const resetLink = `${appUrl}/set-password?token=${resetToken}`;
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f7f5f2; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+            .header { background: #0d7a5e; color: #ffffff; padding: 32px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { padding: 32px; }
+            .content p { color: #1f2c2a; line-height: 1.6; margin: 0 0 16px; }
+            .button { display: inline-block; background: #0d7a5e; color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 4px; font-weight: 600; margin: 16px 0; }
+            .button:hover { background: #0b664f; }
+            .footer { background: #f9f8f6; padding: 24px 32px; text-align: center; color: #6b7a76; font-size: 12px; border-top: 1px solid #e8e5e0; }
+            .link-text { color: #0d7a5e; word-break: break-all; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>OTQue - Password Reset</h1>
+            </div>
+            <div class="content">
+              <p>Hello ${user.name || "there"},</p>
+              <p>An administrator has initiated a password reset for your account. Click the button below to create a new password:</p>
+              <div style="text-align: center;">
+                <a href="${resetLink}" class="button">Reset Password</a>
+              </div>
+              <p>Or copy and paste this link into your browser:</p>
+              <p class="link-text">${resetLink}</p>
+              <p>This link will expire in 1 hour. If you did not request a password reset, please contact your administrator.</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email from OTQue. Please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await sendEmail({
+        to: user.email,
+        subject: "OTQue - Password Reset Request",
+        html,
+      });
+
+      logger.info({ msg: "Admin-initiated password reset email sent", userId: user.id, email: user.email });
+    } catch (emailError) {
+      logger.error({ msg: "Failed to send admin-initiated reset email", userId: user.id, error: emailError });
+      // Don't fail the request if email fails — the token is still valid
+    }
+
+    return res.json({ message: "Password reset email sent successfully" });
+  } catch (error) {
+    console.error("Admin reset password error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 

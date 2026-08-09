@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Lock, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Lock, Eye, EyeOff, CheckCircle, XCircle, Mail } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 
 interface TokenVerification {
@@ -13,14 +13,19 @@ interface TokenVerification {
   userId: string;
 }
 
+interface ForgotPasswordResponse {
+  message: string;
+}
+
 export default function SetPassword() {
-  const [currentPath] = useLocation();
-  const params = new URLSearchParams(currentPath.split("?")[1] || "");
+  const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

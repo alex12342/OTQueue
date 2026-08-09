@@ -23,7 +23,9 @@ import ForgotPassword from "@/pages/forgot-password";
 import SetPassword from "@/pages/set-password";
 import ChangePassword from "@/pages/change-password";
 import MyAccount from "@/pages/my-account";
+import SsoCallback from "@/pages/callback";
 import { getPasswordChangeRequired } from "@/lib/auth";
+import { useAuthExpired } from "@/hooks/use-auth-expired";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +53,7 @@ function AppContent() {
     <PasswordChangeRequiredGuard>
       <Switch>
         <Route path="/login" component={Login} />
+        <Route path="/login/callback" component={SsoCallback} />
         <Route path="/logout" component={Logout} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/set-password" component={SetPassword} />
@@ -76,6 +79,9 @@ function AppContent() {
 }
 
 function App() {
+  // When any API call returns 401, this hook fires and redirects to /login.
+  useAuthExpired();
+
   console.log('[App] mount');
   return (
     <QueryClientProvider client={queryClient}>

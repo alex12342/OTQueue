@@ -13,6 +13,39 @@ const TOKEN_STORAGE_KEY = "otqueue_token";
 const USER_STORAGE_KEY = "otqueue_user";
 
 /**
+ * Dispatched whenever the server rejects a request with 401 Unauthorized.
+ * Components listen for this event to know they need to redirect to /login.
+ */
+export const AUTH_EXPIRED_EVENT = "otqueue:auth-expired";
+
+/**
+ * Clear all in-memory auth state, purge localStorage, and redirect to /login.
+ * Call this when you know the session is no longer valid (401, explicit sign-out, etc.).
+ */
+export function handleAuthExpired() {
+  // Signal the rest of the app that auth is gone
+  window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+
+  _token = null;
+  setAuthTokenGetter(null);
+  _isLoggedIn = false;
+  _userEmail = null;
+  _userRole = null;
+  _userId = null;
+  _currentUser = null;
+  _passwordChangeRequired = false;
+
+  try {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+  } catch {}
+
+  // Force a full page reload to /login so React re-mounts and AuthGuard
+  // runs the "no-session" path on the next navigation cycle.
+  window.location.href = "/login";
+}
+
+/**
  * Initialize the auth system by checking for a stored JWT token
  */
 export async function initAuth() {
@@ -180,13 +213,21 @@ export async function fetchCurrentUser(): Promise<{ email: string; role: "user" 
           passwordChangeRequired: data.user.passwordChangeRequired || false,
         };
       }
+      // Server explicitly says not authenticated — session is invalid
       return null;
-    } catch {
-      // API failed, fall through to localStorage cache
+    } catch (err: any) {
+      // If the server returned 401 (or the fetch failed while a token was set),
+      // the token is stale or the session is gone. Do NOT fall back to localStorage.
+      if (err?.status === 401) {
+        return null;
+      }
+      // Network error (server down, DNS, etc.) — fall through to localStorage cache
+      console.warn('[auth] fetchCurrentUser: network error, falling back to localStorage', err);
     }
   }
 
-  // Fallback to stored user in localStorage when no token available
+  // Fallback to stored user in localStorage only when no token is available
+  // (i.e., user is genuinely not logged in or the token was never set).
   const storedUser = getStoredUser();
   console.log('[auth] fetchCurrentUser: storedUser =', storedUser);
   if (storedUser) {

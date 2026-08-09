@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 import { setCurrentUser } from "@/lib/auth";
@@ -21,7 +20,6 @@ interface ErrorResponse {
 }
 
 export default function SsoCallback() {
-  const [, navigate] = useLocation();
   const [status, setStatus] = useState<"loading" | "error">("loading");
 
   useEffect(() => {
@@ -29,7 +27,7 @@ export default function SsoCallback() {
     const code = params.get("code");
 
     if (!code) {
-      navigate("/login?error=no_code");
+      window.location.href = "/login?error=no_code";
       return;
     }
 
@@ -56,7 +54,7 @@ export default function SsoCallback() {
         console.error("SSO exchange error:", err);
         setStatus("error");
       });
-  }, [navigate]);
+  }, []);
 
   if (status === "error") {
     return (

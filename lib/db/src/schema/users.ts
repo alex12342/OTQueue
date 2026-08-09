@@ -11,11 +11,12 @@ export const usersTable = pgTable("users", {
   name: varchar("name", { length: 255 }).notNull(),
   role: varchar("role", { length: 50 })
     .notNull()
-    .default("user")
+    .default("viewer")
     .$type<"user" | "admin" | "viewer">(),
   isActive: boolean("is_active").notNull().default(true),
   passwordChangeRequired: boolean("password_change_required").notNull().default(false),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  googleId: varchar("google_id", { length: 255 }).unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
