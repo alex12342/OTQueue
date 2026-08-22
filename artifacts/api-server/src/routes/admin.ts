@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { adminAuthMiddleware } from "../middlewares/auth";
 import { sendUserInviteEmail, sendEmail, getTransporter, clearTransporterCache } from "../lib/email";
 import { logger } from "../lib/logger";
+import { validatePasswordStrength } from "../lib/password";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -111,13 +112,23 @@ router.put("/users/:id", async (req: any, res: any) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update user fields (excluding password)
+    const { password, ...restData } = updateData;
+
+    const updatePayload: Record<string, unknown> = {
+      ...restData,
+      updatedAt: new Date(),
+    };
+
+    if (password !== undefined) {
+      const validation = validatePasswordStrength(password);
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.message });
+      }
+      updatePayload.passwordHash = await bcrypt.hash(password, 10);
+    }
+
     const updatedUser = await db.update(usersTable)
-      .set({
-        ...updateData,
-        passwordHash: existingUser.passwordHash, // Keep existing hash
-        updatedAt: new Date(),
-      })
+      .set(updatePayload)
       .where(and(eq(usersTable.id, userId)))
       .returning();
 

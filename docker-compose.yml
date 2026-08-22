@@ -1,6 +1,11 @@
 services:
   otqueue-app:
-    build: .
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-dev}
+        BUILD_DATE: ${BUILD_DATE:-}
     container_name: otqueue
     restart: unless-stopped
     user: "${PUID}:${PGID}"

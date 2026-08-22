@@ -4,6 +4,7 @@ import { ClipboardList, Users, History, PlusCircle, LayoutDashboard, Settings, C
 import { cn } from "@/lib/utils";
 import { useRoster } from "@/hooks/use-roster";
 import { isViewer } from "@/lib/auth";
+import { versionLabel } from "@/lib/version";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -179,6 +180,12 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
               />
               Logout
             </Link>
+          </div>
+
+          <div className="shrink-0 border-t border-sidebar-border px-4 py-3">
+            <span className="block font-mono text-[11px] text-sidebar-foreground/40">
+              {versionLabel()}
+            </span>
           </div>
         </div>
       </div>

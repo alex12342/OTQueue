@@ -23,9 +23,6 @@ export const AUTH_EXPIRED_EVENT = "otqueue:auth-expired";
  * Call this when you know the session is no longer valid (401, explicit sign-out, etc.).
  */
 export function handleAuthExpired() {
-  // Signal the rest of the app that auth is gone
-  window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
-
   _token = null;
   setAuthTokenGetter(null);
   _isLoggedIn = false;

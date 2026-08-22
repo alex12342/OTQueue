@@ -12,7 +12,10 @@ import * as zod from 'zod';
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  "status": zod.string()
+  "status": zod.string(),
+  "version": zod.string(),
+  "git_sha": zod.string(),
+  "build_date": zod.string()
 })
 
 
@@ -577,7 +580,7 @@ export const CreateEventBody = zod.object({
   "date": zod.coerce.date(),
   "description": zod.string().min(1),
   "defaultHours": zod.number().min(createEventBodyDefaultHoursMin),
-  "dayType": zod.string(),
+  "dayType": zod.string().optional(),
   "multiplier": zod.number().min(createEventBodyMultiplierMin).default(createEventBodyMultiplierDefault),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),
@@ -639,7 +642,7 @@ export const UpdateEventBody = zod.object({
   "date": zod.coerce.date(),
   "description": zod.string().min(1),
   "defaultHours": zod.number().min(updateEventBodyDefaultHoursMin),
-  "dayType": zod.string(),
+  "dayType": zod.string().optional(),
   "multiplier": zod.number().min(updateEventBodyMultiplierMin).default(updateEventBodyMultiplierDefault),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),

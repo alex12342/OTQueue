@@ -166,21 +166,21 @@ router.get("/up-next", async (req, res): Promise<void> => {
 
   const dayTypeOverrideMap = new Map<number, number>(dayTypeOverrides.map((o: typeof subclassDayTypeSortTable.$inferSelect) => [o.subclassId, o.sortOrder]));
 
+  // Find the most recent "Reset Hours" event once (shared by all employees)
+  const [resetEvent] = await db
+    .select({ createdAt: eventsTable.createdAt })
+    .from(eventsTable)
+    .where(
+      and(
+        eq(eventsTable.rosterId, rosterId),
+        sql`${eventsTable.description} = 'Reset Hours'`,
+      ),
+    )
+    .orderBy(sql`${eventsTable.createdAt} DESC`)
+    .limit(1);
+
   const withData = await Promise.all(
     employees.map(async (emp: typeof employeesTable.$inferSelect) => {
-      // Find the most recent "Reset Hours" event for time-window filtering
-      const [resetEvent] = await db
-        .select({ createdAt: eventsTable.createdAt })
-        .from(eventsTable)
-        .where(
-          and(
-            eq(eventsTable.rosterId, rosterId),
-            sql`${eventsTable.description} = 'Reset Hours'`,
-          ),
-        )
-        .orderBy(sql`${eventsTable.createdAt} DESC`)
-        .limit(1);
-
       let empHoursQuery = db
         .select({
           totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,

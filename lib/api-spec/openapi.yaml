@@ -810,9 +810,15 @@ components:
   schemas:
     HealthStatus:
       type: object
-      required: [status]
+      required: [status, version, git_sha, build_date]
       properties:
         status:
+          type: string
+        version:
+          type: string
+        git_sha:
+          type: string
+        build_date:
           type: string
 
     # ── Rosters ──────────────────────────────────────────────────────────────
@@ -1100,7 +1106,7 @@ components:
 
     EventInput:
       type: object
-      required: [rosterId, date, description, defaultHours, dayType, entries]
+      required: [rosterId, date, description, defaultHours, entries]
       properties:
         rosterId:
           type: integer

@@ -46,6 +46,14 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# Environment files (contain secrets — never commit; keep .env.example as the template)
+.env
+.env.*
+!.env.example
+
+# Caches
 .cache/
 .local/
+
+# Local release helper (prompts for credentials at runtime — never commit)
+scripts/release.sh

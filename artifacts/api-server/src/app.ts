@@ -13,6 +13,10 @@ const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 
+// Trust exactly one reverse-proxy hop (Nginx) so req.ip reflects the real
+// client IP, without allowing X-Forwarded-For spoofing from further upstream.
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,
@@ -32,9 +36,21 @@ app.use(
     },
   }),
 );
-// Task 15: CORS configuration with environment-aware settings
+// CORS configuration with environment-aware settings.
+// - CORS_ORIGIN unset / empty / "*" -> allow any origin (origin: true)
+// - CORS_ORIGIN "a.com, b.com"      -> whitelist exactly those origins
+const corsOriginRaw = (process.env.CORS_ORIGIN ?? "").trim();
+const corsWhitelist = corsOriginRaw
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const corsOrigin: boolean | string[] =
+  corsOriginRaw === "" || corsOriginRaw === "*" || corsWhitelist.length === 0
+    ? true
+    : corsWhitelist;
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()) || true,
+  origin: corsOrigin,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],

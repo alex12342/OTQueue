@@ -5,7 +5,6 @@
 ```
 artifacts/overtime-tracker   — React frontend (Vite 7, Tailwind 4, shadcn/ui, wouter, TanStack Query)
 artifacts/api-server         — Express 5 backend (esbuild bundle, pino)
-artifacts/mockup-sandbox     — experimental sandbox (Vite, standalone)
 lib/db                       — Drizzle ORM schema (@workspace/db)
 lib/api-client-react         — Orval-generated React Query client (@workspace/api-client-react)
 lib/api-spec                 — Orval codegen source: openapi.yaml (@workspace/api-spec)
@@ -59,7 +58,7 @@ pnpm --filter db push-force                      # drizzle-kit push --force
 | `BASE_PATH` | Required by Vite (frontend deploy path) |
 | `DATABASE_URL` | Required by Drizzle and API server |
 | `JWT_SECRET` | Generated at runtime by entrypoint.sh (persisted to `/app/data/.jwt-secret`) |
-| `NODE_ENV=development` | Triggers Replit dev plugins (cartographer, dev-banner) |
+| `NODE_ENV` | `production` in the Docker image (JSON logs, no pino-pretty) |
 
 See `.env.example` for full list (CORS, SSO, email, session, logging).
 

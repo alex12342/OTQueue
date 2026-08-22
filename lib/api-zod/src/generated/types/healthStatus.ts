@@ -8,4 +8,7 @@
 
 export interface HealthStatus {
   status: string;
+  version: string;
+  git_sha: string;
+  build_date: string;
 }

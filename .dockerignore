@@ -1,0 +1,24 @@
+# VCS
+.git
+
+# Local dependencies (reinstalled in the image)
+node_modules
+**/node_modules
+
+# Build outputs (regenerated in the image)
+**/dist
+*.tsbuildinfo
+
+# Local env files / secrets
+.env
+.env.*
+
+# Local runtime data
+data
+attached_assets
+
+# Caches and tooling
+.playwright-mcp
+.codebase-memory
+.codebase
+opencode.json

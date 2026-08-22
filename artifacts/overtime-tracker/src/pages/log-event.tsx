@@ -174,10 +174,6 @@ export default function LogEvent() {
       toast({ title: "Validation Error", description: "Description is required.", variant: "destructive" });
       return;
     }
-    if (!dayType) {
-      toast({ title: "Validation Error", description: "Day type is required.", variant: "destructive" });
-      return;
-    }
 
     createMutation.mutate({
       data: {
@@ -185,7 +181,7 @@ export default function LogEvent() {
         date: dateStr,
         description,
         defaultHours: parseFloat(defaultHours) || 0,
-        dayType,
+        dayType: dayType || "weekday",
         multiplier: parseFloat(multiplier) || 1,
         entries: activeEntries.map((e) => ({
           employeeId: e.employeeId,

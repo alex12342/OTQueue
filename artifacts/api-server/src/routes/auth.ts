@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit";
 import { randomUUID } from "crypto";
 import { sendPasswordResetEmail, sendUserInviteEmail, sendPasswordChangedEmail } from "../lib/email";
 import { authMiddleware } from "../middlewares/auth";
+import { validatePasswordStrength } from "../lib/password";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = "7d";
@@ -31,7 +32,7 @@ const authLimiter = rateLimit({
 
 const loginLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many login attempts, please try again later." },
@@ -52,30 +53,6 @@ const passwordChangeLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many password change attempts, please try again later." },
 });
-
-// ── Password strength validation ─────────────────────────────────────────────
-
-function validatePasswordStrength(password: string): { valid: boolean; message: string } {
-  if (password.length < 12) {
-    return { valid: false, message: "Password must be at least 12 characters long" };
-  }
-  if (password.length > 128) {
-    return { valid: false, message: "Password must not exceed 128 characters" };
-  }
-  if (!/[A-Z]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one uppercase letter" };
-  }
-  if (!/[a-z]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one lowercase letter" };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one number" };
-  }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one special character" };
-  }
-  return { valid: true, message: "" };
-}
 
 // ── Login endpoint ───────────────────────────────────────────────────────────
 
