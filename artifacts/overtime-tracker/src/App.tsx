@@ -18,6 +18,8 @@ import Settings from "@/pages/settings";
 import AdminUsers from "@/pages/admin-users";
 import AdminEmailConfig from "@/pages/admin-email-config";
 import HelpPage from "@/pages/help";
+import PrivacyPolicy from "@/pages/privacy";
+import TermsOfService from "@/pages/terms";
 import Login from "@/pages/login";
 import Logout from "@/pages/logout";
 import ForgotPassword from "@/pages/forgot-password";
@@ -48,7 +50,8 @@ function PasswordChangeRequiredGuard({ children }: { children: React.ReactNode }
 
 function AppContent() {
   const [currentPath] = useLocation();
-  const authPages = ["/login", "/logout", "/forgot-password", "/set-password", "/change-password"];
+  // authPages render without the sidebar (auth flows + standalone legal pages)
+  const authPages = ["/login", "/logout", "/forgot-password", "/set-password", "/change-password", "/privacy", "/terms"];
   const showSidebar = !getPasswordChangeRequired() && !authPages.includes(currentPath);
   const content = (
     <PasswordChangeRequiredGuard>
@@ -68,6 +71,8 @@ function AppContent() {
         <Route path="/employees/:id/report" component={EmployeeReport} />
         <Route path="/settings" component={Settings} />
         <Route path="/help" component={HelpPage} />
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/terms" component={TermsOfService} />
 
         <Route path="/admin/users" component={AdminUsers} />
         <Route path="/admin/email-config" component={AdminEmailConfig} />

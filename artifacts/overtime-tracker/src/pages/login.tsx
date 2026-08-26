@@ -215,6 +215,13 @@ export default function Login() {
               Forgot password?
             </Link>
           </div>
+
+          <p className="text-xs text-muted-foreground leading-relaxed text-center">
+            By signing in, you agree to our{" "}
+            <Link href="/terms" className="text-primary hover:underline font-medium">Terms of Service</Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>.
+          </p>
         </CardContent>
       </Card>
     </div>

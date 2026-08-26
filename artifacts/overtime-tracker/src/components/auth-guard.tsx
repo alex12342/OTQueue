@@ -8,6 +8,8 @@ import NotFound from "@/pages/not-found";
 import SsoCallback from "@/pages/callback";
 import SetPassword from "@/pages/set-password";
 import Landing from "@/pages/landing";
+import PrivacyPolicy from "@/pages/privacy";
+import TermsOfService from "@/pages/terms";
 import { Loader2 } from "lucide-react";
 
 interface AuthGuardProps {
@@ -15,6 +17,8 @@ interface AuthGuardProps {
 }
 
 const AUTH_PAGES = ["/login", "/login/callback", "/forgot-password", "/set-password"];
+// Standalone legal pages — reachable in every auth state, rendered without the app chrome
+const LEGAL_PAGES = ["/privacy", "/terms"];
 
 /**
  * AuthGuard implements a three-state routing system:
@@ -52,9 +56,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   const passwordChangeRequired = getPasswordChangeRequired();
 
-  // State 2: password-change-required — allow /change-password, redirect everything else to /change-password
+  // State 2: password-change-required — allow /change-password + legal pages, redirect everything else to /change-password
   if (isAuth && passwordChangeRequired) {
-    if (currentPath !== "/change-password" && currentPath !== "/login" && currentPath !== "/forgot-password") {
+    if (
+      currentPath !== "/change-password" &&
+      currentPath !== "/login" &&
+      currentPath !== "/forgot-password" &&
+      !LEGAL_PAGES.includes(currentPath)
+    ) {
       setCurrentPath("/change-password");
       return null;
     }
@@ -63,14 +72,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
         <Route path="/change-password" component={ChangePassword} />
         <Route path="/login" component={Login} />
         <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/terms" component={TermsOfService} />
         <Route component={NotFound} />
       </Switch>
     );
   }
 
-  // State 1: no-session — allow auth pages + home (landing), redirect everything else to /login
+  // State 1: no-session — allow auth pages + legal pages + home (landing), redirect everything else to /login
   if (!isAuth) {
-    if (!AUTH_PAGES.includes(currentPath) && currentPath !== "/") {
+    if (!AUTH_PAGES.includes(currentPath) && !LEGAL_PAGES.includes(currentPath) && currentPath !== "/") {
       setCurrentPath("/login");
       return null;
     }
@@ -80,6 +91,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
         <Route path="/login/callback" component={SsoCallback} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/set-password" component={SetPassword} />
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/terms" component={TermsOfService} />
         <Route path="/" component={Landing} />
         <Route component={NotFound} />
       </Switch>

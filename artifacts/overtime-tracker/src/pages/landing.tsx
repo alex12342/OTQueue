@@ -294,15 +294,23 @@ export default function Landing() {
             <ClipboardList className="h-4 w-4 text-primary" />
             <span>OTQue — free &amp; open-source overtime scheduling · GPL 3.0 · {versionLabel()}</span>
           </div>
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-          >
-            <Github className="h-4 w-4" />
-            alex12342/otqueue
-          </a>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Terms of Service
+            </Link>
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+            >
+              <Github className="h-4 w-4" />
+              alex12342/otqueue
+            </a>
+          </div>
         </div>
       </footer>
     </div>

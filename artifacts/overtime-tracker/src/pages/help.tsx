@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Users, Calendar, Clock, RotateCcw, Settings } from "lucide-react";
+import { BookOpen, Users, Calendar, Clock, RotateCcw, Settings, Scale } from "lucide-react";
 
 const steps = [
   {
@@ -138,6 +138,28 @@ export default function HelpPage() {
           <p className="text-muted-foreground">
             If you have questions not answered here, please contact your system admin.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Scale className="h-5 w-5" />
+            Legal
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-muted-foreground">
+            Review the policies that apply when you use OTQue:
+          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-1">
+            <Link href="/privacy" className="text-sm text-primary hover:underline font-medium">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-sm text-primary hover:underline font-medium">
+              Terms of Service
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
