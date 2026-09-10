@@ -5,10 +5,13 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
+import type { RosterSettingsSeniorityMode } from './rosterSettingsSeniorityMode';
 
 export interface RosterSettings {
   rosterId: number;
   useOfferedHours: boolean;
   useSeniority: boolean;
   useSubclassOrdering: boolean;
+  /** How seniority is derived. manual = stored seniority number (legacy); hire_date = computed rank from hire date, oldest first */
+  seniorityMode: RosterSettingsSeniorityMode;
 }

@@ -10,8 +10,28 @@ export interface EmployeeInput {
   rosterId: number;
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
-  seniority: number;
+  /**
+     * Required in manual seniority mode
+     * @minimum 1
+     * @nullable
+     */
+  seniority?: number | null;
+  /**
+     * Hire date (YYYY-MM-DD); required in hire_date seniority mode
+     * @nullable
+     */
+  hireDate?: string | null;
+  /**
+     * Optional tie-breaker for shared hire dates (lower = higher priority)
+     * @minimum 1
+     * @nullable
+     */
+  priorityRank?: number | null;
+  /**
+     * Source employee id when adding from the directory
+     * @nullable
+     */
+  linkedEmployeeId?: number | null;
   /** @nullable */
   roleId?: number | null;
   /** @nullable */

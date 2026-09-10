@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import { db, eventsTable, eventEntriesTable, employeesTable } from "@workspace/db";
+import { getRosterSeniorityMode, seniorityOrderBy } from "../lib/seniority";
 import {
   CreateEventBody,
   GetEventParams,
@@ -14,6 +15,8 @@ async function getEventWithEntries(id: number) {
   const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, id));
   if (!event) return null;
 
+  const seniorityMode = await getRosterSeniorityMode(event.rosterId);
+
   const entries = await db
     .select({
       id: eventEntriesTable.id,
@@ -26,7 +29,7 @@ async function getEventWithEntries(id: number) {
     .from(eventEntriesTable)
     .innerJoin(employeesTable, eq(eventEntriesTable.employeeId, employeesTable.id))
     .where(eq(eventEntriesTable.eventId, id))
-    .orderBy(employeesTable.seniority);
+    .orderBy(...seniorityOrderBy(seniorityMode));
 
   const defaultHours = Number(event.defaultHours);
 

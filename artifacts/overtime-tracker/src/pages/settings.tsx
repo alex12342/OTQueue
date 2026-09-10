@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -177,12 +178,23 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
         toast({ title: "Settings saved" });
         queryClient.invalidateQueries({ queryKey: getGetRosterSettingsQueryKey(rosterId) });
       },
-      onError: () => toast({ title: "Error saving settings", variant: "destructive" }),
+      onError: (error) => {
+        const data = (error as { data?: { error?: string } } | null)?.data;
+        toast({
+          title: "Error saving settings",
+          description: data?.error,
+          variant: "destructive",
+        });
+      },
     },
   });
 
   const handleToggle = (key: "useOfferedHours" | "useSeniority" | "useSubclassOrdering", value: boolean) => {
     updateMutation.mutate({ id: rosterId, data: { [key]: value } });
+  };
+
+  const handleSeniorityMode = (value: "manual" | "hire_date") => {
+    updateMutation.mutate({ id: rosterId, data: { seniorityMode: value } });
   };
 
   if (isLoading) return <Skeleton className="h-48 w-full mt-4" />;
@@ -220,17 +232,40 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
             onCheckedChange={(v) => handleToggle("useOfferedHours", v)}
           />
         </div>
-        <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between py-3 border-b">
           <div>
             <p className="font-medium">Seniority Tie-Breaker</p>
             <p className="text-sm text-muted-foreground">
-              When hours are equal, lower seniority number takes priority.
+              When hours are equal, seniority decides the order.
             </p>
           </div>
           <Switch
             checked={settings?.useSeniority ?? true}
             onCheckedChange={(v) => handleToggle("useSeniority", v)}
           />
+        </div>
+        <div className="flex items-center justify-between py-3">
+          <div>
+            <p className="font-medium">Seniority Source</p>
+            <p className="text-sm text-muted-foreground">
+              Manual: each employee's assigned seniority number. Hire date: rank is
+              computed automatically (oldest hire date = #1); employees hired the same
+              day can be tie-broken with a priority value on their employee record.
+            </p>
+          </div>
+          <Select
+            value={settings?.seniorityMode ?? "manual"}
+            onValueChange={(v) => handleSeniorityMode(v as "manual" | "hire_date")}
+            disabled={!(settings?.useSeniority ?? true)}
+          >
+            <SelectTrigger className="w-52" data-testid="seniority-mode-select">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="manual">Manual number (legacy)</SelectItem>
+              <SelectItem value="hire_date">Hire date (auto rank)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>

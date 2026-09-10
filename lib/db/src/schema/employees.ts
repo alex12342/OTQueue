@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, numeric, date, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { rostersTable } from "./rosters";
@@ -8,20 +8,28 @@ export const employeesTable = pgTable("employees", {
   id: serial("id").primaryKey(),
   rosterId: integer("roster_id").notNull().references(() => rostersTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  seniority: integer("seniority").notNull(),
+  seniority: integer("seniority"),
+  hireDate: date("hire_date"),
+  priorityRank: integer("priority_rank"),
+  linkedEmployeeId: integer("linked_employee_id"),
   category: text("category").notNull().default("full_time").$type<"four_hour" | "full_time">(),
   roleId: integer("role_id").references(() => rolesTable.id, { onDelete: "set null" }),
   subclassId: integer("subclass_id").references(() => subclassesTable.id, { onDelete: "set null" }),
   active: boolean("active").notNull().default(true),
   startingNormalizedHours: numeric("starting_normalized_hours").default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  foreignKey({ columns: [table.linkedEmployeeId], foreignColumns: [table.id] }).onDelete("set null"),
+]);
 
 export const insertEmployeeSchema = z.object({
   name: z.string(),
   rosterId: z.number(),
   subclassId: z.number().nullish(),
-  seniority: z.number(),
+  seniority: z.number().nullish(),
+  hireDate: z.string().nullish(),
+  priorityRank: z.number().nullish(),
+  linkedEmployeeId: z.number().nullish(),
   category: z.enum(["four_hour", "full_time"]).optional(),
   roleId: z.number().nullish(),
   active: z.boolean().optional(),

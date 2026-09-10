@@ -1784,7 +1784,7 @@ export const getListEmployeesUrl = (params?: ListEmployeesParams,) => {
 }
 
 /**
- * @summary List employees, optionally filtered by roster
+ * @summary List employees, optionally filtered by roster or searched by name
  */
 export const listEmployees = async (params?: ListEmployeesParams, options?: RequestInit): Promise<Employee[]> => {
 
@@ -1831,7 +1831,7 @@ export type ListEmployeesQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List employees, optionally filtered by roster
+ * @summary List employees, optionally filtered by roster or searched by name
  */
 
 export function useListEmployees<TData = Awaited<ReturnType<typeof listEmployees>>, TError = ErrorType<unknown>>(

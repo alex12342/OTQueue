@@ -3,6 +3,8 @@ import { useParams, Link, useLocation } from "wouter";
 import {
   useGetEmployeeReport,
   getGetEmployeeReportQueryKey,
+  useGetRosterSettings,
+  getGetRosterSettingsQueryKey,
   useUpdateEmployee,
   useDeleteEmployee,
   getListEmployeesQueryKey,
@@ -64,6 +66,14 @@ export default function EmployeeReport() {
     },
   });
 
+  const { data: settings } = useGetRosterSettings(report?.employee.rosterId ?? 0, {
+    query: {
+      queryKey: getGetRosterSettingsQueryKey(report?.employee.rosterId ?? 0),
+      enabled: !!report?.employee,
+    },
+  });
+  const seniorityMode: "manual" | "hire_date" = settings?.seniorityMode ?? "manual";
+
   const updateMutation = useUpdateEmployee({
     mutation: {
       onSuccess: () => {
@@ -72,7 +82,10 @@ export default function EmployeeReport() {
         queryClient.invalidateQueries({ queryKey: getGetEmployeeReportQueryKey(empId) });
         queryClient.invalidateQueries({ queryKey: getListEmployeesQueryKey() });
       },
-      onError: () => toast({ title: "Error", description: "Failed to update employee", variant: "destructive" }),
+      onError: (error) => {
+        const data = (error as { data?: { error?: string } } | null)?.data;
+        toast({ title: "Error", description: data?.error ?? "Failed to update employee", variant: "destructive" });
+      },
     },
   });
 
@@ -107,7 +120,7 @@ export default function EmployeeReport() {
       ]);
     }
     const name = report.employee.name.replace(/\s+/g, "-").toLowerCase();
-    downloadCsv(`otqueue-report-${name}-${formatDate(new Date(), "yyyy-MM-dd")}.csv`, rows);
+    downloadCsv(`otque-report-${name}-${formatDate(new Date(), "yyyy-MM-dd")}.csv`, rows);
     toast({ title: "Export ready", description: `${report.events.length} event(s) exported.` });
   };
 
@@ -121,24 +134,28 @@ export default function EmployeeReport() {
   const handleEdit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const seniorityRaw = fd.get("seniority");
-    const seniority = seniorityRaw != null && seniorityRaw !== "" 
-      ? parseInt(seniorityRaw as string, 10) 
-      : 1;
-    
-    if (isNaN(seniority) || seniority < 1) {
-      return;
-    }
-    
     const data: Record<string, unknown> = {
       name: fd.get("name") as string,
-      seniority,
       active: editActive,
     };
+    // Seniority # — required in manual mode, optional (nullable) in hire_date mode.
+    const seniorityRaw = fd.get("seniority") as string;
+    const seniorityVal = seniorityRaw && seniorityRaw.trim() !== "" ? parseInt(seniorityRaw, 10) : null;
+    if (seniorityMode === "manual" && (seniorityVal == null || Number.isNaN(seniorityVal) || seniorityVal < 1)) {
+      return;
+    }
+    data.seniority = seniorityVal;
+    // Hire Date — required in hire_date mode, optional (nullable) in manual mode.
+    const hireDate = fd.get("hireDate") as string;
+    if (seniorityMode === "hire_date" && !hireDate) return;
+    data.hireDate = hireDate || null;
+    // Priority — optional same-day tie-breaker.
+    const priorityRaw = fd.get("priorityRank") as string;
+    data.priorityRank = priorityRaw && priorityRaw.trim() !== "" ? parseInt(priorityRaw, 10) : null;
     if (editStartingHours.trim() !== "") {
       data.startingNormalizedHours = parseFloat(editStartingHours);
     }
-    
+
     updateMutation.mutate({
       id: empId,
       data,
@@ -184,7 +201,13 @@ export default function EmployeeReport() {
                     {report?.employee.active ? "Active" : "Inactive"}
                   </Badge>
                   <span>&bull;</span>
-                  <span>Seniority #{report?.employee.seniority}</span>
+                  <span>Seniority #{report?.employee.effectiveSeniority ?? "—"}</span>
+                  {report?.employee.hireDate && (
+                    <>
+                      <span>&bull;</span>
+                      <span>Hired {report.employee.hireDate}</span>
+                    </>
+                  )}
                   <span>&bull;</span>
                   {report?.employee.subclassName && <span>{report.employee.subclassName}</span>}
                   {report?.employee.roleName && <span className="italic">{report.employee.roleName}</span>}
@@ -272,15 +295,43 @@ export default function EmployeeReport() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-seniority">Seniority #</Label>
+                  <Label htmlFor="edit-seniority">
+                    Seniority #
+                    {seniorityMode === "hire_date" && <span className="text-muted-foreground font-normal"> (optional)</span>}
+                  </Label>
                   <Input
                     id="edit-seniority"
                     name="seniority"
                     type="number"
                     min="1"
-                    defaultValue={report.employee.seniority}
-                    required
+                    defaultValue={report.employee.seniority ?? ""}
+                    required={seniorityMode === "manual"}
                     data-testid="input-edit-seniority"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-hiredate">
+                    Hire Date
+                    {seniorityMode === "manual" && <span className="text-muted-foreground font-normal"> (optional)</span>}
+                  </Label>
+                  <Input
+                    id="edit-hiredate"
+                    name="hireDate"
+                    type="date"
+                    defaultValue={report.employee.hireDate ?? ""}
+                    required={seniorityMode === "hire_date"}
+                    data-testid="input-edit-hiredate"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-priority">Priority (same-day tie-breaker, optional)</Label>
+                  <Input
+                    id="edit-priority"
+                    name="priorityRank"
+                    type="number"
+                    min="1"
+                    defaultValue={report.employee.priorityRank ?? ""}
+                    data-testid="input-edit-priority"
                   />
                 </div>
                 <div className="space-y-2">

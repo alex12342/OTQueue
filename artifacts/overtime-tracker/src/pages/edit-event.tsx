@@ -108,7 +108,7 @@ export default function EditEvent() {
     const eventEmployeeIds = new Set((event?.entries ?? []).map((e) => e.employeeId));
     return employees
       .filter((e) => e.active || eventEmployeeIds.has(e.id))
-      .sort((a, b) => a.seniority - b.seniority);
+      .sort((a, b) => (a.effectiveSeniority ?? 9999) - (b.effectiveSeniority ?? 9999));
   }, [employees, event]);
 
   const updateMutation = useUpdateEvent({
@@ -318,7 +318,7 @@ export default function EditEvent() {
                       >
                         <td className="px-6 py-3 font-medium text-foreground">
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-mono text-xs w-6 inline-block">#{emp.seniority}</span>
+                             <span className="text-muted-foreground font-mono text-xs w-6 inline-block">#{emp.effectiveSeniority ?? "—"}</span>
                             {emp.name}
                             {!emp.active && <span className="text-xs text-muted-foreground">(inactive)</span>}
                           </div>

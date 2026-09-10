@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { ClipboardList, Users, History, PlusCircle, LayoutDashboard, Settings, ChevronDown, BookOpen, LogOut, User, FileText, Scale, Menu } from "lucide-react";
+import { ClipboardList, Users, History, PlusCircle, LayoutDashboard, Settings, ChevronDown, BookOpen, LogOut, User, FileText, Scale, Menu, BookUser } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRoster } from "@/hooks/use-roster";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,6 +27,7 @@ const allNavigation = [
   { name: "Log Event", href: "/events/new", icon: PlusCircle },
   { name: "Event Log", href: "/log", icon: History },
   { name: "Employees", href: "/employees", icon: Users },
+  { name: "Directory", href: "/directory", icon: BookUser },
 ];
 
 export function SidebarContent() {

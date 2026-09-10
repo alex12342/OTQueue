@@ -26,17 +26,39 @@ export interface RosterInput {
   description?: string | null;
 }
 
+/**
+ * How seniority is derived. manual = stored seniority number (legacy); hire_date = computed rank from hire date, oldest first
+ */
+export type RosterSettingsSeniorityMode = typeof RosterSettingsSeniorityMode[keyof typeof RosterSettingsSeniorityMode];
+
+
+export const RosterSettingsSeniorityMode = {
+  manual: 'manual',
+  hire_date: 'hire_date',
+} as const;
+
 export interface RosterSettings {
   rosterId: number;
   useOfferedHours: boolean;
   useSeniority: boolean;
   useSubclassOrdering: boolean;
+  /** How seniority is derived. manual = stored seniority number (legacy); hire_date = computed rank from hire date, oldest first */
+  seniorityMode: RosterSettingsSeniorityMode;
 }
+
+export type RosterSettingsInputSeniorityMode = typeof RosterSettingsInputSeniorityMode[keyof typeof RosterSettingsInputSeniorityMode];
+
+
+export const RosterSettingsInputSeniorityMode = {
+  manual: 'manual',
+  hire_date: 'hire_date',
+} as const;
 
 export interface RosterSettingsInput {
   useOfferedHours?: boolean;
   useSeniority?: boolean;
   useSubclassOrdering?: boolean;
+  seniorityMode?: RosterSettingsInputSeniorityMode;
 }
 
 export interface DayTypeConfig {
@@ -108,8 +130,33 @@ export interface SubclassInput {
 export interface Employee {
   id: number;
   rosterId: number;
+  rosterName?: string;
   name: string;
-  seniority: number;
+  /**
+     * Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual
+     * @nullable
+     */
+  seniority?: number | null;
+  /**
+     * Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date
+     * @nullable
+     */
+  hireDate?: string | null;
+  /**
+     * Manual tie-breaker for employees sharing a hire date (lower = higher priority)
+     * @nullable
+     */
+  priorityRank?: number | null;
+  /**
+     * Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)
+     * @nullable
+     */
+  effectiveSeniority: number | null;
+  /**
+     * ID of the employee record in another roster this record was linked from
+     * @nullable
+     */
+  linkedEmployeeId?: number | null;
   /** @nullable */
   roleId?: number | null;
   /** @nullable */
@@ -131,8 +178,28 @@ export interface EmployeeInput {
   rosterId: number;
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
-  seniority: number;
+  /**
+     * Required in manual seniority mode
+     * @minimum 1
+     * @nullable
+     */
+  seniority?: number | null;
+  /**
+     * Hire date (YYYY-MM-DD); required in hire_date seniority mode
+     * @nullable
+     */
+  hireDate?: string | null;
+  /**
+     * Optional tie-breaker for shared hire dates (lower = higher priority)
+     * @minimum 1
+     * @nullable
+     */
+  priorityRank?: number | null;
+  /**
+     * Source employee id when adding from the directory
+     * @nullable
+     */
+  linkedEmployeeId?: number | null;
   /** @nullable */
   roleId?: number | null;
   /** @nullable */
@@ -145,8 +212,20 @@ export interface EmployeeInput {
 export interface EmployeeUpdate {
   /** @minLength 1 */
   name?: string;
-  /** @minimum 1 */
-  seniority?: number;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  seniority?: number | null;
+  /** @nullable */
+  hireDate?: string | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  priorityRank?: number | null;
+  /** @nullable */
+  linkedEmployeeId?: number | null;
   /** @nullable */
   roleId?: number | null;
   /** @nullable */
@@ -201,6 +280,14 @@ export interface EventInput {
   entries: EventEntryInput[];
 }
 
+export type UpNextResultSeniorityMode = typeof UpNextResultSeniorityMode[keyof typeof UpNextResultSeniorityMode];
+
+
+export const UpNextResultSeniorityMode = {
+  manual: 'manual',
+  hire_date: 'hire_date',
+} as const;
+
 export interface UpNextEmployee {
   id: number;
   name: string;
@@ -210,7 +297,17 @@ export interface UpNextEmployee {
   subclassName?: string | null;
   /** @nullable */
   roleName?: string | null;
-  seniority: number;
+  /** @nullable */
+  seniority?: number | null;
+  /** @nullable */
+  hireDate?: string | null;
+  /** @nullable */
+  priorityRank?: number | null;
+  /**
+     * Display rank (stored seniority in manual mode; computed rank in hire_date mode)
+     * @nullable
+     */
+  effectiveSeniority: number | null;
   totalOfferedHours: number;
   fairnessScore: number;
   rank: number;
@@ -219,6 +316,7 @@ export interface UpNextEmployee {
 export interface UpNextResult {
   rosterId: number;
   dayType: string;
+  seniorityMode: UpNextResultSeniorityMode;
   employees: UpNextEmployee[];
 }
 
@@ -285,6 +383,10 @@ export interface DayTypeSuggestion {
 
 export type ListEmployeesParams = {
 rosterId?: number;
+/**
+ * Case-insensitive name search
+ */
+search?: string;
 };
 
 export type ListEventsParams = {

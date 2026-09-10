@@ -22,5 +22,5 @@
         "AUTO_INDEX": "true"
       }
     }
-  }
+  },"compaction": {"auto":false,"prune":false}
 }

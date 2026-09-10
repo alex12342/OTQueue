@@ -97,7 +97,8 @@ export const GetRosterSettingsResponse = zod.object({
   "rosterId": zod.number(),
   "useOfferedHours": zod.boolean(),
   "useSeniority": zod.boolean(),
-  "useSubclassOrdering": zod.boolean()
+  "useSubclassOrdering": zod.boolean(),
+  "seniorityMode": zod.enum(['manual', 'hire_date']).describe('How seniority is derived. manual = stored seniority number (legacy); hire_date = computed rank from hire date, oldest first')
 })
 
 
@@ -111,14 +112,16 @@ export const UpdateRosterSettingsParams = zod.object({
 export const UpdateRosterSettingsBody = zod.object({
   "useOfferedHours": zod.boolean().optional(),
   "useSeniority": zod.boolean().optional(),
-  "useSubclassOrdering": zod.boolean().optional()
+  "useSubclassOrdering": zod.boolean().optional(),
+  "seniorityMode": zod.enum(['manual', 'hire_date']).optional()
 })
 
 export const UpdateRosterSettingsResponse = zod.object({
   "rosterId": zod.number(),
   "useOfferedHours": zod.boolean(),
   "useSeniority": zod.boolean(),
-  "useSubclassOrdering": zod.boolean()
+  "useSubclassOrdering": zod.boolean(),
+  "seniorityMode": zod.enum(['manual', 'hire_date']).describe('How seniority is derived. manual = stored seniority number (legacy); hire_date = computed rank from hire date, oldest first')
 })
 
 
@@ -373,17 +376,23 @@ export const DeleteSubclassParams = zod.object({
 
 
 /**
- * @summary List employees, optionally filtered by roster
+ * @summary List employees, optionally filtered by roster or searched by name
  */
 export const ListEmployeesQueryParams = zod.object({
-  "rosterId": zod.coerce.number().optional()
+  "rosterId": zod.coerce.number().optional(),
+  "search": zod.coerce.string().optional().describe('Case-insensitive name search')
 })
 
 export const ListEmployeesResponseItem = zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
+  "rosterName": zod.string().optional(),
   "name": zod.string(),
-  "seniority": zod.number(),
+  "seniority": zod.number().nullish().describe('Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual'),
+  "hireDate": zod.string().nullish().describe('Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date'),
+  "priorityRank": zod.number().nullish().describe('Manual tie-breaker for employees sharing a hire date (lower = higher priority)'),
+  "effectiveSeniority": zod.number().nullable().describe('Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)'),
+  "linkedEmployeeId": zod.number().nullish().describe('ID of the employee record in another roster this record was linked from'),
   "roleId": zod.number().nullish(),
   "roleName": zod.string().nullish(),
   "subclassId": zod.number().nullish(),
@@ -402,6 +411,7 @@ export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
  */
 
 
+
 export const createEmployeeBodyActiveDefault = true;
 export const createEmployeeBodyStartingNormalizedHoursMin = 0;
 
@@ -410,7 +420,10 @@ export const createEmployeeBodyStartingNormalizedHoursMin = 0;
 export const CreateEmployeeBody = zod.object({
   "rosterId": zod.number(),
   "name": zod.string().min(1),
-  "seniority": zod.number().min(1),
+  "seniority": zod.number().min(1).nullish().describe('Required in manual seniority mode'),
+  "hireDate": zod.string().nullish().describe('Hire date (YYYY-MM-DD); required in hire_date seniority mode'),
+  "priorityRank": zod.number().min(1).nullish().describe('Optional tie-breaker for shared hire dates (lower = higher priority)'),
+  "linkedEmployeeId": zod.number().nullish().describe('Source employee id when adding from the directory'),
   "roleId": zod.number().nullish(),
   "subclassId": zod.number().nullish(),
   "active": zod.boolean().default(createEmployeeBodyActiveDefault),
@@ -428,8 +441,13 @@ export const GetEmployeeParams = zod.object({
 export const GetEmployeeResponse = zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
+  "rosterName": zod.string().optional(),
   "name": zod.string(),
-  "seniority": zod.number(),
+  "seniority": zod.number().nullish().describe('Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual'),
+  "hireDate": zod.string().nullish().describe('Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date'),
+  "priorityRank": zod.number().nullish().describe('Manual tie-breaker for employees sharing a hire date (lower = higher priority)'),
+  "effectiveSeniority": zod.number().nullable().describe('Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)'),
+  "linkedEmployeeId": zod.number().nullish().describe('ID of the employee record in another roster this record was linked from'),
   "roleId": zod.number().nullish(),
   "roleName": zod.string().nullish(),
   "subclassId": zod.number().nullish(),
@@ -451,13 +469,17 @@ export const UpdateEmployeeParams = zod.object({
 
 
 
+
 export const updateEmployeeBodyStartingNormalizedHoursMin = 0;
 
 
 
 export const UpdateEmployeeBody = zod.object({
   "name": zod.string().min(1).optional(),
-  "seniority": zod.number().min(1).optional(),
+  "seniority": zod.number().min(1).nullish(),
+  "hireDate": zod.string().nullish(),
+  "priorityRank": zod.number().min(1).nullish(),
+  "linkedEmployeeId": zod.number().nullish(),
   "roleId": zod.number().nullish(),
   "subclassId": zod.number().nullish(),
   "active": zod.boolean().optional(),
@@ -467,8 +489,13 @@ export const UpdateEmployeeBody = zod.object({
 export const UpdateEmployeeResponse = zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
+  "rosterName": zod.string().optional(),
   "name": zod.string(),
-  "seniority": zod.number(),
+  "seniority": zod.number().nullish().describe('Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual'),
+  "hireDate": zod.string().nullish().describe('Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date'),
+  "priorityRank": zod.number().nullish().describe('Manual tie-breaker for employees sharing a hire date (lower = higher priority)'),
+  "effectiveSeniority": zod.number().nullable().describe('Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)'),
+  "linkedEmployeeId": zod.number().nullish().describe('ID of the employee record in another roster this record was linked from'),
   "roleId": zod.number().nullish(),
   "roleName": zod.string().nullish(),
   "subclassId": zod.number().nullish(),
@@ -502,8 +529,13 @@ export const GetEmployeeReportResponse = zod.object({
   "employee": zod.object({
   "id": zod.number(),
   "rosterId": zod.number(),
+  "rosterName": zod.string().optional(),
   "name": zod.string(),
-  "seniority": zod.number(),
+  "seniority": zod.number().nullish().describe('Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual'),
+  "hireDate": zod.string().nullish().describe('Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date'),
+  "priorityRank": zod.number().nullish().describe('Manual tie-breaker for employees sharing a hire date (lower = higher priority)'),
+  "effectiveSeniority": zod.number().nullable().describe('Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)'),
+  "linkedEmployeeId": zod.number().nullish().describe('ID of the employee record in another roster this record was linked from'),
   "roleId": zod.number().nullish(),
   "roleName": zod.string().nullish(),
   "subclassId": zod.number().nullish(),
@@ -696,13 +728,17 @@ export const GetUpNextQueryParams = zod.object({
 export const GetUpNextResponse = zod.object({
   "rosterId": zod.number(),
   "dayType": zod.string(),
+  "seniorityMode": zod.enum(['manual', 'hire_date']),
   "employees": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "subclassId": zod.number().nullish(),
   "subclassName": zod.string().nullish(),
   "roleName": zod.string().nullish(),
-  "seniority": zod.number(),
+  "seniority": zod.number().nullish(),
+  "hireDate": zod.string().nullish(),
+  "priorityRank": zod.number().nullish(),
+  "effectiveSeniority": zod.number().nullable().describe('Display rank (stored seniority in manual mode; computed rank in hire_date mode)'),
   "totalOfferedHours": zod.number(),
   "fairnessScore": zod.number(),
   "rank": zod.number()

@@ -10,6 +10,8 @@ import {
   subclassDayTypeSortTable,
 } from "@workspace/db";
 import { GetUpNextQueryParams, GetStatsQueryParams, SuggestDayTypeQueryParams } from "@workspace/api-zod";
+import { assignEffectiveSeniority, compareSeniority } from "../lib/seniority";
+import type { SeniorityMode } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -141,6 +143,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
   const useOfferedHours = settings?.useOfferedHours ?? true;
   const useSeniority = settings?.useSeniority ?? true;
   const useSubclassOrdering = settings?.useSubclassOrdering ?? true;
+  const seniorityMode: SeniorityMode = settings?.seniorityMode ?? "manual";
 
   const employees = await db
     .select()
@@ -206,12 +209,22 @@ router.get("/up-next", async (req, res): Promise<void> => {
         subclassId: emp.subclassId,
         subclassName: subclass?.name ?? null,
         seniority: emp.seniority,
+        hireDate: emp.hireDate,
+        priorityRank: emp.priorityRank,
         totalOfferedHours: rawOfferedHours,
         fairnessScore,
         subclassPriority,
       };
     })
   );
+
+  // Effective seniority is ranked over ALL roster employees (active and
+  // inactive) so the displayed rank is stable across pages.
+  const allRosterEmployees = await db
+    .select()
+    .from(employeesTable)
+    .where(eq(employeesTable.rosterId, rosterId));
+  const effectiveMap = assignEffectiveSeniority(allRosterEmployees, seniorityMode);
 
   const sorted = withData.sort((a, b) => {
     if (useSubclassOrdering) {
@@ -223,7 +236,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
       if (hoursDiff !== 0) return hoursDiff;
     }
     if (useSeniority) {
-      return a.seniority - b.seniority;
+      return compareSeniority(a, b, seniorityMode);
     }
     return 0;
   });
@@ -235,12 +248,15 @@ router.get("/up-next", async (req, res): Promise<void> => {
     subclassName: emp.subclassName,
     roleName: null as string | null,
     seniority: emp.seniority,
+    hireDate: emp.hireDate,
+    priorityRank: emp.priorityRank,
+    effectiveSeniority: effectiveMap.get(emp.id) ?? null,
     totalOfferedHours: emp.totalOfferedHours,
     fairnessScore: emp.fairnessScore,
     rank: idx + 1,
   }));
 
-  res.json({ rosterId, dayType, employees: ranked });
+  res.json({ rosterId, dayType, seniorityMode, employees: ranked });
 });
 
 router.get("/stats", async (req, res): Promise<void> => {

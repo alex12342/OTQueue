@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, sql } from "drizzle-orm";
-import { db, employeesTable, eventEntriesTable, eventsTable, rolesTable, subclassesTable, rosterSettingsTable } from "@workspace/db";
+import { db, employeesTable, eventEntriesTable, eventsTable, rolesTable, subclassesTable, rosterSettingsTable, rostersTable } from "@workspace/db";
 import {
   CreateEmployeeBody,
   GetEmployeeParams,
@@ -10,6 +10,12 @@ import {
   GetEmployeeReportParams,
   ListEmployeesQueryParams,
 } from "@workspace/api-zod";
+import {
+  assignEffectiveSeniority,
+  getRosterSeniorityMode,
+  isValidHireDate,
+  seniorityOrderBy,
+} from "../lib/seniority";
 
 const router: IRouter = Router();
 
@@ -61,6 +67,10 @@ async function getEmployeeWithHours(id: number) {
   const [employee] = await db.select().from(employeesTable).where(eq(employeesTable.id, id));
   if (!employee) return null;
 
+  const [roster] = await db
+    .select()
+    .from(rostersTable)
+    .where(eq(rostersTable.id, employee.rosterId));
   const [role] = employee.roleId
     ? await db.select().from(rolesTable).where(eq(rolesTable.id, employee.roleId))
     : [null];
@@ -98,8 +108,12 @@ async function getEmployeeWithHours(id: number) {
   return {
     id: employee.id,
     rosterId: employee.rosterId,
+    rosterName: roster?.name ?? null,
     name: employee.name,
     seniority: employee.seniority,
+    hireDate: employee.hireDate,
+    priorityRank: employee.priorityRank,
+    linkedEmployeeId: employee.linkedEmployeeId,
     roleId: employee.roleId,
     roleName: role?.name ?? null,
     subclassId: employee.subclassId,
@@ -110,6 +124,47 @@ async function getEmployeeWithHours(id: number) {
     totalWorkedHours: Number(hrs?.totalWorkedHours ?? 0),
     fairnessScore: fairnessScore,
   };
+}
+
+type EmployeeWithHours = NonNullable<Awaited<ReturnType<typeof getEmployeeWithHours>>>;
+
+/**
+ * Attach the mode-aware effective seniority (display rank) for a single employee.
+ * manual mode: stored seniority passes through; hire_date mode: computed 1-based rank.
+ */
+async function withEffectiveSeniority(id: number): Promise<(EmployeeWithHours & { effectiveSeniority: number | null }) | null> {
+  const employee = await getEmployeeWithHours(id);
+  if (!employee) return null;
+  const mode = await getRosterSeniorityMode(employee.rosterId);
+  const rosterRows = await db
+    .select()
+    .from(employeesTable)
+    .where(eq(employeesTable.rosterId, employee.rosterId));
+  const map = assignEffectiveSeniority(rosterRows, mode);
+  return { ...employee, effectiveSeniority: map.get(id) ?? null };
+}
+
+/** Attach effective seniority for a batch of employees (may span multiple rosters). */
+async function attachEffectiveSeniority(
+  rows: EmployeeWithHours[]
+): Promise<(EmployeeWithHours & { effectiveSeniority: number | null })[]> {
+  const byRoster = new Map<number, EmployeeWithHours[]>();
+  for (const row of rows) {
+    const list = byRoster.get(row.rosterId) ?? [];
+    list.push(row);
+    byRoster.set(row.rosterId, list);
+  }
+  const effective = new Map<number, number | null>();
+  for (const [rosterId] of byRoster) {
+    const mode = await getRosterSeniorityMode(rosterId);
+    const rosterRows = await db
+      .select()
+      .from(employeesTable)
+      .where(eq(employeesTable.rosterId, rosterId));
+    const map = assignEffectiveSeniority(rosterRows, mode);
+    for (const [id, value] of map) effective.set(id, value);
+  }
+  return rows.map((row) => ({ ...row, effectiveSeniority: effective.get(row.id) ?? null }));
 }
 
 router.get("/employees", async (req, res): Promise<void> => {
@@ -123,11 +178,23 @@ router.get("/employees", async (req, res): Promise<void> => {
   if (parsed.data.rosterId !== undefined) {
     query = query.where(eq(employeesTable.rosterId, parsed.data.rosterId));
   }
+  if (parsed.data.search !== undefined && parsed.data.search !== "") {
+    query = query.where(sql`${employeesTable.name} ILIKE ${`%${parsed.data.search}%`}`);
+  }
 
-  const employees = await query.orderBy(employeesTable.seniority);
+  // Roster-scoped lists order by the roster's active seniority mode; the
+  // global (directory) list orders alphabetically by name.
+  let employees;
+  if (parsed.data.rosterId !== undefined) {
+    const mode = await getRosterSeniorityMode(parsed.data.rosterId);
+    employees = await query.orderBy(...seniorityOrderBy(mode));
+  } else {
+    employees = await query.orderBy(employeesTable.name);
+  }
 
   const withHours = await Promise.all(employees.map((emp: typeof employeesTable.$inferSelect) => getEmployeeWithHours(emp.id)));
-  res.json(withHours.filter(Boolean));
+  const withRank = await attachEffectiveSeniority(withHours.filter((e) => e !== null));
+  res.json(withRank);
 });
 
 router.post("/employees", async (req, res): Promise<void> => {
@@ -135,6 +202,30 @@ router.post("/employees", async (req, res): Promise<void> => {
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
+  }
+
+  // Mode-conditional validation: manual mode needs a seniority number,
+  // hire-date mode needs a hire date.
+  const mode = await getRosterSeniorityMode(parsed.data.rosterId);
+  if (mode === "manual" && parsed.data.seniority == null) {
+    res.status(400).json({ error: "Seniority number is required for rosters using manual seniority" });
+    return;
+  }
+  if (mode === "hire_date" && !isValidHireDate(parsed.data.hireDate)) {
+    res.status(400).json({ error: "Hire date is required for rosters using hire-date seniority" });
+    return;
+  }
+
+  // A directory link must point at an existing employee in another roster.
+  if (parsed.data.linkedEmployeeId != null) {
+    const [source] = await db
+      .select()
+      .from(employeesTable)
+      .where(eq(employeesTable.id, parsed.data.linkedEmployeeId));
+    if (!source || source.rosterId === parsed.data.rosterId) {
+      res.status(400).json({ error: "linkedEmployeeId must reference an employee in a different roster" });
+      return;
+    }
   }
 
   // Use manual startingNormalizedHours if provided, otherwise compute from peers
@@ -146,7 +237,10 @@ router.post("/employees", async (req, res): Promise<void> => {
     .values({
       rosterId: parsed.data.rosterId,
       name: parsed.data.name,
-      seniority: parsed.data.seniority,
+      seniority: parsed.data.seniority ?? null,
+      hireDate: parsed.data.hireDate ?? null,
+      priorityRank: parsed.data.priorityRank ?? null,
+      linkedEmployeeId: parsed.data.linkedEmployeeId ?? null,
       roleId: parsed.data.roleId ?? null,
       subclassId: parsed.data.subclassId ?? null,
       active: parsed.data.active ?? true,
@@ -269,7 +363,7 @@ router.post("/employees", async (req, res): Promise<void> => {
     });
   }
 
-  withHours = await getEmployeeWithHours(employee.id);
+  withHours = await withEffectiveSeniority(employee.id);
 
   res.status(201).json(withHours);
 });
@@ -281,7 +375,7 @@ router.get("/employees/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const employee = await getEmployeeWithHours(params.data.id);
+  const employee = await withEffectiveSeniority(params.data.id);
   if (!employee) {
     res.status(404).json({ error: "Employee not found" });
     return;
@@ -314,9 +408,39 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Mode-conditional validation against the current stored values.
+  const mode = await getRosterSeniorityMode(current.rosterId);
+  if (parsed.data.hireDate != null && !isValidHireDate(parsed.data.hireDate)) {
+    res.status(400).json({ error: "hireDate must be a valid YYYY-MM-DD date" });
+    return;
+  }
+  if (mode === "manual" && current.seniority == null && parsed.data.seniority == null) {
+    res.status(400).json({ error: "Seniority number is required for rosters using manual seniority" });
+    return;
+  }
+  if (mode === "hire_date" && current.hireDate == null && !isValidHireDate(parsed.data.hireDate)) {
+    res.status(400).json({ error: "Hire date is required for rosters using hire-date seniority" });
+    return;
+  }
+
+  // A directory link must point at an existing employee in another roster.
+  if (parsed.data.linkedEmployeeId != null && parsed.data.linkedEmployeeId !== current.linkedEmployeeId) {
+    const [source] = await db
+      .select()
+      .from(employeesTable)
+      .where(eq(employeesTable.id, parsed.data.linkedEmployeeId));
+    if (!source || source.rosterId === current.rosterId) {
+      res.status(400).json({ error: "linkedEmployeeId must reference an employee in a different roster" });
+      return;
+    }
+  }
+
   const updateData: Partial<typeof employeesTable.$inferInsert> = {};
   if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
   if (parsed.data.seniority !== undefined) updateData.seniority = parsed.data.seniority;
+  if (parsed.data.hireDate !== undefined) updateData.hireDate = parsed.data.hireDate;
+  if (parsed.data.priorityRank !== undefined) updateData.priorityRank = parsed.data.priorityRank;
+  if (parsed.data.linkedEmployeeId !== undefined) updateData.linkedEmployeeId = parsed.data.linkedEmployeeId;
   if (parsed.data.roleId !== undefined) updateData.roleId = parsed.data.roleId;
   if (parsed.data.subclassId !== undefined) updateData.subclassId = parsed.data.subclassId;
   if (parsed.data.active !== undefined) updateData.active = parsed.data.active;
@@ -475,7 +599,7 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
     }
   }
 
-  const withHours = await getEmployeeWithHours(updated.id);
+  const withHours = await withEffectiveSeniority(updated.id);
   res.json(withHours);
 });
 
@@ -509,7 +633,7 @@ router.get("/employees/:id/report", async (req, res): Promise<void> => {
     return;
   }
 
-  const employee = await getEmployeeWithHours(params.data.id);
+  const employee = await withEffectiveSeniority(params.data.id);
   if (!employee) {
     res.status(404).json({ error: "Employee not found" });
     return;

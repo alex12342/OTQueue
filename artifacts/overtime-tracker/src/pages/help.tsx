@@ -54,14 +54,24 @@ const faqs = [
     q: "What is seniority?",
     a: (
       <>
-        <p>Seniority shows how long a worker has been with the group compared to everyone else. It is used as a tie-breaker.</p>
+        <p>Seniority shows how long a worker has been with the group compared to everyone else. It is used as a tie-breaker when two workers are otherwise equal.</p>
         <p className="mt-2">Your seniority is like your place in line:</p>
         <ul className="list-disc pl-6 mt-1 space-y-1">
           <li>Number 1 means you have the highest seniority (you have been here the longest).</li>
           <li>Higher numbers (like 2, 5, or 10) mean you are further back in line and have less seniority.</li>
         </ul>
+        <p className="mt-2">Each roster can calculate seniority two ways (Settings &rarr; Criteria):</p>
+        <ul className="list-disc pl-6 mt-1 space-y-1">
+          <li><strong>Hire date</strong> (new rosters): the rank is computed automatically from hire date. The oldest hire is number 1. Workers hired the same day can be tie-broken with a priority value.</li>
+          <li><strong>Manual number</strong> (legacy): you type each worker&rsquo;s seniority number by hand.</li>
+        </ul>
+        <p className="mt-2">You can always set both a hire date and a manual seniority number on a worker — the roster&rsquo;s mode just decides which one is used for ranking. Only the active mode&rsquo;s field is required.</p>
       </>
     ),
+  },
+  {
+    q: "How do I add the same worker to two rosters?",
+    a: "Open the Directory page — every worker is listed once with all the rosters they're in. Click 'Add to roster' and pick a roster they're not already in (rosters they're already in are marked and can't be re-added). Their name and hire details carry over so you don't retype them, but their hours, subclass, and role stay independent for each roster.",
   },
   {
     q: "What are roles?",

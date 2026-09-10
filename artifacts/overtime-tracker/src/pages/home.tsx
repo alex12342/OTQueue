@@ -178,7 +178,7 @@ export default function Home() {
                     <div>
                       <div className="font-semibold text-base">{emp.name}</div>
                       <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                        <span>Seniority: #{emp.seniority}</span>
+                        <span>Seniority: #{emp.effectiveSeniority ?? "—"}</span>
                         {emp.subclassName && (
                           <>
                             <span>&bull;</span>

@@ -5,9 +5,11 @@
  * Overtime Tracker API
  * OpenAPI spec version: 0.1.0
  */
+import type { RosterSettingsInputSeniorityMode } from './rosterSettingsInputSeniorityMode';
 
 export interface RosterSettingsInput {
   useOfferedHours?: boolean;
   useSeniority?: boolean;
   useSubclassOrdering?: boolean;
+  seniorityMode?: RosterSettingsInputSeniorityMode;
 }

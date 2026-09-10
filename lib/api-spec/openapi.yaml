@@ -529,13 +529,19 @@ paths:
     get:
       operationId: listEmployees
       tags: [employees]
-      summary: List employees, optionally filtered by roster
+      summary: List employees, optionally filtered by roster or searched by name
       parameters:
         - name: rosterId
           in: query
           required: false
           schema:
             type: integer
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Case-insensitive name search
       responses:
         "200":
           description: List of employees
@@ -845,7 +851,7 @@ components:
 
     RosterSettings:
       type: object
-      required: [rosterId, useOfferedHours, useSeniority, useSubclassOrdering]
+      required: [rosterId, useOfferedHours, useSeniority, useSubclassOrdering, seniorityMode]
       properties:
         rosterId:
           type: integer
@@ -855,6 +861,10 @@ components:
           type: boolean
         useSubclassOrdering:
           type: boolean
+        seniorityMode:
+          type: string
+          enum: [manual, hire_date]
+          description: How seniority is derived. manual = stored seniority number (legacy); hire_date = computed rank from hire date, oldest first
 
     RosterSettingsInput:
       type: object
@@ -865,6 +875,9 @@ components:
           type: boolean
         useSubclassOrdering:
           type: boolean
+        seniorityMode:
+          type: string
+          enum: [manual, hire_date]
 
     DayTypeConfig:
       type: object
@@ -984,16 +997,31 @@ components:
     # ── Employees ─────────────────────────────────────────────────────────────
     Employee:
       type: object
-      required: [id, rosterId, name, seniority, active]
+      required: [id, rosterId, name, active, effectiveSeniority]
       properties:
         id:
           type: integer
         rosterId:
           type: integer
+        rosterName:
+          type: string
         name:
           type: string
         seniority:
-          type: integer
+          type: ["integer", "null"]
+          description: Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual
+        hireDate:
+          type: ["string", "null"]
+          description: Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date
+        priorityRank:
+          type: ["integer", "null"]
+          description: Manual tie-breaker for employees sharing a hire date (lower = higher priority)
+        effectiveSeniority:
+          type: ["integer", "null"]
+          description: Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)
+        linkedEmployeeId:
+          type: ["integer", "null"]
+          description: ID of the employee record in another roster this record was linked from
         roleId:
           type: ["integer", "null"]
         roleName:
@@ -1017,7 +1045,7 @@ components:
 
     EmployeeInput:
       type: object
-      required: [rosterId, name, seniority]
+      required: [rosterId, name]
       properties:
         rosterId:
           type: integer
@@ -1025,8 +1053,19 @@ components:
           type: string
           minLength: 1
         seniority:
-          type: integer
+          type: ["integer", "null"]
           minimum: 1
+          description: Required in manual seniority mode
+        hireDate:
+          type: ["string", "null"]
+          description: Hire date (YYYY-MM-DD); required in hire_date seniority mode
+        priorityRank:
+          type: ["integer", "null"]
+          minimum: 1
+          description: Optional tie-breaker for shared hire dates (lower = higher priority)
+        linkedEmployeeId:
+          type: ["integer", "null"]
+          description: Source employee id when adding from the directory
         roleId:
           type: ["integer", "null"]
         subclassId:
@@ -1045,8 +1084,15 @@ components:
           type: string
           minLength: 1
         seniority:
-          type: integer
+          type: ["integer", "null"]
           minimum: 1
+        hireDate:
+          type: ["string", "null"]
+        priorityRank:
+          type: ["integer", "null"]
+          minimum: 1
+        linkedEmployeeId:
+          type: ["integer", "null"]
         roleId:
           type: ["integer", "null"]
         subclassId:
@@ -1147,12 +1193,15 @@ components:
     # ── Reports ───────────────────────────────────────────────────────────────
     UpNextResult:
       type: object
-      required: [rosterId, dayType, employees]
+      required: [rosterId, dayType, seniorityMode, employees]
       properties:
         rosterId:
           type: integer
         dayType:
           type: string
+        seniorityMode:
+          type: string
+          enum: [manual, hire_date]
         employees:
           type: array
           items:
@@ -1160,7 +1209,7 @@ components:
 
     UpNextEmployee:
       type: object
-      required: [id, name, seniority, totalOfferedHours, fairnessScore, rank]
+      required: [id, name, effectiveSeniority, totalOfferedHours, fairnessScore, rank]
       properties:
         id:
           type: integer
@@ -1173,7 +1222,14 @@ components:
         roleName:
           type: ["string", "null"]
         seniority:
-          type: integer
+          type: ["integer", "null"]
+        hireDate:
+          type: ["string", "null"]
+        priorityRank:
+          type: ["integer", "null"]
+        effectiveSeniority:
+          type: ["integer", "null"]
+          description: Display rank (stored seniority in manual mode; computed rank in hire_date mode)
         totalOfferedHours:
           type: number
         fairnessScore:

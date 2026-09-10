@@ -8,4 +8,8 @@
 
 export type ListEmployeesParams = {
 rosterId?: number;
+/**
+ * Case-insensitive name search
+ */
+search?: string;
 };

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, rostersTable, rosterSettingsTable } from "@workspace/db";
+import { and, eq, sql } from "drizzle-orm";
+import { db, rostersTable, rosterSettingsTable, employeesTable } from "@workspace/db";
 import {
   CreateRosterBody,
   GetRosterParams,
@@ -31,11 +31,13 @@ router.post("/rosters", async (req, res): Promise<void> => {
     .values({ name: parsed.data.name, description: parsed.data.description ?? null })
     .returning();
 
+  // New rosters default to hire-date seniority (computed rank, oldest first).
   await db.insert(rosterSettingsTable).values({
     rosterId: roster.id,
     useOfferedHours: true,
     useSeniority: true,
     useSubclassOrdering: true,
+    seniorityMode: "hire_date",
   });
 
   res.status(201).json(roster);
@@ -123,6 +125,7 @@ router.get("/rosters/:id/settings", async (req, res): Promise<void> => {
     useOfferedHours: settings.useOfferedHours,
     useSeniority: settings.useSeniority,
     useSubclassOrdering: settings.useSubclassOrdering,
+    seniorityMode: settings.seniorityMode,
   });
 });
 
@@ -149,12 +152,39 @@ router.put("/rosters/:id/settings", async (req, res): Promise<void> => {
     return;
   }
 
+  // Guard: switching to hire-date seniority requires every active employee
+  // to have a hire date, otherwise they would all sort last.
+  if (
+    parsed.data.seniorityMode === "hire_date" &&
+    existing[0].seniorityMode !== "hire_date"
+  ) {
+    const missing = await db
+      .select({ name: employeesTable.name })
+      .from(employeesTable)
+      .where(
+        and(
+          eq(employeesTable.rosterId, params.data.id),
+          eq(employeesTable.active, true),
+          sql`${employeesTable.hireDate} IS NULL`,
+        ),
+      )
+      .orderBy(employeesTable.name);
+
+    if (missing.length > 0) {
+      res.status(400).json({
+        error: `Cannot enable hire-date seniority: ${missing.map((m: { name: string }) => m.name).join(", ")} have no hire date`,
+      });
+      return;
+    }
+  }
+
   const [updated] = await db
     .update(rosterSettingsTable)
     .set({
       ...(parsed.data.useOfferedHours !== undefined && { useOfferedHours: parsed.data.useOfferedHours }),
       ...(parsed.data.useSeniority !== undefined && { useSeniority: parsed.data.useSeniority }),
       ...(parsed.data.useSubclassOrdering !== undefined && { useSubclassOrdering: parsed.data.useSubclassOrdering }),
+      ...(parsed.data.seniorityMode !== undefined && { seniorityMode: parsed.data.seniorityMode }),
       updatedAt: new Date(),
     })
     .where(eq(rosterSettingsTable.rosterId, params.data.id))
@@ -165,6 +195,7 @@ router.put("/rosters/:id/settings", async (req, res): Promise<void> => {
     useOfferedHours: updated.useOfferedHours,
     useSeniority: updated.useSeniority,
     useSubclassOrdering: updated.useSubclassOrdering,
+    seniorityMode: updated.seniorityMode,
   });
 });
 

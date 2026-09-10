@@ -9,8 +9,20 @@
 export interface EmployeeUpdate {
   /** @minLength 1 */
   name?: string;
-  /** @minimum 1 */
-  seniority?: number;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  seniority?: number | null;
+  /** @nullable */
+  hireDate?: string | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  priorityRank?: number | null;
+  /** @nullable */
+  linkedEmployeeId?: number | null;
   /** @nullable */
   roleId?: number | null;
   /** @nullable */

@@ -15,7 +15,17 @@ export interface UpNextEmployee {
   subclassName?: string | null;
   /** @nullable */
   roleName?: string | null;
-  seniority: number;
+  /** @nullable */
+  seniority?: number | null;
+  /** @nullable */
+  hireDate?: string | null;
+  /** @nullable */
+  priorityRank?: number | null;
+  /**
+     * Display rank (stored seniority in manual mode; computed rank in hire_date mode)
+     * @nullable
+     */
+  effectiveSeniority: number | null;
   totalOfferedHours: number;
   fairnessScore: number;
   rank: number;

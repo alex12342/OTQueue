@@ -131,7 +131,7 @@ export default function LogEvent() {
 
   const activeEmployees = React.useMemo(() => {
     const filtered = (employees || []).filter((e) => e.active);
-    if (!upNext?.employees?.length) return filtered.sort((a, b) => a.seniority - b.seniority);
+    if (!upNext?.employees?.length) return filtered.sort((a, b) => (a.effectiveSeniority ?? 9999) - (b.effectiveSeniority ?? 9999));
     const rankMap = new Map(upNext.employees.map((e) => [e.id, e.rank]));
     return filtered.sort((a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999));
   }, [employees, upNext]);
@@ -329,9 +329,9 @@ export default function LogEvent() {
                       >
                         <td className="px-6 py-3 font-medium text-foreground">
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-mono text-xs w-6 inline-block">
-                              #{emp.seniority}
-                            </span>
+                             <span className="text-muted-foreground font-mono text-xs w-6 inline-block">
+                               #{emp.effectiveSeniority ?? "—"}
+                             </span>
                             <div>
                               <div>{emp.name}</div>
                               {emp.subclassName && (

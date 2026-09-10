@@ -118,7 +118,7 @@ export default function EventLog() {
       }
     }
     const label = search.trim() ? "filtered" : "all";
-    downloadCsv(`otqueue-event-log-${label}-${format(new Date(), "yyyy-MM-dd")}.csv`, rows);
+    downloadCsv(`otque-event-log-${label}-${format(new Date(), "yyyy-MM-dd")}.csv`, rows);
     toast({ title: "Export ready", description: `${filteredEvents.length} event(s) exported.` });
   };
 

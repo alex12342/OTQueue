@@ -14,6 +14,7 @@ import EditEvent from "@/pages/edit-event";
 import EventLog from "@/pages/event-log";
 import Employees from "@/pages/employees";
 import EmployeeReport from "@/pages/employee-report";
+import Directory from "@/pages/directory";
 import Settings from "@/pages/settings";
 import AdminUsers from "@/pages/admin-users";
 import AdminEmailConfig from "@/pages/admin-email-config";
@@ -69,6 +70,7 @@ function AppContent() {
         <Route path="/log" component={EventLog} />
         <Route path="/employees" component={Employees} />
         <Route path="/employees/:id/report" component={EmployeeReport} />
+        <Route path="/directory" component={Directory} />
         <Route path="/settings" component={Settings} />
         <Route path="/help" component={HelpPage} />
         <Route path="/privacy" component={PrivacyPolicy} />

@@ -9,8 +9,33 @@
 export interface Employee {
   id: number;
   rosterId: number;
+  rosterName?: string;
   name: string;
-  seniority: number;
+  /**
+     * Stored manual seniority number (lower = higher priority); only used when roster seniorityMode is manual
+     * @nullable
+     */
+  seniority?: number | null;
+  /**
+     * Employee hire date (YYYY-MM-DD); drives computed seniority when roster seniorityMode is hire_date
+     * @nullable
+     */
+  hireDate?: string | null;
+  /**
+     * Manual tie-breaker for employees sharing a hire date (lower = higher priority)
+     * @nullable
+     */
+  priorityRank?: number | null;
+  /**
+     * Display rank. manual mode = stored seniority; hire_date mode = computed rank (1 = oldest hire date)
+     * @nullable
+     */
+  effectiveSeniority: number | null;
+  /**
+     * ID of the employee record in another roster this record was linked from
+     * @nullable
+     */
+  linkedEmployeeId?: number | null;
   /** @nullable */
   roleId?: number | null;
   /** @nullable */
