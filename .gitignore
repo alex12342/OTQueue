@@ -55,6 +55,7 @@ Thumbs.db
 # Caches
 .cache/
 .local/
+.cortexkit/
 
 # Local release helper (prompts for credentials at runtime — never commit)
 scripts/release.sh
