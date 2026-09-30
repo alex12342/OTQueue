@@ -43,8 +43,9 @@ pnpm --filter @workspace/api-spec codegen
 # then: pnpm run typecheck:libs  to validate generated code
 
 # Database
-pnpm --filter db push                            # drizzle-kit push (safe)
-pnpm --filter db push-force                      # drizzle-kit push --force
+pnpm --filter db generate      # drizzle-kit generate (after schema changes — emits new SQL migration)
+pnpm --filter db migrate       # drizzle-kit migrate (applies pending migrations; transactional)
+pnpm --filter db push          # drizzle-kit push (dev-only; interactive — do NOT use in containers)
 
 # Post-merge hook
 ./scripts/post-merge.sh   # pnpm install --frozen-lockfile + db push
@@ -74,8 +75,15 @@ docker compose down        # stops all; data persists in ./data
 - Data volume: `/app/data` (Postgres WAL + JWT secret)
 - Nginx proxies `/api` → `127.0.0.1:8080` (Express)
 - Serves frontend from `artifacts/overtime-tracker/dist/public`
-- entrypoint.sh bootstraps Postgres, runs `drizzle push-force`, seeds admin user
+- entrypoint.sh bootstraps Postgres, baselines+migrates the schema (`drizzle-kit migrate`), verifies it, seeds admin user
 - Default admin: `admin@otqueue.local` / `Admin@123!`
+
+## Database migrations
+
+- Committed SQL in `lib/db/drizzle/` (+ `meta/` journal/snapshots). Applied at container start by `drizzle-kit migrate` — non-interactive and transactional: a failed run rolls back completely, so `migrate` can never leave a partial schema.
+- Applied state lives in `drizzle.__drizzle_migrations` (hash + journal timestamp). Pre-migration (0.3.x) databases are baselined by entrypoint.sh, which records 0000 as already-applied (exactly what `migrate` would record).
+- **Convention: migration SQL is idempotent by design** — `ADD COLUMN IF NOT EXISTS`, constraints inside `DO $$ ... IF NOT EXISTS ...` blocks. This lets `migrate` converge push-era partially-migrated databases non-destructively (adds only missing objects, never touches existing data). `0000_baseline.sql` / `0001_seniority_mode.sql` must NOT be regenerated with `drizzle-kit generate` (generated output is non-idempotent).
+- entrypoint.sh then verifies the post-migration schema (0001 objects + their type/nullability/default + FK) and `exit 1`s on any mismatch — the container refuses to boot half-migrated.
 
 ## Codegen flow
 
@@ -93,7 +101,7 @@ docker compose down        # stops all; data persists in ./data
 - **React 19.1.0 pinned exactly** (Expo requirement) — do not upgrade
 - **esbuild externalizes** many native modules (see `artifacts/api-server/build.mjs`). Adding a new native dep requires updating the external list there
 - **TypeScript**: `noUnusedLocals: false`, `strictFunctionTypes: false`, `customConditions: ["workspace"]` for workspace protocol resolution
-- **`pnpm --filter db push-force`** in entrypoint.sh — schema is applied at every container start (idempotent)
+- **Migrations are applied at container start by `drizzle-kit migrate`** (non-interactive, transactional, fails loud). `push`/`push-force` must never be used in the container — `push` prompts interactively on risky changes and can crash without a TTY
 
 ## Testing
 

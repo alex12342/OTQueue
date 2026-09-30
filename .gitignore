@@ -38,7 +38,7 @@ testem.log
 /typings
 .playwright-mcp/
 tests/e2e/.auth/
-
+otqueue-backup/
 
 # System Files
 .DS_Store

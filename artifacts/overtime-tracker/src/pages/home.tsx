@@ -195,8 +195,8 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-foreground">{emp.totalOfferedHours}h</div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Offered</div>
+                    <div className="text-lg font-bold text-foreground">{emp.fairnessScore}h</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Normalized</div>
                   </div>
                 </Link>
               ))}

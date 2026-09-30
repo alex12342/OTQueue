@@ -44,14 +44,101 @@ if ! sudo -u postgres psql -lqt | cut -d '|' -f 1 | grep -qw otqueue; then
     sudo -u postgres createdb otqueue
 fi
 
-# 5. Run Drizzle schema push (adds missing columns, does not drop data).
-#    drizzle-kit ships in the self-contained /app/db package.
-echo "Running database schema sync..."
-(cd /app/db && node_modules/.bin/drizzle-kit push --force --config ./drizzle.config.ts)
+# 5. Apply Drizzle migrations (version-controlled, non-interactive, transactional).
+#    Migrations are committed SQL in /app/db/drizzle/, applied in journal order
+#    inside a single transaction — a failed run rolls back completely, so a
+#    `migrate` crash can never leave a partial schema.
+#    Applied state is tracked in drizzle.__drizzle_migrations (hash + the
+#    journal timestamp), so reboots are idempotent and a missing migration
+#    fails loudly (non-zero exit) instead of silently no-op'ing like `push`.
+#
+#    5a. Baseline pre-migration databases. 0.3.x deployments already have the
+#        base tables but no migration history, so record the 0000 baseline as
+#        already-applied (hash = SHA-256 of 0000, created_at = its journal
+#        timestamp — exactly what `migrate` would record itself).
+#        0001 is deliberately NOT baselined: it is written idempotently, so
+#        `migrate` converges any push-era partial state — adding only the
+#        objects that are missing and never touching existing data — and then
+#        records it as applied.
+#        No-op on fresh DBs (no base tables yet) and on already-migrated DBs
+#        (the drizzle schema already exists).
+echo "Checking for a pre-migration (0.3.x) database..."
+if [ -z "$(sudo -u postgres psql -d otqueue -tAc "SELECT 1 FROM information_schema.schemata WHERE schema_name='drizzle'")" ] \
+   && [ -n "$(sudo -u postgres psql -d otqueue -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='rosters'")" ]; then
+  echo "Existing (pre-migration) database detected — baselining migration 0000..."
+  # Node emits the full baseline SQL. If it fails, the command substitution
+  # fails and `set -e` aborts BEFORE anything is written to the database.
+  BASELINE_SQL="$(node -e '
+    const fs = require("fs"), p = require("path"), c = require("crypto");
+    const d = "/app/db/drizzle";
+    const e = JSON.parse(fs.readFileSync(p.join(d, "meta/_journal.json"), "utf8")).entries[0];
+    const h = c.createHash("sha256").update(fs.readFileSync(p.join(d, e.tag + ".sql"))).digest("hex");
+    process.stdout.write(
+      "CREATE SCHEMA IF NOT EXISTS drizzle;\n"
+      + "CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (id serial PRIMARY KEY, hash text NOT NULL, created_at bigint);\n"
+      + "INSERT INTO drizzle.__drizzle_migrations (hash, created_at) SELECT \x27" + h + "\x27, " + e.when
+      + " WHERE NOT EXISTS (SELECT 1 FROM drizzle.__drizzle_migrations WHERE hash = \x27" + h + "\x27);\n"
+    );
+  ')"
+  printf '%s\n' "$BASELINE_SQL" | sudo -u postgres psql -d otqueue -v ON_ERROR_STOP=1
+  echo "Baseline recorded."
+fi
 
-# 6. Ensure google_id column exists on existing users tables.
-#    drizzle-kit push adds the column definition but some legacy deployments
-#    may predate it. This SQL is idempotent — safe to run on fresh or existing DBs.
+# 5b. Apply pending migrations (0000 + 0001 on fresh DBs; 0001 on baselined DBs).
+echo "Running database migrations..."
+(cd /app/db && node_modules/.bin/drizzle-kit migrate --config ./drizzle.config.ts)
+
+# 5c. Verify the 0.4.0 seniority schema landed — refuse to start if not.
+#     Checks existence AND shape (type / nullability / default) of the 0001
+#     columns plus the self-referencing FK, so a drifted hand-edit fails loud
+#     at boot instead of surfacing as 500s at runtime.
+echo "Verifying required schema objects..."
+MISSING="$(sudo -u postgres psql -d otqueue -tAc "
+SELECT string_agg(item, ', ' ORDER BY item) FROM (
+  SELECT v.object || ' [' ||
+    CASE
+      WHEN c.object IS NULL THEN 'missing'
+      WHEN c.data_type <> v.type THEN 'type is ' || c.data_type || ', want ' || v.type
+      WHEN c.is_nullable <> v.nullable THEN 'nullability is ' || c.is_nullable || ', want ' || v.nullable
+      WHEN v.def IS NOT NULL AND c.column_default IS DISTINCT FROM v.def THEN 'default is ' || c.column_default || ', want ' || v.def
+      ELSE 'ok'
+    END || ']' AS item
+  FROM (VALUES
+      ('roster_settings.seniority_mode', 'text', 'NO', '''manual''::text'),
+      ('employees.hire_date', 'date', 'YES', NULL),
+      ('employees.priority_rank', 'integer', 'YES', NULL),
+      ('employees.linked_employee_id', 'integer', 'YES', NULL)
+  ) AS v(object, type, nullable, def)
+  LEFT JOIN (
+    SELECT table_name || '.' || column_name AS object, data_type, is_nullable, column_default
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND ((table_name = 'roster_settings' AND column_name = 'seniority_mode')
+        OR (table_name = 'employees' AND column_name IN ('hire_date', 'priority_rank', 'linked_employee_id')))
+  ) AS c ON c.object = v.object
+  WHERE c.object IS NULL
+     OR c.data_type <> v.type
+     OR c.is_nullable <> v.nullable
+     OR (v.def IS NOT NULL AND c.column_default IS DISTINCT FROM v.def)
+  UNION ALL
+  SELECT 'employees.linked_employee_id FK [missing]'
+  WHERE NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'employees_linked_employee_id_employees_id_fk'
+      AND conrelid = 'employees'::regclass
+  )
+) AS items
+")"
+if [ -n "$MISSING" ]; then
+  echo "CRITICAL: schema verification failed after migration: $MISSING" >&2
+  echo "CRITICAL: refusing to start with an invalid schema. Review the migration output above." >&2
+  exit 1
+fi
+echo "Schema verification passed."
+
+# 6. Legacy safety net: ensure google_id column exists on very old users tables.
+#    Migrations already provide this column; this idempotent no-op covers
+#    deployments that predate it. Safe on fresh or existing DBs.
 echo "Ensuring google_id column exists on users table..."
 sudo -u postgres psql -d otqueue -c "
 ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE;
