@@ -11,6 +11,7 @@ import {
 } from "@workspace/db";
 import { GetUpNextQueryParams, GetStatsQueryParams, SuggestDayTypeQueryParams } from "@workspace/api-zod";
 import { assignEffectiveSeniority, compareSeniority } from "../lib/seniority";
+import { activeEventWhere } from "../lib/active-events";
 import type { SeniorityMode } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -191,7 +192,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
         })
         .from(eventEntriesTable)
         .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-        .where(and(eq(eventEntriesTable.employeeId, emp.id), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
+        .where(and(eq(eventEntriesTable.employeeId, emp.id), activeEventWhere(), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
 
       const [hrs] = await empHoursQuery;
 
@@ -295,7 +296,8 @@ router.get("/stats", async (req, res): Promise<void> => {
     .from(eventEntriesTable)
     .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
     .$dynamic()
-    .where(rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`);
+    .where(rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`)
+    .where(activeEventWhere());
 
   if (resetEvent) {
     hoursQuery = hoursQuery.where(sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`);
@@ -328,7 +330,7 @@ router.get("/stats", async (req, res): Promise<void> => {
         })
         .from(eventEntriesTable)
         .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-        .where(and(eq(eventEntriesTable.employeeId, emp.id), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
+        .where(and(eq(eventEntriesTable.employeeId, emp.id), activeEventWhere(), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
 
       const [hrs] = await empHoursQuery;
 

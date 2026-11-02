@@ -95,11 +95,12 @@ export default function EventLog() {
     const rows: string[][] = [header];
     for (const ev of filteredEvents) {
       const multiplier = ev.multiplier ?? 1;
+      const isUpcoming = ev.date > format(new Date(), "yyyy-MM-dd");
       if (!ev.entries?.length) {
         rows.push([String(ev.id), ev.date, ev.description, ev.dayType ?? "", String(ev.defaultHours), String(multiplier), "", "", "", "", ""]);
       } else {
         for (const entry of ev.entries) {
-          const status = entry.worked ? "Worked" : entry.offered ? "Offered" : "";
+          const status = entry.worked ? (isUpcoming ? "Agreed" : "Worked") : entry.offered ? "Offered" : "";
           const normalizedHours = entry.offered ? (entry.hoursOffered * multiplier).toFixed(2) : "";
           rows.push([
             String(ev.id),
@@ -194,6 +195,7 @@ export default function EventLog() {
           {filteredEvents.map((event) => {
             const multiplier = event.multiplier ?? 1;
             const hasMultiplier = multiplier !== 1;
+            const isUpcoming = event.date > format(new Date(), "yyyy-MM-dd");
             return (
               <Card key={event.id} className="overflow-hidden">
                 <CardHeader className="bg-muted/30 border-b pb-4 flex flex-row items-start justify-between">
@@ -208,6 +210,11 @@ export default function EventLog() {
                       ) : (
                         <Badge variant={event.dayType === "weekend" ? "secondary" : "outline"} className="capitalize">
                           {event.dayType}
+                        </Badge>
+                      )}
+                      {isUpcoming && (
+                        <Badge variant="outline" className="gap-1 text-xs bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20" data-testid={`badge-upcoming-${event.id}`}>
+                          Upcoming
                         </Badge>
                       )}
                       {hasMultiplier && (
@@ -297,7 +304,7 @@ export default function EventLog() {
                               <td className="px-6 py-3 text-center">
                                 {entry.worked ? (
                                   <Badge className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-none border-0">
-                                    Worked
+                                    {isUpcoming ? "Agreed" : "Worked"}
                                   </Badge>
                                 ) : entry.offered ? (
                                   <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">

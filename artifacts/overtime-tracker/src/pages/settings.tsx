@@ -255,11 +255,11 @@ function CriteriaTab({ rosterId }: { rosterId: number }) {
           </div>
           <Select
             value={settings?.seniorityMode ?? "manual"}
-            onValueChange={(v) => handleSeniorityMode(v as "manual" | "hire_date")}
+            onValueChange={(v) => { if (!v) return; handleSeniorityMode(v as "manual" | "hire_date"); }}
             disabled={!(settings?.useSeniority ?? true)}
           >
             <SelectTrigger className="w-52" data-testid="seniority-mode-select">
-              <SelectValue />
+              <SelectValue>{(settings?.seniorityMode ?? "manual") === "hire_date" ? "Hire date (auto rank)" : "Manual number (legacy)"}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="manual">Manual number (legacy)</SelectItem>

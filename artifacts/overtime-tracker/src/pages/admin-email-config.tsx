@@ -324,9 +324,9 @@ export default function AdminEmailConfigPage() {
                   <Server className="h-3.5 w-3.5" />
                   Connection Type
                 </Label>
-                <Select value={protocol} onValueChange={(v: Protocol) => setProtocol(v)}>
+                <Select value={protocol} onValueChange={(v) => { if (!v) return; setProtocol(v as Protocol); }}>
                   <SelectTrigger className="w-full sm:w-[280px]">
-                    <SelectValue placeholder="Select connection type" />
+                    <SelectValue>{PROTOCOL_OPTIONS.find((o) => o.value === protocol)?.label ?? ""}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {PROTOCOL_OPTIONS.map((opt) => (

@@ -40,6 +40,7 @@ export * from './subclassDayTypeSortEntry';
 export * from './subclassDayTypeSortInputItem';
 export * from './subclassInput';
 export * from './suggestDayTypeParams';
+export * from './updateEventInput';
 export * from './upNextEmployee';
 export * from './upNextResult';
 export * from './upNextResultSeniorityMode';

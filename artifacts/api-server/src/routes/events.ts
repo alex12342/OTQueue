@@ -4,6 +4,7 @@ import { db, eventsTable, eventEntriesTable, employeesTable } from "@workspace/d
 import { getRosterSeniorityMode, seniorityOrderBy } from "../lib/seniority";
 import {
   CreateEventBody,
+  UpdateEventBody,
   GetEventParams,
   DeleteEventParams,
   ListEventsQueryParams,
@@ -144,14 +145,13 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = CreateEventBody.safeParse(req.body);
+  const parsed = UpdateEventBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
   const { date, description, defaultHours, dayType, multiplier, entries } = parsed.data;
-  const dateStr = date instanceof Date ? date.toISOString().split("T")[0] : String(date);
 
   const [existing] = await db.select().from(eventsTable).where(eq(eventsTable.id, params.data.id));
   if (!existing) {
@@ -165,16 +165,18 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  await db
-    .update(eventsTable)
-    .set({
-      date: dateStr,
-      description,
-      defaultHours: String(defaultHours),
-      dayType: dayType ?? "weekday",
-      multiplier: String(multiplier ?? 1),
-    })
-    .where(eq(eventsTable.id, params.data.id));
+  // Partial update: only fields present in the payload are written; omitted
+  // fields keep their stored value (day_type/multiplier clobber regression fix).
+  const updates: Partial<typeof eventsTable.$inferInsert> = {};
+  if (date !== undefined) updates.date = date.toISOString().split("T")[0];
+  if (description !== undefined) updates.description = description;
+  if (defaultHours !== undefined) updates.defaultHours = String(defaultHours);
+  if (dayType !== undefined) updates.dayType = dayType;
+  if (multiplier != null) updates.multiplier = String(multiplier);
+
+  if (Object.keys(updates).length > 0) {
+    await db.update(eventsTable).set(updates).where(eq(eventsTable.id, params.data.id));
+  }
 
   await db.delete(eventEntriesTable).where(eq(eventEntriesTable.eventId, params.data.id));
 

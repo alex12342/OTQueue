@@ -61,7 +61,11 @@ const EmployeeForm = ({
   setManualStartingHours: (v: boolean) => void;
   activeToggle: boolean;
   setActiveToggle: (v: boolean) => void;
-}) => (
+}) => {
+  const [roleId, setRoleId] = useState(String(defaultValues?.roleId ?? "none"));
+  const [subclassId, setSubclassId] = useState(String(defaultValues?.subclassId ?? "none"));
+
+  return (
   <form onSubmit={onSubmit} className="space-y-4 pt-4">
     <div className="space-y-2">
       <Label htmlFor="name">Full Name</Label>
@@ -95,8 +99,8 @@ const EmployeeForm = ({
       </div>
       <div className="space-y-2">
         <Label>Role</Label>
-        <Select name="roleId" defaultValue={String(defaultValues?.roleId ?? "none")}>
-          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+        <Select name="roleId" value={roleId} onValueChange={(v) => { if (!v) return; setRoleId(v); }}>
+          <SelectTrigger><SelectValue>{roles.find((r) => String(r.id) === roleId)?.name ?? "None"}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
             {roles.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
@@ -106,8 +110,8 @@ const EmployeeForm = ({
     </div>
     <div className="space-y-2">
       <Label>Subclass</Label>
-      <Select name="subclassId" defaultValue={String(defaultValues?.subclassId ?? "none")}>
-        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+      <Select name="subclassId" value={subclassId} onValueChange={(v) => { if (!v) return; setSubclassId(v); }}>
+        <SelectTrigger><SelectValue>{subclasses.find((s) => String(s.id) === subclassId)?.name ?? "None"}</SelectValue></SelectTrigger>
         <SelectContent>
           <SelectItem value="none">None</SelectItem>
           {subclasses.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
@@ -150,7 +154,8 @@ const EmployeeForm = ({
       <Button type="submit" disabled={isPending}>{submitLabel}</Button>
     </div>
   </form>
-);
+  );
+};
 
 export default function Employees() {
   const { toast } = useToast();

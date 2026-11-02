@@ -280,6 +280,19 @@ export interface EventInput {
   entries: EventEntryInput[];
 }
 
+export interface UpdateEventInput {
+  date?: string;
+  /** @minLength 1 */
+  description?: string;
+  /** @minimum 0 */
+  defaultHours?: number;
+  dayType?: string;
+  /** @minimum 0 */
+  multiplier?: number;
+  /** @minItems 1 */
+  entries: EventEntryInput[];
+}
+
 export type UpNextResultSeniorityMode = typeof UpNextResultSeniorityMode[keyof typeof UpNextResultSeniorityMode];
 
 

@@ -663,19 +663,17 @@ export const UpdateEventParams = zod.object({
 
 export const updateEventBodyDefaultHoursMin = 0;
 
-export const updateEventBodyMultiplierDefault = 1;
 export const updateEventBodyMultiplierMin = 0;
 
 
 
 
 export const UpdateEventBody = zod.object({
-  "rosterId": zod.number(),
-  "date": zod.coerce.date(),
-  "description": zod.string().min(1),
-  "defaultHours": zod.number().min(updateEventBodyDefaultHoursMin),
+  "date": zod.coerce.date().optional(),
+  "description": zod.string().min(1).optional(),
+  "defaultHours": zod.number().min(updateEventBodyDefaultHoursMin).optional(),
   "dayType": zod.string().optional(),
-  "multiplier": zod.number().min(updateEventBodyMultiplierMin).default(updateEventBodyMultiplierDefault),
+  "multiplier": zod.number().min(updateEventBodyMultiplierMin).optional(),
   "entries": zod.array(zod.object({
   "employeeId": zod.number(),
   "offered": zod.boolean(),

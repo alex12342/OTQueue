@@ -723,7 +723,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventInput"
+              $ref: "#/components/schemas/UpdateEventInput"
       responses:
         "200":
           description: Updated event
@@ -1171,6 +1171,32 @@ components:
           type: number
           minimum: 0
           default: 1
+        entries:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/EventEntryInput"
+
+    # PATCH /events/{id}: omitted fields keep their stored value (no defaults —
+    # a default here would make "omitted" indistinguishable from "explicit").
+    UpdateEventInput:
+      type: object
+      required: [entries]
+      properties:
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          minLength: 1
+        defaultHours:
+          type: number
+          minimum: 0
+        dayType:
+          type: string
+        multiplier:
+          type: number
+          minimum: 0
         entries:
           type: array
           minItems: 1

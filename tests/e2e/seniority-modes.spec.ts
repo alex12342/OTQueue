@@ -161,7 +161,7 @@ test.describe("seniority modes", () => {
       await selectRoster(page, rosterName, "/settings");
       await page.getByRole("tab", { name: /criteria/i }).click();
       const select = page.getByTestId("seniority-mode-select");
-      await expect(select).toContainText(/manual/i, { timeout: 10000 });
+      await expect(select).toContainText("Manual number (legacy)", { timeout: 10000 });
       await select.click();
       await page.getByRole("option", { name: /hire date/i }).click();
     };
@@ -185,7 +185,7 @@ test.describe("seniority modes", () => {
 
     await toGuard();
     await expect(page.getByText("Error saving settings")).toHaveCount(0, { timeout: 2000 });
-    await expect(page.getByTestId("seniority-mode-select")).toContainText(/hire date/i);
+    await expect(page.getByTestId("seniority-mode-select")).toContainText("Hire date (auto rank)");
 
     expect((await api(page, `/rosters/${roster.id}/settings`)).seniorityMode).toBe("hire_date");
 
@@ -247,10 +247,10 @@ test.describe("seniority modes", () => {
     await selectRoster(page, rosterName, "/settings");
     await page.getByRole("tab", { name: /criteria/i }).click();
     const select = page.getByTestId("seniority-mode-select");
-    await expect(select).toContainText(/manual/i, { timeout: 10000 });
+    await expect(select).toContainText("Manual number (legacy)", { timeout: 10000 });
     await select.click();
     await page.getByRole("option", { name: /hire date/i }).click();
-    await expect(select).toContainText(/hire date/i);
+    await expect(select).toContainText("Hire date (auto rank)");
     expect((await api(page, `/rosters/${roster.id}/settings`)).seniorityMode).toBe("hire_date");
   });
 });

@@ -16,6 +16,7 @@ import {
   isValidHireDate,
   seniorityOrderBy,
 } from "../lib/seniority";
+import { activeEventWhere } from "../lib/active-events";
 
 const router: IRouter = Router();
 
@@ -48,7 +49,7 @@ async function computeFairnessScore(
     .limit(1);
 
   const baseWhere = eq(eventEntriesTable.employeeId, employeeId);
-  const timeWhere = resetEvent ? and(baseWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`) : baseWhere;
+  const timeWhere = resetEvent ? and(baseWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`, activeEventWhere()) : and(baseWhere, activeEventWhere());
 
   const [hrs] = await db
     .select({
@@ -92,7 +93,7 @@ async function getEmployeeWithHours(id: number) {
     .limit(1);
 
   const baseWhere = eq(eventEntriesTable.employeeId, id);
-  const timeWhere = resetEvent ? and(baseWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`) : baseWhere;
+  const timeWhere = resetEvent ? and(baseWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`, activeEventWhere()) : and(baseWhere, activeEventWhere());
 
   const [hrs] = await db
     .select({
@@ -249,6 +250,7 @@ router.post("/employees", async (req, res): Promise<void> => {
     .returning();
 
   // Compute fairness baseline from peers only if not manually specified
+  let finalStartingHours = useManualStartingHours ? Number(manualStartingHours) : 0;
   let withHours: Awaited<ReturnType<typeof getEmployeeWithHours>> | null = null;
   if (!useManualStartingHours) {
     const [settings] = await db
@@ -289,8 +291,8 @@ router.post("/employees", async (req, res): Promise<void> => {
         : baseWhere;
 
     const timeWhere = resetEvent
-      ? and(subclassWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`)
-      : subclassWhere;
+      ? and(subclassWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`, activeEventWhere())
+      : and(subclassWhere, activeEventWhere());
 
     const [peerTotals] = await db
       .select({
@@ -304,44 +306,18 @@ router.post("/employees", async (req, res): Promise<void> => {
 
     const avgScore = (Number(peerTotals?.total ?? 0) / (Number(peerTotals?.count ?? 0) || 1));
 
-    if (avgScore > 0) {
-      const today = new Date().toISOString().split("T")[0];
-      const [baselineEvent] = await db
-        .insert(eventsTable)
-        .values({
-          rosterId: parsed.data.rosterId,
-          date: today,
-          description: "Fairness Baseline",
-          defaultHours: String(avgScore),
-          dayType: "system",
-          multiplier: "1",
-        })
-        .returning();
+    finalStartingHours = avgScore > 0 ? avgScore : 0;
 
-      await db.insert(eventEntriesTable).values({
-        eventId: baselineEvent.id,
-        employeeId: employee.id,
-        hoursOverride: String(avgScore),
-        offered: true,
-        worked: false,
-      });
-
-      await db
-        .update(employeesTable)
-        .set({ startingNormalizedHours: String(avgScore) })
-        .where(eq(employeesTable.id, employee.id));
-    } else {
-      await db
-        .update(employeesTable)
-        .set({ startingNormalizedHours: "0" })
-        .where(eq(employeesTable.id, employee.id));
-    }
+    await db
+      .update(employeesTable)
+      .set({ startingNormalizedHours: String(finalStartingHours) })
+      .where(eq(employeesTable.id, employee.id));
   }
 
-  // Always emit a Fairness Baseline event for the final starting value
+  // Emit exactly one Fairness Baseline event for the final starting value
   {
     const today = new Date().toISOString().split("T")[0];
-    const finalHours = Number(manualStartingHours ?? (useManualStartingHours ? manualStartingHours : 0));
+    const finalHours = finalStartingHours;
     const [baselineEvent] = await db
       .insert(eventsTable)
       .values({
@@ -527,8 +503,8 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
         : baseWhere;
 
     const timeWhere = resetEvent
-      ? and(subclassWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`)
-      : subclassWhere;
+      ? and(subclassWhere, sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`, activeEventWhere())
+      : and(subclassWhere, activeEventWhere());
 
     // First reset the employee's baseline to 0
     await db

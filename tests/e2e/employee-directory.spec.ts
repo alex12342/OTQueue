@@ -26,6 +26,7 @@ interface NewEmployee {
   hireDate?: string | null;
   priorityRank?: number | null;
   linkedEmployeeId?: number | null;
+  startingNormalizedHours?: number | null;
 }
 
 async function createEmployee(page: Page, entry: NewEmployee) {
@@ -156,5 +157,36 @@ test.describe("employee directory", () => {
     await page.goto("/directory");
     await page.getByTestId("directory-search").fill(`Dora ${SUFFIX}`);
     await expect(page.locator("tr", { hasText: `Dora ${SUFFIX}` })).toHaveCount(1);
+  });
+
+  test("creating an employee emits exactly one Fairness Baseline event", async ({ page }) => {
+    const rosterName = `E2E Baseline ${SUFFIX}`;
+    const roster = await createRoster(page, rosterName);
+
+    const baselineEventsFor = async (employeeId: number) => {
+      const events = (await api(page, `/events?rosterId=${roster.id}`)) as {
+        description: string;
+        entries: { employeeId: number; hoursOverride: number | null }[];
+      }[];
+      return events.filter(
+        (e) => e.description === "Fairness Baseline" && e.entries.some((en) => en.employeeId === employeeId),
+      );
+    };
+
+    // Manual starting hours: exactly one baseline event carrying the manual value.
+    const first = await createEmployee(page, { rosterId: roster.id, name: `Base One ${SUFFIX}`, hireDate: "2020-01-01", startingNormalizedHours: 6 });
+    let mine = await baselineEventsFor(first.id);
+    expect(mine.length).toBe(1);
+    expect(mine[0].entries.find((en) => en.employeeId === first.id)?.hoursOverride).toBe(6);
+
+    // Auto-computed from peers (peer average 6): exactly one baseline event —
+    // no duplicate zero-hour row alongside the computed one.
+    const second = await createEmployee(page, { rosterId: roster.id, name: `Base Two ${SUFFIX}`, hireDate: "2019-01-01" });
+    mine = await baselineEventsFor(second.id);
+    expect(mine.length).toBe(1);
+    expect(mine[0].entries.find((en) => en.employeeId === second.id)?.hoursOverride).toBe(6);
+
+    const empTwo = (await api(page, `/employees/${second.id}`)) as { startingNormalizedHours: number };
+    expect(empTwo.startingNormalizedHours).toBe(6);
   });
 });

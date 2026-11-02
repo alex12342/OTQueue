@@ -52,6 +52,7 @@ export default function LogEvent() {
   const [entries, setEntries] = useState<Record<number, EntryState>>({});
 
   const dateStr = format(date, "yyyy-MM-dd");
+  const isFutureEvent = dateStr > format(new Date(), "yyyy-MM-dd");
 
   const { data: suggestion } = useSuggestDayType(
     { date: dateStr },
@@ -262,12 +263,13 @@ export default function LogEvent() {
                 <Select
                   value={dayType}
                   onValueChange={(v: string) => {
+                    if (!v) return;
                     setDayType(v);
                     setDayTypeOverridden(true);
                   }}
                 >
                   <SelectTrigger className="bg-background">
-                    <SelectValue />
+                    <SelectValue>{enabledDayTypes.find((c) => c.dayType === dayType)?.name ?? ""}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {enabledDayTypes.map((c) => (
@@ -287,7 +289,13 @@ export default function LogEvent() {
       <Card className="border-border shadow-sm overflow-hidden">
         <CardHeader className="bg-muted/30 border-b pb-4">
           <CardTitle className="text-lg">Roster Assignments</CardTitle>
-          <CardDescription>Select who was offered and who actually worked.</CardDescription>
+          {isFutureEvent ? (
+            <CardDescription data-testid="scheduled-banner" className="text-amber-600 dark:text-amber-500">
+              Scheduled event — these hours start counting on {format(date, "PPP")}. Check Agreed for employees who confirmed they will work it.
+            </CardDescription>
+          ) : (
+            <CardDescription>Select who was offered and who actually worked.</CardDescription>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -296,7 +304,7 @@ export default function LogEvent() {
                 <tr>
                   <th className="px-6 py-3 font-medium">Employee</th>
                   <th className="px-6 py-3 font-medium text-center">Offered</th>
-                  <th className="px-6 py-3 font-medium text-center">Worked</th>
+                  <th className="px-6 py-3 font-medium text-center" data-testid="worked-column-header">{isFutureEvent ? "Agreed" : "Worked"}</th>
                   <th className="px-6 py-3 font-medium">Override Hrs (Opt)</th>
                 </tr>
               </thead>

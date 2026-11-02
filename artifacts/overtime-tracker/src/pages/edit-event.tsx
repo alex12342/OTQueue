@@ -59,10 +59,14 @@ export default function EditEvent() {
 
   const { activeRosterId } = useRoster();
 
-  const { data: dayTypeConfigs } = useListDayTypeConfig(activeRosterId ?? 0, {
+  // Day-type options must come from the event's own roster, not whichever
+  // roster is currently active in the switcher.
+  const configRosterId = event?.rosterId ?? activeRosterId;
+
+  const { data: dayTypeConfigs } = useListDayTypeConfig(configRosterId ?? 0, {
     query: {
-      queryKey: getListDayTypeConfigQueryKey(activeRosterId ?? 0),
-      enabled: activeRosterId != null,
+      queryKey: getListDayTypeConfigQueryKey(configRosterId ?? 0),
+      enabled: configRosterId != null,
     },
   });
 
@@ -111,6 +115,26 @@ export default function EditEvent() {
       .sort((a, b) => (a.effectiveSeniority ?? 9999) - (b.effectiveSeniority ?? 9999));
   }, [employees, event]);
 
+  const isFutureEvent = format(date, "yyyy-MM-dd") > format(new Date(), "yyyy-MM-dd");
+
+  // Enabled configs plus the event's current day type when it has no enabled
+  // config row (system events, disabled/deleted types) — otherwise Radix Select
+  // renders a blank trigger and users silently re-pick over the stored value.
+  const dayTypeOptions = React.useMemo(() => {
+    const configs = (dayTypeConfigs ?? []).filter((c) => c.enabled);
+    const current = event?.dayType;
+    if (!current || configs.some((c) => c.dayType === current)) return configs;
+    const disabledConfig = (dayTypeConfigs ?? []).find((c) => c.dayType === current);
+    const name = disabledConfig?.name ?? (current === "system" ? "System" : current);
+    return [...configs, { dayType: current, name }];
+  }, [dayTypeConfigs, event]);
+
+  const isSystemDayType = dayType === "system";
+
+  // Radix Select >=2.2 renders no label for a pre-filled value unless children
+  // are provided — show the resolved option name explicitly.
+  const dayTypeLabel = dayTypeOptions.find((o) => o.dayType === dayType)?.name ?? (dayType || "");
+
   const updateMutation = useUpdateEvent({
     mutation: {
       onSuccess: () => {
@@ -150,7 +174,6 @@ export default function EditEvent() {
     updateMutation.mutate({
       id: eventId,
       data: {
-        rosterId: event?.rosterId ?? activeRosterId ?? 0,
         date: format(date, "yyyy-MM-dd"),
         description,
         defaultHours: parseFloat(defaultHours) || 0,
@@ -257,18 +280,17 @@ export default function EditEvent() {
 
             <div className="space-y-2">
               <Label>Day Type</Label>
-              <Select value={dayType} onValueChange={(v: string) => { setDayType(v); setDayTypeChangedByUser(true); }}>
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
+              {/* Radix >=2.2 emits onValueChange("") when the controlled value has no mounted item — ignore it so prefilled state survives */}
+              <Select value={dayType} disabled={isSystemDayType} onValueChange={(v: string) => { if (!v) return; setDayType(v); setDayTypeChangedByUser(true); }}>
+                <SelectTrigger className="bg-background" data-testid="select-event-day-type">
+                  <SelectValue>{dayTypeLabel}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {(dayTypeConfigs ?? [])
-                    .filter((c) => c.enabled)
-                    .map((c) => (
-                      <SelectItem key={c.dayType} value={c.dayType}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
+                  {dayTypeOptions.map((c) => (
+                    <SelectItem key={c.dayType} value={c.dayType}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -279,7 +301,13 @@ export default function EditEvent() {
       <Card className="border-border shadow-sm overflow-hidden">
         <CardHeader className="bg-muted/30 border-b pb-4">
           <CardTitle className="text-lg">Roster Assignments</CardTitle>
-          <CardDescription>Update who was offered and who actually worked.</CardDescription>
+          {isFutureEvent ? (
+            <CardDescription data-testid="scheduled-banner" className="text-amber-600 dark:text-amber-500">
+              Scheduled event — these hours start counting on {format(date, "PPP")}. Agreed means the employee confirmed they will work it.
+            </CardDescription>
+          ) : (
+            <CardDescription>Update who was offered and who actually worked.</CardDescription>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -288,7 +316,7 @@ export default function EditEvent() {
                 <tr>
                   <th className="px-6 py-3 font-medium">Employee</th>
                   <th className="px-6 py-3 font-medium text-center">Offered</th>
-                  <th className="px-6 py-3 font-medium text-center">Worked</th>
+                  <th className="px-6 py-3 font-medium text-center" data-testid="worked-column-header">{isFutureEvent ? "Agreed" : "Worked"}</th>
                   <th className="px-6 py-3 font-medium">Override Hrs (Opt)</th>
                 </tr>
               </thead>
