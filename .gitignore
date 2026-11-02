@@ -59,5 +59,11 @@ Thumbs.db
 
 # Local release helper (prompts for credentials at runtime — never commit)
 scripts/release.sh
+
+# Local-only tooling and docs (not required by the app or its build)
+/tests/
+/playwright.config.ts
+opencode.json
+AGENTS.md
 test-results/
 playwright-report/

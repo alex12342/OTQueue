@@ -22,3 +22,5 @@ attached_assets
 .codebase-memory
 .codebase
 opencode.json
+tests
+playwright.config.ts

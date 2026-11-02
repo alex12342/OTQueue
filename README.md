@@ -1,6 +1,6 @@
 # OTQueue
 
-A web application for tracking and fairly distributing overtime at shift-based jobs. Supports multiple rosters, role/subclass classification, holiday day types, and weighted fairness hours.
+A web application for tracking and fairly distributing overtime at shift-based jobs. Supports multiple rosters, role/subclass classification, day types with hour multipliers, configurable seniority ranking (hire date or manual), scheduled future-dated events that don't affect fairness totals until their date arrives, and weighted normalized fairness hours.
 
 ---
 
@@ -202,9 +202,11 @@ PORT=3000 DATABASE_URL=postgresql://user:pass@localhost:5432/otqueue pnpm --filt
 ### Database
 
 ```bash
-pnpm --filter db push           # safe schema push
-pnpm --filter db push-force     # force schema push (idempotent)
+pnpm --filter db generate     # emit a SQL migration after schema changes (commit it)
+pnpm --filter db migrate      # apply pending migrations locally (same as container startup)
 ```
+
+Containers apply committed migrations automatically at every boot (`drizzle-kit migrate`); `drizzle-kit push` is dev-only and must not be used in containers.
 
 ### Codegen (after editing `lib/api-spec/openapi.yaml`)
 
@@ -233,14 +235,6 @@ docker compose down -v
 mkdir -p data
 docker compose up -d
 ```
-
----
-
-## Build Artifacts (git-ignored)
-
-- `dist/`, `*.tsbuildinfo` — regenerated
-- `lib/*/src/generated/` — Orval codegen output
-- `.playwright-mcp/` — MCP runtime cache
 
 ---
 
