@@ -27,6 +27,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HoursInput } from "@/components/hours-input";
 import { cn, invalidateEventQueries } from "@/lib/utils";
 
 type EntryState = {
@@ -239,13 +240,10 @@ export default function LogEvent() {
 
             <div className="space-y-2">
               <Label htmlFor="hours">Hours</Label>
-              <Input
+              <HoursInput
                 id="hours"
-                type="number"
-                step="0.5"
-                min="0"
                 value={defaultHours}
-                onChange={(e) => setDefaultHours(e.target.value)}
+                onValueChange={setDefaultHours}
                 className="bg-background"
                 required
               />
@@ -363,12 +361,10 @@ export default function LogEvent() {
                           />
                         </td>
                         <td className="px-6 py-3">
-                          <Input
-                            type="number"
-                            step="0.5"
+                          <HoursInput
                             placeholder={entry.worked ? defaultHours : "-"}
                             value={entry.hoursOverride}
-                            onChange={(e) => handleEntryChange(emp.id, "hoursOverride", e.target.value)}
+                            onValueChange={(v) => handleEntryChange(emp.id, "hoursOverride", v)}
                             disabled={!entry.worked && !entry.offered}
                             className="w-24 h-9 bg-background disabled:opacity-50"
                           />
