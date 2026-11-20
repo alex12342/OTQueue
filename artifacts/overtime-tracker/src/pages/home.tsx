@@ -194,9 +194,15 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-foreground">{emp.fairnessScore}h</div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Normalized</div>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right min-w-[3rem]">
+                      <div className="text-lg font-bold text-foreground">{emp.fairnessScore}h</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider">Normalized</div>
+                    </div>
+                    <div className="text-right min-w-[3rem]">
+                      <div className="text-lg italic text-muted-foreground">{emp.pendingHours ?? 0}h</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider">Pending</div>
+                    </div>
                   </div>
                 </Link>
               ))}

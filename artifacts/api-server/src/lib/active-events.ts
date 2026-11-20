@@ -1,4 +1,4 @@
-import { lte } from "drizzle-orm";
+import { gt, lte } from "drizzle-orm";
 import { eventsTable } from "@workspace/db";
 
 export function todayStr(): string {
@@ -10,4 +10,11 @@ export function todayStr(): string {
 // reached. Evaluated at query time, so totals self-correct as days pass.
 export function activeEventWhere(today = todayStr()) {
   return lte(eventsTable.date, today);
+}
+
+// The complement of activeEventWhere(): scheduled events whose date has not
+// been reached yet. Used to surface "pending" hours that will start counting
+// once their date arrives.
+export function pendingEventWhere(today = todayStr()) {
+  return gt(eventsTable.date, today);
 }

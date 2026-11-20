@@ -581,6 +581,12 @@ export const ListEventsResponseItem = zod.object({
   "defaultHours": zod.number(),
   "dayType": zod.string(),
   "multiplier": zod.number().default(listEventsResponseMultiplierDefault),
+  "createdAt": zod.coerce.date().nullish().describe('When the event was recorded (ISO 8601)'),
+  "createdBy": zod.string().nullish().describe('ID of the user who created the event (null if unknown\/deleted)'),
+  "createdByName": zod.string().nullish().describe('Display name of the creator at creation time (survives renames\/deletes)'),
+  "updatedAt": zod.coerce.date().nullish().describe('Last edit timestamp (null if never edited)'),
+  "updatedBy": zod.string().nullish(),
+  "updatedByName": zod.string().nullish(),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -640,6 +646,12 @@ export const GetEventResponse = zod.object({
   "defaultHours": zod.number(),
   "dayType": zod.string(),
   "multiplier": zod.number().default(getEventResponseMultiplierDefault),
+  "createdAt": zod.coerce.date().nullish().describe('When the event was recorded (ISO 8601)'),
+  "createdBy": zod.string().nullish().describe('ID of the user who created the event (null if unknown\/deleted)'),
+  "createdByName": zod.string().nullish().describe('Display name of the creator at creation time (survives renames\/deletes)'),
+  "updatedAt": zod.coerce.date().nullish().describe('Last edit timestamp (null if never edited)'),
+  "updatedBy": zod.string().nullish(),
+  "updatedByName": zod.string().nullish(),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -692,6 +704,12 @@ export const UpdateEventResponse = zod.object({
   "defaultHours": zod.number(),
   "dayType": zod.string(),
   "multiplier": zod.number().default(updateEventResponseMultiplierDefault),
+  "createdAt": zod.coerce.date().nullish().describe('When the event was recorded (ISO 8601)'),
+  "createdBy": zod.string().nullish().describe('ID of the user who created the event (null if unknown\/deleted)'),
+  "createdByName": zod.string().nullish().describe('Display name of the creator at creation time (survives renames\/deletes)'),
+  "updatedAt": zod.coerce.date().nullish().describe('Last edit timestamp (null if never edited)'),
+  "updatedBy": zod.string().nullish(),
+  "updatedByName": zod.string().nullish(),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -711,6 +729,29 @@ export const UpdateEventResponse = zod.object({
 export const DeleteEventParams = zod.object({
   "id": zod.coerce.number()
 })
+
+
+/**
+ * @summary Get the edit history of an event (most recent first)
+ */
+export const GetEventEditHistoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEventEditHistoryResponseItem = zod.object({
+  "id": zod.number(),
+  "eventId": zod.number(),
+  "userId": zod.string().nullish().describe('ID of the editing user (null if unknown\/deleted)'),
+  "userName": zod.string().nullish().describe('Display name of the editor at edit time (survives renames\/deletes)'),
+  "changes": zod.array(zod.object({
+  "field": zod.string().describe('Stable key of the changed item (e.g. \"description\", \"entry:<employeeId>\")'),
+  "label": zod.string().describe('Human-readable name of the changed item (e.g. \"Description\", employee name)'),
+  "from": zod.string().nullable().describe('Previous value; null when the item was added'),
+  "to": zod.string().nullable().describe('New value; null when the item was removed')
+})),
+  "createdAt": zod.coerce.date()
+})
+export const GetEventEditHistoryResponse = zod.array(GetEventEditHistoryResponseItem)
 
 
 /**
@@ -739,6 +780,7 @@ export const GetUpNextResponse = zod.object({
   "effectiveSeniority": zod.number().nullable().describe('Display rank (stored seniority in manual mode; computed rank in hire_date mode)'),
   "totalOfferedHours": zod.number(),
   "fairnessScore": zod.number(),
+  "pendingHours": zod.number().optional().describe('Normalized hours from scheduled (future-dated) events that start counting once their date is reached'),
   "rank": zod.number()
 }))
 })
@@ -772,6 +814,12 @@ export const GetStatsResponse = zod.object({
   "defaultHours": zod.number(),
   "dayType": zod.string(),
   "multiplier": zod.number().default(getStatsResponseRecentEventsItemMultiplierDefault),
+  "createdAt": zod.coerce.date().nullish().describe('When the event was recorded (ISO 8601)'),
+  "createdBy": zod.string().nullish().describe('ID of the user who created the event (null if unknown\/deleted)'),
+  "createdByName": zod.string().nullish().describe('Display name of the creator at creation time (survives renames\/deletes)'),
+  "updatedAt": zod.coerce.date().nullish().describe('Last edit timestamp (null if never edited)'),
+  "updatedBy": zod.string().nullish(),
+  "updatedByName": zod.string().nullish(),
   "entries": zod.array(zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),

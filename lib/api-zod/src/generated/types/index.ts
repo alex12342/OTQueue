@@ -18,6 +18,8 @@ export * from './employeeReport';
 export * from './employeeStat';
 export * from './employeeUpdate';
 export * from './event';
+export * from './eventEditChange';
+export * from './eventEditHistoryEntry';
 export * from './eventEntry';
 export * from './eventEntryInput';
 export * from './eventInput';

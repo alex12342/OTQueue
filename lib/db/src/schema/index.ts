@@ -14,6 +14,7 @@ export * from "./employees";
 // Event schemas
 export * from "./events";
 export * from "./eventEntries";
+export * from "./eventEditHistory";
 
 // Day type config
 export * from "./dayTypeConfig";

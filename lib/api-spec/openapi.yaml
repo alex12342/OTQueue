@@ -747,6 +747,29 @@ paths:
         "204":
           description: Deleted
 
+  /events/{id}/history:
+    get:
+      operationId: getEventEditHistory
+      tags: [events]
+      summary: Get the edit history of an event (most recent first)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Edit history entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventEditHistoryEntry"
+        "404":
+          description: Not found
+
   # ── Reports ───────────────────────────────────────────────────────────────
   /up-next:
     get:
@@ -1124,10 +1147,70 @@ components:
         multiplier:
           type: number
           default: 1
+        # Audit fields. Optional/nullable for backwards compatibility: events
+        # recorded before the audit feature have no author info (null), and old
+        # clients simply ignore these extra properties.
+        createdAt:
+          type: ["string", "null"]
+          format: date-time
+          description: When the event was recorded (ISO 8601)
+        createdBy:
+          type: ["string", "null"]
+          description: ID of the user who created the event (null if unknown/deleted)
+        createdByName:
+          type: ["string", "null"]
+          description: Display name of the creator at creation time (survives renames/deletes)
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+          description: Last edit timestamp (null if never edited)
+        updatedBy:
+          type: ["string", "null"]
+        updatedByName:
+          type: ["string", "null"]
         entries:
           type: array
           items:
             $ref: "#/components/schemas/EventEntry"
+
+    EventEditChange:
+      type: object
+      required: [field, label, from, to]
+      properties:
+        field:
+          type: string
+          description: Stable key of the changed item (e.g. "description", "entry:<employeeId>")
+        label:
+          type: string
+          description: Human-readable name of the changed item (e.g. "Description", employee name)
+        from:
+          type: ["string", "null"]
+          description: Previous value; null when the item was added
+        to:
+          type: ["string", "null"]
+          description: New value; null when the item was removed
+
+    EventEditHistoryEntry:
+      type: object
+      required: [id, eventId, changes, createdAt]
+      properties:
+        id:
+          type: integer
+        eventId:
+          type: integer
+        userId:
+          type: ["string", "null"]
+          description: ID of the editing user (null if unknown/deleted)
+        userName:
+          type: ["string", "null"]
+          description: Display name of the editor at edit time (survives renames/deletes)
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventEditChange"
+        createdAt:
+          type: string
+          format: date-time
 
     EventEntry:
       type: object
@@ -1260,6 +1343,9 @@ components:
           type: number
         fairnessScore:
           type: number
+        pendingHours:
+          type: number
+          description: Normalized hours from scheduled (future-dated) events that start counting once their date is reached
         rank:
           type: integer
 

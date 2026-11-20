@@ -11,7 +11,7 @@ import {
 } from "@workspace/db";
 import { GetUpNextQueryParams, GetStatsQueryParams, SuggestDayTypeQueryParams } from "@workspace/api-zod";
 import { assignEffectiveSeniority, compareSeniority } from "../lib/seniority";
-import { activeEventWhere } from "../lib/active-events";
+import { activeEventWhere, pendingEventWhere } from "../lib/active-events";
 import type { SeniorityMode } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -185,19 +185,26 @@ router.get("/up-next", async (req, res): Promise<void> => {
 
   const withData = await Promise.all(
     employees.map(async (emp: typeof employeesTable.$inferSelect) => {
+      // Active (counted) and pending (future-dated) hours are summed in one
+      // pass: the date condition lives inside each CASE so scheduled events
+      // can be reported separately instead of filtered out. Pending uses the
+      // same normalization as fairnessScore, so those hours move into the
+      // counted total once their date is reached.
       let empHoursQuery = db
         .select({
-          totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
-          fairnessScore: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) * ${eventsTable.multiplier}::numeric ELSE 0 END), 0)`,
+          totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true AND ${activeEventWhere()} THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
+          fairnessScore: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true AND ${activeEventWhere()} THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) * ${eventsTable.multiplier}::numeric ELSE 0 END), 0)`,
+          pendingHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true AND ${pendingEventWhere()} THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) * ${eventsTable.multiplier}::numeric ELSE 0 END), 0)`,
         })
         .from(eventEntriesTable)
         .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-        .where(and(eq(eventEntriesTable.employeeId, emp.id), activeEventWhere(), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
+        .where(and(eq(eventEntriesTable.employeeId, emp.id), resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`));
 
       const [hrs] = await empHoursQuery;
 
       const rawOfferedHours = Number(hrs?.totalOfferedHours ?? 0);
       const fairnessScore = Number(hrs?.fairnessScore ?? 0);
+      const pendingHours = Number(hrs?.pendingHours ?? 0);
       const subclass = emp.subclassId ? subclassMap.get(emp.subclassId) : null;
 
       const subclassPriority = emp.subclassId !== null && dayTypeOverrideMap.has(emp.subclassId)
@@ -214,6 +221,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
         priorityRank: emp.priorityRank,
         totalOfferedHours: rawOfferedHours,
         fairnessScore,
+        pendingHours,
         subclassPriority,
       };
     })
@@ -254,6 +262,7 @@ router.get("/up-next", async (req, res): Promise<void> => {
     effectiveSeniority: effectiveMap.get(emp.id) ?? null,
     totalOfferedHours: emp.totalOfferedHours,
     fairnessScore: emp.fairnessScore,
+    pendingHours: emp.pendingHours,
     rank: idx + 1,
   }));
 

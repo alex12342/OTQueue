@@ -255,7 +255,65 @@ export interface Event {
   defaultHours: number;
   dayType: string;
   multiplier: number;
+  /**
+     * When the event was recorded (ISO 8601)
+     * @nullable
+     */
+  createdAt?: string | null;
+  /**
+     * ID of the user who created the event (null if unknown/deleted)
+     * @nullable
+     */
+  createdBy?: string | null;
+  /**
+     * Display name of the creator at creation time (survives renames/deletes)
+     * @nullable
+     */
+  createdByName?: string | null;
+  /**
+     * Last edit timestamp (null if never edited)
+     * @nullable
+     */
+  updatedAt?: string | null;
+  /** @nullable */
+  updatedBy?: string | null;
+  /** @nullable */
+  updatedByName?: string | null;
   entries: EventEntry[];
+}
+
+export interface EventEditChange {
+  /** Stable key of the changed item (e.g. "description", "entry:<employeeId>") */
+  field: string;
+  /** Human-readable name of the changed item (e.g. "Description", employee name) */
+  label: string;
+  /**
+     * Previous value; null when the item was added
+     * @nullable
+     */
+  from: string | null;
+  /**
+     * New value; null when the item was removed
+     * @nullable
+     */
+  to: string | null;
+}
+
+export interface EventEditHistoryEntry {
+  id: number;
+  eventId: number;
+  /**
+     * ID of the editing user (null if unknown/deleted)
+     * @nullable
+     */
+  userId?: string | null;
+  /**
+     * Display name of the editor at edit time (survives renames/deletes)
+     * @nullable
+     */
+  userName?: string | null;
+  changes: EventEditChange[];
+  createdAt: string;
 }
 
 export interface EventEntryInput {
@@ -323,6 +381,8 @@ export interface UpNextEmployee {
   effectiveSeniority: number | null;
   totalOfferedHours: number;
   fairnessScore: number;
+  /** Normalized hours from scheduled (future-dated) events that start counting once their date is reached */
+  pendingHours?: number;
   rank: number;
 }
 

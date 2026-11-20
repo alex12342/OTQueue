@@ -3,10 +3,11 @@ import jwt from "jsonwebtoken";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   userId?: string;
   userRole?: "user" | "admin" | "viewer";
   userEmail?: string;
+  userName?: string;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -47,6 +48,7 @@ export const authMiddleware = async (
       req.userId = String(user.id);
       req.userRole = user.role as "user" | "admin" | "viewer";
       req.userEmail = user.email;
+      req.userName = user.name;
     }
   } catch (error) {
     console.error("Auth middleware error:", error);
@@ -107,6 +109,7 @@ export const optionalAuthMiddleware = async (
       req.userId = String(user.id);
       req.userRole = user.role as "user" | "admin" | "viewer";
       req.userEmail = user.email;
+      req.userName = user.name;
     }
   } catch (error) {
     console.error("Optional auth middleware error:", error);

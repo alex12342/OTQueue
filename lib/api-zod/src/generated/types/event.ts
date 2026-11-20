@@ -15,5 +15,29 @@ export interface Event {
   defaultHours: number;
   dayType: string;
   multiplier: number;
+  /**
+     * When the event was recorded (ISO 8601)
+     * @nullable
+     */
+  createdAt?: Date | null;
+  /**
+     * ID of the user who created the event (null if unknown/deleted)
+     * @nullable
+     */
+  createdBy?: string | null;
+  /**
+     * Display name of the creator at creation time (survives renames/deletes)
+     * @nullable
+     */
+  createdByName?: string | null;
+  /**
+     * Last edit timestamp (null if never edited)
+     * @nullable
+     */
+  updatedAt?: Date | null;
+  /** @nullable */
+  updatedBy?: string | null;
+  /** @nullable */
+  updatedByName?: string | null;
   entries: EventEntry[];
 }

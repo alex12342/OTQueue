@@ -29,6 +29,7 @@ import type {
   EmployeeReport,
   EmployeeUpdate,
   Event,
+  EventEditHistoryEntry,
   EventInput,
   GetStatsParams,
   GetUpNextParams,
@@ -2593,6 +2594,83 @@ export const useDeleteEvent = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteEventMutationOptions(options));
     }
+
+export const getGetEventEditHistoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/events/${id}/history`
+}
+
+/**
+ * @summary Get the edit history of an event (most recent first)
+ */
+export const getEventEditHistory = async (id: number, options?: RequestInit): Promise<EventEditHistoryEntry[]> => {
+
+  return customFetch<EventEditHistoryEntry[]>(getGetEventEditHistoryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEventEditHistoryQueryKey = (id: number,) => {
+    return [
+    `/api/events/${id}/history`
+    ] as const;
+    }
+
+
+export const getGetEventEditHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getEventEditHistory>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEventEditHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEventEditHistoryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventEditHistory>>> = ({ signal }) => getEventEditHistory(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventEditHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEventEditHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getEventEditHistory>>>
+export type GetEventEditHistoryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the edit history of an event (most recent first)
+ */
+
+export function useGetEventEditHistory<TData = Awaited<ReturnType<typeof getEventEditHistory>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEventEditHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEventEditHistoryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetUpNextUrl = (params: GetUpNextParams,) => {
   const normalizedParams = new URLSearchParams();

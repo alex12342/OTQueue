@@ -28,5 +28,7 @@ export interface UpNextEmployee {
   effectiveSeniority: number | null;
   totalOfferedHours: number;
   fairnessScore: number;
+  /** Normalized hours from scheduled (future-dated) events that start counting once their date is reached */
+  pendingHours?: number;
   rank: number;
 }

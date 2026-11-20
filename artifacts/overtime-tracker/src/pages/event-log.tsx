@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useListEvents, useDeleteEvent, getListEventsQueryKey, getGetStatsQueryKey } from "@workspace/api-client-react";
+import { useListEvents, useDeleteEvent, getListEventsQueryKey, getGetStatsQueryKey, useGetEventEditHistory } from "@workspace/api-client-react";
 import { format, parseISO } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { isViewer } from "@/lib/auth";
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil, Search, Download, X, Zap, Settings } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, Trash2, Pencil, Search, Download, X, Zap, Settings, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
@@ -42,11 +42,59 @@ function downloadCsv(filename: string, rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
+// Expandable audit trail for one event: who edited it, when, and what changed.
+// Fetched lazily (only while mounted), so collapsed cards cost nothing.
+function EventHistoryPanel({ eventId }: { eventId: number }) {
+  const { data: history, isLoading } = useGetEventEditHistory(eventId);
+
+  if (isLoading) {
+    return (
+      <div className="border-t bg-muted/20 px-6 py-4 space-y-2">
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    );
+  }
+
+  if (!history?.length) {
+    return (
+      <div className="border-t bg-muted/20 px-6 py-4 text-sm text-muted-foreground" data-testid={`event-history-empty-${eventId}`}>
+        No edits recorded for this event.
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t bg-muted/20 px-6 py-4 space-y-4" data-testid={`event-history-${eventId}`}>
+      {history.map((h) => (
+        <div key={h.id} className="text-sm">
+          <p className="font-medium text-foreground">
+            {h.userName ?? "Unknown user"}
+            <span className="ml-1 font-normal text-muted-foreground">
+              edited {format(parseISO(h.createdAt), "MMM d, yyyy 'at' h:mm a")}
+            </span>
+          </p>
+          <ul className="mt-1 space-y-0.5 text-muted-foreground">
+            {(h.changes ?? []).map((c, i) => (
+              <li key={i}>
+                <span className="text-foreground">{c.label}:</span>{" "}
+                {c.from == null ? "Added" : c.to == null ? "Removed" : `${c.from} → ${c.to}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function EventLog() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const viewer = isViewer();
+  // Event ids whose edit-history panel is expanded (fetched lazily per card).
+  const [historyOpen, setHistoryOpen] = useState<Record<number, boolean>>({});
 
   const { activeRosterId } = useRoster();
 
@@ -91,13 +139,15 @@ export default function EventLog() {
 
   const handleExport = () => {
     if (!filteredEvents.length) return;
-    const header = ["Event ID", "Date", "Description", "Day Type", "Default Hours", "Multiplier", "Employee", "Status", "Hours Override", "Hours Offered", "Normalized Hours"];
+    const header = ["Event ID", "Date", "Description", "Day Type", "Default Hours", "Multiplier", "Employee", "Status", "Hours Override", "Hours Offered", "Normalized Hours", "Created By", "Created At"];
     const rows: string[][] = [header];
     for (const ev of filteredEvents) {
       const multiplier = ev.multiplier ?? 1;
       const isUpcoming = ev.date > format(new Date(), "yyyy-MM-dd");
+      const createdBy = ev.createdByName ?? "";
+      const createdAt = ev.createdAt ? format(parseISO(ev.createdAt), "yyyy-MM-dd HH:mm") : "";
       if (!ev.entries?.length) {
-        rows.push([String(ev.id), ev.date, ev.description, ev.dayType ?? "", String(ev.defaultHours), String(multiplier), "", "", "", "", ""]);
+        rows.push([String(ev.id), ev.date, ev.description, ev.dayType ?? "", String(ev.defaultHours), String(multiplier), "", "", "", "", "", createdBy, createdAt]);
       } else {
         for (const entry of ev.entries) {
           const status = entry.worked ? (isUpcoming ? "Agreed" : "Worked") : entry.offered ? "Offered" : "";
@@ -114,6 +164,8 @@ export default function EventLog() {
             entry.hoursOverride != null ? String(entry.hoursOverride) : "",
             String(entry.hoursOffered),
             normalizedHours,
+            createdBy,
+            createdAt,
           ]);
         }
       }
@@ -235,50 +287,69 @@ export default function EventLog() {
                         <Users className="w-3.5 h-3.5" /> {event.entries?.length || 0} Involved
                       </span>
                     </CardDescription>
+                    {/* Audit line: hidden for pre-audit events (no createdAt) so old rows stay clean */}
+                    {event.createdAt && (
+                      <p className="text-xs text-muted-foreground mt-1.5" data-testid={`created-by-${event.id}`}>
+                        {event.createdByName ? `Added by ${event.createdByName} on ` : "Added on "}
+                        {format(parseISO(event.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    )}
                   </div>
-                  {!viewer && (
-                    <div className="flex items-center gap-1">
-                      <Link href={`/events/${event.id}/edit`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground"
-                          data-testid={`button-edit-event-${event.id}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-muted-foreground hover:text-foreground gap-1.5"
+                      onClick={() => setHistoryOpen((prev) => ({ ...prev, [event.id]: !prev[event.id] }))}
+                      data-testid={`button-history-${event.id}`}
+                    >
+                      <History className="h-4 w-4" />
+                      History
+                    </Button>
+                    {!viewer && (
+                      <>
+                        <Link href={`/events/${event.id}/edit`}>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-muted-foreground hover:text-destructive"
-                            data-testid={`button-delete-event-${event.id}`}
+                            className="text-muted-foreground hover:text-foreground"
+                            data-testid={`button-edit-event-${event.id}`}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this event?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete the event and reverse its hours from the employees' totals. This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate({ id: event.id })}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        </Link>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-destructive"
+                              data-testid={`button-delete-event-${event.id}`}
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete the event and reverse its hours from the employees' totals. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteMutation.mutate({ id: event.id })}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
@@ -340,6 +411,7 @@ export default function EventLog() {
                     </table>
                   </div>
                 </CardContent>
+                {historyOpen[event.id] && <EventHistoryPanel eventId={event.id} />}
               </Card>
             );
           })}

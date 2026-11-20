@@ -17,6 +17,7 @@ import {
   seniorityOrderBy,
 } from "../lib/seniority";
 import { activeEventWhere } from "../lib/active-events";
+import { AuthRequest } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
@@ -198,7 +199,7 @@ router.get("/employees", async (req, res): Promise<void> => {
   res.json(withRank);
 });
 
-router.post("/employees", async (req, res): Promise<void> => {
+router.post("/employees", async (req: AuthRequest, res): Promise<void> => {
   const parsed = CreateEmployeeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -327,6 +328,8 @@ router.post("/employees", async (req, res): Promise<void> => {
         defaultHours: String(finalHours),
         dayType: "system",
         multiplier: "1",
+        createdBy: req.userId ?? null,
+        createdByName: req.userName ?? null,
       })
       .returning();
 
@@ -360,7 +363,7 @@ router.get("/employees/:id", async (req, res): Promise<void> => {
   res.json(employee);
 });
 
-router.patch("/employees/:id", async (req, res): Promise<void> => {
+router.patch("/employees/:id", async (req: AuthRequest, res): Promise<void> => {
   const params = UpdateEmployeeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -454,6 +457,8 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
         defaultHours: String(newHours),
         dayType: "system",
         multiplier: "1",
+        createdBy: req.userId ?? null,
+        createdByName: req.userName ?? null,
       })
       .returning();
 
@@ -523,6 +528,8 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
         defaultHours: "0",
         dayType: "system",
         multiplier: "1",
+        createdBy: req.userId ?? null,
+        createdByName: req.userName ?? null,
       })
       .returning();
 
@@ -557,6 +564,8 @@ router.patch("/employees/:id", async (req, res): Promise<void> => {
           defaultHours: String(avgScore),
           dayType: "system",
           multiplier: "1",
+          createdBy: req.userId ?? null,
+          createdByName: req.userName ?? null,
         })
         .returning();
 
@@ -667,7 +676,7 @@ router.get("/employees/:id/report", async (req, res): Promise<void> => {
 
 // ── Normalize hours for all employees in a roster ─────────────────────────────
 
-router.post("/rosters/:id/normalize-hours", async (req, res): Promise<void> => {
+router.post("/rosters/:id/normalize-hours", async (req: AuthRequest, res): Promise<void> => {
   const rosterId = Number(req.params.id);
   if (isNaN(rosterId)) {
     res.status(400).json({ error: "Invalid roster ID" });
@@ -703,6 +712,8 @@ router.post("/rosters/:id/normalize-hours", async (req, res): Promise<void> => {
       defaultHours: "0",
       dayType: "system",
       multiplier: "1",
+      createdBy: req.userId ?? null,
+      createdByName: req.userName ?? null,
     })
     .returning();
 
