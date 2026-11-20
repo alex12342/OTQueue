@@ -47,18 +47,22 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Environment files (contain secrets — never commit; keep .env.example as the template)
+# Environment files (contain secrets — never commit; keep *.example templates committed)
 .env
 .env.*
 !.env.example
+!.env.*.example
 
 # Caches
 .cache/
 .local/
 .cortexkit/
+.opencode/
 
-# Local release helper (prompts for credentials at runtime — never commit)
+# Local release helper (reads credentials from .env.release — never commit)
 scripts/release.sh
+# Local release history appended by scripts/release.sh (git tags are the source of truth)
+/RELEASES.md
 
 # Local-only tooling and docs (not required by the app or its build)
 /tests/
