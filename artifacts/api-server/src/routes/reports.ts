@@ -297,22 +297,24 @@ router.get("/stats", async (req, res): Promise<void> => {
     .$dynamic()
     .where(rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`);
 
-  let hoursQuery = db
+  // NOTE: Drizzle's .where() REPLACES any previous condition on a query, so all
+  // filters (roster scope + scheduled-event cutoff + reset-hours window) must be
+  // combined into a single and(...) — chaining .where() silently dropped the
+  // roster filter, making "Total Worked" sum across every roster.
+  const [hourTotals] = await db
     .select({
       totalOfferedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.offered} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
       totalWorkedHours: sql<number>`COALESCE(SUM(CASE WHEN ${eventEntriesTable.worked} = true THEN COALESCE(${eventEntriesTable.hoursOverride}::numeric, ${eventsTable.defaultHours}) ELSE 0 END), 0)`,
     })
     .from(eventEntriesTable)
     .innerJoin(eventsTable, eq(eventEntriesTable.eventId, eventsTable.id))
-    .$dynamic()
-    .where(rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`)
-    .where(activeEventWhere());
-
-  if (resetEvent) {
-    hoursQuery = hoursQuery.where(sql`${eventsTable.createdAt} > ${resetEvent.createdAt}`);
-  }
-
-  const [hourTotals] = await hoursQuery;
+    .where(
+      and(
+        rosterId !== undefined ? eq(eventsTable.rosterId, rosterId) : sql`true`,
+        activeEventWhere(),
+        resetEvent ? sql`${eventsTable.createdAt} > ${resetEvent.createdAt}` : sql`true`,
+      ),
+    );
 
   const [empCount] = await db
     .select({ count: sql<number>`COUNT(*)` })
