@@ -47,6 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRoster } from "@/hooks/use-roster";
 import { customFetch, setAuthTokenGetter } from "@workspace/api-client-react";
 import { getUserRole, initAuth, isViewer } from "@/lib/auth";
+import BackupRestoreCard from "@/components/backup-restore-card";
 import { PlusCircle, Pencil, Trash2, ChevronUp, ChevronDown, RotateCcw, Search, Shield, Users as UsersIcon, Eye, X, Lock, CheckCircle, AlertCircle, BookOpen, Mail, Server, Lock as LockIcon, EyeOff, RefreshCw, Send, CheckCircle2, AlertCircle as AlertCircleIcon } from "lucide-react";
 import AdminEmailConfigPage from "@/pages/admin-email-config";
 
@@ -1858,6 +1859,11 @@ function UsersTab() {
           </CardContent>
         </Card>
       )}
+
+      {/* Backup & Restore (admin only) */}
+      <div className="mt-6">
+        <BackupRestoreCard />
+      </div>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>

@@ -8,6 +8,7 @@ import eventsRouter from "./events";
 import reportsRouter from "./reports";
 import authRouter from "./auth";
 import adminRouter from "./admin";
+import adminBackupRouter from "./admin-backup";
 import ssoRouter from "./auth.google";
 import ssoStatusRouter from "./auth.sso";
 
@@ -26,6 +27,9 @@ router.use("/sso", ssoRouter);
 router.use("/sso-enabled", ssoStatusRouter);
 // Add auth routes last so they are matched after all resource routes
 router.use("/auth", authRouter);
+// Backup & restore admin API — mounted before /admin so its own
+// adminAuthMiddleware handles these paths without double-processing.
+router.use("/admin/backups", adminBackupRouter);
 // Add admin routes after auth (for protected endpoints)
 router.use("/admin", adminRouter);
 

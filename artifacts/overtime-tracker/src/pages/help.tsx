@@ -85,6 +85,10 @@ const faqs = [
     q: "What are subclasses?",
     a: "Subclasses let you sort workers into groups. For example, you can put all nurses in one group and all techs in another.",
   },
+  {
+    q: "How do backups work?",
+    a: "Administrators can back up the entire system (database plus all data files) from Settings → Users → Backup & Restore. A backup is created automatically once per day, and the five most recent automatic backups are kept; you can also create, download, upload, or delete backups manually. Restoring replaces ALL current data with the chosen backup's contents and restarts the system — everyone will need to sign in again afterwards.",
+  },
 ];
 
 export default function HelpPage() {
